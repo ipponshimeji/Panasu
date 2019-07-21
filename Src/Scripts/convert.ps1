@@ -40,6 +40,7 @@ param (
     [string]$outputDir = '..\html',
     [string]$outputFormat = 'html',
     [string]$outputExtension = '.html',
+    [string]$filter = '',
     [string[]]$otherOptions = @('--standalone'),
     [Switch]
     [bool]$rebuild = $false
@@ -55,6 +56,19 @@ function IsUpToDate([string]$sourceFile, [string]$destFile) {
         # destFile does not exist
         $false
     }
+}
+
+function RunOnShell([string]$commandLine) {
+    if ([System.IO.Path]::DirectorySeparatorChar -eq '\') {
+        # on Windows
+        Invoke-Expression "`"$env:ComSpec`" /c `"$commandLine`""
+    } else {
+        # on other than Windows
+        Invoke-Expression "$env:SHELL -c '$commandLine'" 
+    }
+
+    # returns the result of execution
+    $?
 }
 
 function Convert([string]$inputFileRelPath) {
@@ -84,8 +98,18 @@ function Convert([string]$inputFileRelPath) {
             $metadataOption = "--metadata-file=$metadataFilePath"
         }
 
-        # Note not to quote $otherOptions. It may contain multiple options.
-        pandoc $otherOptions $metadataOption -f $inputFormat -t $outputFormat -o $outputFilePath $inputFilePath 
+        # run pandoc
+        if ([string]::IsNullOrWhiteSpace($filter)) {
+            # with no filter
+            pandoc $otherOptions $metadataOption -f $inputFormat -t $outputFormat -o $outputFilePath $inputFilePath 
+        } else {
+            # with the specified filter
+            RunOnShell (
+                'pandoc $metadataOption -f $inputFormat -t json $inputFilePath | ' `
+                + $filter `
+                + ' | pandoc -f json -t $outputFormat -o $outputFilePath'
+            )
+        }
 
         # return the path of the output file
         if ($?) {
