@@ -7,4 +7,8 @@
     <RootNamespace>PandocUtil.ExtensionChanger</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\PandocFilter\PandocFilter.csproj" />
+  </ItemGroup>
+
 </Project>

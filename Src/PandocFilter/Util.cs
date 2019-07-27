@@ -6,6 +6,16 @@ using System.Linq;
 
 namespace PandocUtil.PandocFilter {
 	public static class Util {
+		#region methods
+
+		public static void ClearDisposable<T>(ref T target) where T: class, IDisposable {
+			if (target != null) {
+				IDisposable temp = target;
+				target = null;
+				temp.Dispose();
+			}
+		}
+
 		public static object CloneJsonObject(object src) {
 			// argument checks
 			if (src == null) {
@@ -111,5 +121,7 @@ namespace PandocUtil.PandocFilter {
 
 			return newRelativeUriString;
 		}
+
+		#endregion
 	}
 }

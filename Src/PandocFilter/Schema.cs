@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace PandocUtil.PandocFilter {
-	public class Schema {
+	public static class Schema {
+		#region types
+
 		public class Names {
 			public const string C = "c";
 			public const string Blocks = "blocks";
@@ -16,7 +18,12 @@ namespace PandocUtil.PandocFilter {
 			public const string Link = "Link";
 		}
 
-		public static (bool, T) GetOptionalValue<T>(IDictionary<string, object> dic, string key) where T : class {
+		#endregion
+
+
+		#region methods
+
+		public static (bool, T) GetOptionalValue<T>(this IDictionary<string, object> dic, string key) where T : class {
 			// argument checks
 			if (dic == null) {
 				throw new ArgumentNullException(nameof(dic));
@@ -39,5 +46,7 @@ namespace PandocUtil.PandocFilter {
 
 			return (exist, value);
 		}
+
+		#endregion
 	}
 }

@@ -6,4 +6,8 @@
     <AssemblyName>PandocUtil.PandocFilter</AssemblyName>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Utf8Json" Version="1.3.7" />
+  </ItemGroup>
+
 </Project>

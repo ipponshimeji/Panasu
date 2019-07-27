@@ -1,9 +1,10 @@
 ﻿using System;
+using PandocUtil.PandocFilter.Commands;
 
 namespace PandocUtil.ExtensionChanger {
 	class Program {
 		static void Main(string[] args) {
-			Console.WriteLine("Hello World!");
+			new ExtensionChangerCommand().Run(args);
 		}
 	}
 }

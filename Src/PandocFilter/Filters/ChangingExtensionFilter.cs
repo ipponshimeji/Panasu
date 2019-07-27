@@ -3,10 +3,18 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 
-namespace PandocUtil.PandocFilter {
+namespace PandocUtil.PandocFilter.Filters {
 	public class ChangingExtensionFilter: ConvertingFilter {
+		#region data
+
 		public readonly bool RebaseOtherRelativeLink;
+
 		private readonly Dictionary<string, string> extensionMap;
+
+		#endregion
+
+
+		#region properties
 
 		public IReadOnlyDictionary<string, string> ExtensionMap {
 			get {
@@ -14,9 +22,14 @@ namespace PandocUtil.PandocFilter {
 			}
 		}
 
+		#endregion
+
+
+		#region constructors
 
 		public ChangingExtensionFilter(string inputFilePath, string outputFilePath, bool rebaseOtherRelativeLink, IDictionary<string, string> extensionMap) : base(inputFilePath, outputFilePath) {
 			// argument checks
+			// extensionMap can be null
 
 			// initialize membera
 			this.RebaseOtherRelativeLink = rebaseOtherRelativeLink;
@@ -38,7 +51,12 @@ namespace PandocUtil.PandocFilter {
 			this.extensionMap.Add(inputExtension, outputExtension);
 		}
 
-		protected override void HandleElement(IDictionary<string, object> element, string type, object contents) {
+		#endregion
+
+
+		#region overrides
+
+		protected override void ModifyElement(Context context, IDictionary<string, object> element, string type, object contents) {
 			// argument checks
 			Debug.Assert(element != null);
 			Debug.Assert(type != null);
@@ -72,8 +90,13 @@ namespace PandocUtil.PandocFilter {
 				}
 			}
 
-			base.HandleElement(element, type, contents);
+			base.ModifyElement(context, element, type, contents);
 		}
+
+		#endregion
+
+
+		#region overridables
 
 		protected virtual string ConvertLink(string target) {
 			// argument checks
@@ -89,11 +112,13 @@ namespace PandocUtil.PandocFilter {
 			string newTarget;
 			string outputExtension;
 			if (this.extensionMap.TryGetValue(Path.GetExtension(unescapedPath), out outputExtension)) {
+				// target to change extension
 				newTarget = Path.ChangeExtension(unescapedPath, outputExtension);
 				if (0 < fragment.Length) {
 					newTarget = string.Concat(newTarget, fragment);
 				}
 			} else {
+				// not a target to change extension
 				if (!this.RebaseOtherRelativeLink) {
 					newTarget = target;
 				} else {
@@ -107,5 +132,7 @@ namespace PandocUtil.PandocFilter {
 
 			return newTarget;
 		}
+
+		#endregion
 	}
 }
