@@ -153,7 +153,7 @@ namespace PandocUtil.PandocFilter.Filters {
 				Debug.Assert(ast != null);
 
 				// create and setup an instance
-				Context instance = CreateContext(concurrent, ast);
+				Context instance = CreateContext(concurrent, (object)ast);
 				instance.Root = instance;
 				return instance;
 			}
@@ -350,7 +350,7 @@ namespace PandocUtil.PandocFilter.Filters {
 
 		#region methods
 
-		public void Modify(bool concurrent, IDictionary<string, object> ast) {
+		public void Modify(IDictionary<string, object> ast, bool concurrent = true) {
 			// argument checks
 			if (ast == null) {
 				throw new ArgumentNullException(nameof(ast));
@@ -369,7 +369,7 @@ namespace PandocUtil.PandocFilter.Filters {
 			});
 		}
 
-		public IDictionary<string, object> Generate(IDictionary<string, object> ast) {
+		public IDictionary<string, object> Generate(IDictionary<string, object> ast, bool concurrent = true) {
 			// argument checks
 			if (ast == null) {
 				throw new ArgumentNullException(nameof(ast));

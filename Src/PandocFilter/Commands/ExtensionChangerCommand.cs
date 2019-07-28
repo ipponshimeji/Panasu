@@ -89,7 +89,7 @@ namespace PandocUtil.PandocFilter.Commands {
 			}
 
 			// modify the AST
-			filter.Modify(false, ast);
+			filter.Modify(ast);
 
 			// write output AST
 			using (Stream stream = Console.OpenStandardOutput()) {
