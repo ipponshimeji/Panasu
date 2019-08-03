@@ -61,7 +61,7 @@ namespace PandocUtil.PandocFilter.Commands {
 
 		public IEnumerator<Argument> GetEnumerator() {
 			Argument argument;
-			if (TryMoveNextArgument(out argument)) {
+			while (TryMoveNextArgument(out argument)) {
 				yield return argument;
 			}
 		}
@@ -93,7 +93,7 @@ namespace PandocUtil.PandocFilter.Commands {
 
 		protected Argument ParseJoinedOption(string arg, int startIndex, char optionSeparator) {
 			// argument checks
-			if (!string.IsNullOrEmpty(arg)) {
+			if (string.IsNullOrEmpty(arg)) {
 				throw new ArgumentNullException(nameof(arg));
 			}
 			if (startIndex < 0 || arg.Length < startIndex) {
@@ -104,7 +104,7 @@ namespace PandocUtil.PandocFilter.Commands {
 			string value;
 			int separatorIndex = arg.IndexOf(optionSeparator, startIndex);
 			if (0 <= separatorIndex) {
-				name = arg.Substring(startIndex, separatorIndex);
+				name = arg.Substring(startIndex, separatorIndex - startIndex);
 				value = arg.Substring(separatorIndex + 1);
 			} else {
 				name = arg.Substring(startIndex);

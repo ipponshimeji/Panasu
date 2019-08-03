@@ -77,6 +77,16 @@ namespace PandocUtil.PandocFilter.Commands {
 			return string.Compare(name1, name2, StringComparison.OrdinalIgnoreCase) == 0;
 		}
 
+		protected virtual bool OptionNameStartsWith(string name, string str) {
+			// argument checks
+			if (name == null) {
+				throw new ArgumentNullException(nameof(name));
+			}
+
+			// case-insensitive, by default
+			return name.StartsWith(str, StringComparison.OrdinalIgnoreCase);
+		}
+
 		#endregion
 
 

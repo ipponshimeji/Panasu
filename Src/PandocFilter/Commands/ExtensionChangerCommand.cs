@@ -50,7 +50,7 @@ namespace PandocUtil.PandocFilter.Commands {
 			Debug.Assert(arg.IsOption);
 
 			string name = arg.Name;
-			if (AreSameOptionNames(name, "map")) {
+			if (AreSameOptionNames(name, "Map")) {
 				(string from, string to) SplitExtensions(string val) {
 					int index = val.IndexOf(':');
 					if (index < 0) {
@@ -64,7 +64,7 @@ namespace PandocUtil.PandocFilter.Commands {
 
 				(string from, string to) = SplitExtensions(arg.Value);
 				this.ExtensionMap.Add(from, to);
-			} else if (AreSameOptionNames(name, "RebaseOtherRelativeLinks")) {
+			} else if (OptionNameStartsWith("RebaseOtherRelativeLinks", name)) {
 				this.RebaseOtherRelativeLinks = true;
 			}
 		}
@@ -93,8 +93,19 @@ namespace PandocUtil.PandocFilter.Commands {
 		}
 
 		protected override int OnExecuted(Exception error) {
-			Console.Error.WriteLine(error.Message);
-			return (error == null) ? SuccessExitCode : GeneralErrorExitCode;
+			int exitCode;
+
+			// handle the execution result
+			if (error == null) {
+				// execution succeeded
+				exitCode = SuccessExitCode;
+			} else {
+				// execution failed
+				Console.Error.WriteLine(error.Message);
+				exitCode = GeneralErrorExitCode;
+			}
+
+			return exitCode;
 		}
 
 		#endregion

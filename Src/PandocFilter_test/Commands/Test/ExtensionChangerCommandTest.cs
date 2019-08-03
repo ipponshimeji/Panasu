@@ -12,8 +12,8 @@ namespace PandocUtil.PandocFilter.Commands.Test {
 		public class Filtering {
 			#region tests
 
-//			[Theory(DisplayName = "Filtering")]
-//			[ClassData(typeof(ExtensionChangingSample.StandardSampleProvider))]
+			[Theory(DisplayName = "Filtering")]
+			[ClassData(typeof(ExtensionChangingSample.StandardSampleProvider))]
 			public void TestFiltering(ExtensionChangingSample sample) {
 				// Arrange
 				List<string> args = new List<string>();
@@ -28,7 +28,10 @@ namespace PandocUtil.PandocFilter.Commands.Test {
 
 				void filter(Stream inputStream, Stream outputStream) {
 					ExtensionChangerCommand command = new ExtensionChangerCommand();
-					command.Run(args.ToArray(), inputStream, outputStream);
+					int exitCode = command.Run(args.ToArray(), inputStream, outputStream);
+					if (exitCode != Command.SuccessExitCode) {
+						throw new ApplicationException($"The command failed. Exit code: {exitCode}");
+					}
 				}
 
 				// Act and Assert
