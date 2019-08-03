@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.IO;
 
 namespace PandocUtil.PandocFilter.Filters {
-	public class ChangingExtensionFilter: ConvertingFilter {
+	public class ExtensionChangingFilter: ConvertingFilter {
 		#region data
 
 		public readonly bool RebaseOtherRelativeLinks;
@@ -27,7 +27,7 @@ namespace PandocUtil.PandocFilter.Filters {
 
 		#region constructors
 
-		public ChangingExtensionFilter(string fromFilePath, string toFilePath, bool rebaseOtherRelativeLinks, IDictionary<string, string> extensionMap) : base(fromFilePath, toFilePath) {
+		public ExtensionChangingFilter(string fromFilePath, string toFilePath, bool rebaseOtherRelativeLinks, IReadOnlyDictionary<string, string> extensionMap) : base(fromFilePath, toFilePath) {
 			// argument checks
 			// extensionMap can be null
 
@@ -36,7 +36,7 @@ namespace PandocUtil.PandocFilter.Filters {
 			this.extensionMap = (extensionMap == null) ? new Dictionary<string, string>() : new Dictionary<string, string>(extensionMap);
 		}
 
-		public ChangingExtensionFilter(string fromFilePath, string toFilePath, bool rebaseOtherRelativeLinks, string inputExtension, string outputExtension) : base(fromFilePath, toFilePath) {
+		public ExtensionChangingFilter(string fromFilePath, string toFilePath, bool rebaseOtherRelativeLinks, string inputExtension, string outputExtension) : base(fromFilePath, toFilePath) {
 			// argument checks
 			if (inputExtension == null) {
 				inputExtension = string.Empty;

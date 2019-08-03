@@ -1,0 +1,11 @@
+{
+    "Description": "simple",
+    "InputFilePath": "Inputs/simple.input.json",
+    "AnswerFilePath": "Answers/simple.answer.json",
+    "SupposedFromFileUri": "From/simple.md",
+    "SupposedToFileUri": "To/simple.html",
+    "RebaseOtherRelativeLinks": false,
+    "ExtensionMap": {
+        ".md": ".html"
+    }
+}

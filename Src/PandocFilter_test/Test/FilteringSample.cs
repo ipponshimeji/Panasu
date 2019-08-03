@@ -1,11 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using Utf8Json;
 using Xunit;
 
 namespace PandocUtil.PandocFilter.Test {
-	public struct FilteringSample {
+	public class FilteringSample {
 		#region data
+
+		public readonly string Description;
 
 		public readonly string InputFilePath;
 
@@ -16,8 +20,11 @@ namespace PandocUtil.PandocFilter.Test {
 
 		#region creation
 
-		public FilteringSample(string inputFilePath, string answerFilePath) {
+		public FilteringSample(string description, string inputFilePath, string answerFilePath) {
 			// argument checks
+			if (description == null) {
+				description = string.Empty;
+			}
 			if (string.IsNullOrEmpty(inputFilePath)) {
 				throw new ArgumentNullException(nameof(inputFilePath));
 			}
@@ -26,31 +33,50 @@ namespace PandocUtil.PandocFilter.Test {
 			}
 
 			// initialize members
+			this.Description = description;
 			this.InputFilePath = inputFilePath;
 			this.AnswerFilePath = answerFilePath;
 		}
 
-		public static FilteringSample GetSample(string group, string name) {
+		protected FilteringSample(IReadOnlyDictionary<string, object> config, string basePath) {
 			// argument checks
-			if (string.IsNullOrEmpty(group)) {
-				throw new ArgumentNullException(nameof(group));
+			if (config == null) {
+				throw new ArgumentNullException(nameof(config));
 			}
-			if (string.IsNullOrEmpty(name)) {
-				throw new ArgumentNullException(nameof(name));
+			if (string.IsNullOrEmpty(basePath)) {
+				throw new ArgumentNullException(nameof(basePath));
 			}
 
-			// create a instance
-			string pathSeparator = TestUtil.DirectorySeparator;
-			string resourceDirPath = TestUtil.GetFilteringResourceDir(group);
-			string inputFilePath = $"{resourceDirPath}{pathSeparator}Inputs{pathSeparator}{name}.json";
-			string answerFilePath = $"{resourceDirPath}{pathSeparator}Answers{pathSeparator}{name}.json";
-			return new FilteringSample(inputFilePath, answerFilePath);	
+			// initialize members
+			string getFullPath(string path) {
+				return Path.Combine(basePath, path);
+			}
+
+			try {
+				this.Description = config.GetOptionalValue<string>("Description", string.Empty);
+				this.InputFilePath = getFullPath(config.GetIndispensableValue<string>("InputFilePath"));
+				this.AnswerFilePath = getFullPath(config.GetIndispensableValue<string>("AnswerFilePath"));
+			} catch (KeyNotFoundException exception) {
+				throw new ArgumentException(exception.Message, nameof(config));
+			}
 		}
 
 		#endregion
 
 
 		#region methods
+
+		protected static Dictionary<string, object> LoadConfigFile(string configFilePath) {
+			// argument checks
+			if (string.IsNullOrEmpty(configFilePath)) {
+				throw new ArgumentNullException(nameof(configFilePath));
+			}
+
+			// read a JSON object from the config file
+			using (Stream stream = File.OpenRead(configFilePath)) {
+				return JsonSerializer.Deserialize<Dictionary<string, object>>(stream);
+			}
+		}
 
 		public Stream OpenInput() {
 			return File.OpenRead(this.InputFilePath);
@@ -62,6 +88,15 @@ namespace PandocUtil.PandocFilter.Test {
 
 		public void AssertEqual(string actual) {
 			Assert.Equal(GetExpected(), actual);
+		}
+
+		#endregion
+
+
+		#region overrides
+
+		public override string ToString() {
+			return this.Description;
 		}
 
 		#endregion

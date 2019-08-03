@@ -7,7 +7,7 @@ using Utf8Json;
 using PandocUtil.PandocFilter.Filters;
 
 namespace PandocUtil.PandocFilter.Commands {
-	public class ExtensionChangerCommand: Command {
+	public class ExtensionChangerCommand: FilteringCommand {
 		#region data
 
 		protected string FromFilePath { get; set; } = null;
@@ -79,24 +79,17 @@ namespace PandocUtil.PandocFilter.Commands {
 			}
 		}
 
-		protected override void Execute() {
-			ChangingExtensionFilter filter = new ChangingExtensionFilter(this.FromFilePath, this.ToFilePath, false, this.ExtensionMap);
+		protected override void Execute(Stream inputStream, Stream outputStream) {
+			ExtensionChangingFilter filter = new ExtensionChangingFilter(this.FromFilePath, this.ToFilePath, false, this.ExtensionMap);
 
 			// read input AST
-			Dictionary<string, object> ast;
-			using (Stream stream = Console.OpenStandardInput()) {
-				ast = JsonSerializer.Deserialize<Dictionary<string, object>>(stream);
-			}
+			Dictionary<string, object> ast = JsonSerializer.Deserialize<Dictionary<string, object>>(inputStream);
 
 			// modify the AST
 			filter.Modify(ast);
 
 			// write output AST
-			using (Stream stream = Console.OpenStandardOutput()) {
-				JsonSerializer.Serialize(stream, ast);
-			}
-
-			return;
+			JsonSerializer.Serialize(outputStream, ast);
 		}
 
 		protected override int OnExecuted(Exception error) {

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace PandocUtil.PandocFilter {
@@ -22,31 +21,6 @@ namespace PandocUtil.PandocFilter {
 
 
 		#region methods
-
-		public static (bool, T) GetOptionalValue<T>(this IDictionary<string, object> dic, string key) where T : class {
-			// argument checks
-			if (dic == null) {
-				throw new ArgumentNullException(nameof(dic));
-			}
-			if (key == null) {
-				throw new ArgumentNullException(nameof(key));
-			}
-
-			bool exist = false;
-			T value = null;
-			object originalValue = null;
-			if (dic.TryGetValue(key, out originalValue)) {
-				if (originalValue == null) {
-					exist = true;
-				} else {
-					value = originalValue as T;
-					exist = (value != null);
-				}
-			}
-
-			return (exist, value);
-		}
-
 		#endregion
 	}
 }

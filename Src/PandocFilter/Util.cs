@@ -16,6 +16,94 @@ namespace PandocUtil.PandocFilter {
 			}
 		}
 
+		private static bool CheckValue<T>(bool keyExist, object originalValue, out T value) {
+			if (keyExist) {
+				if (originalValue == null) {
+					// the key exists, but its value is null
+					if (typeof(T).IsValueType == false) {
+						value = default(T); // actually it is null
+						return true;
+					}
+				} else if (originalValue is T) {
+					value = (T)originalValue;
+					return true;
+				}
+			}
+
+			value = default(T);
+			return false;
+		}
+
+		public static bool TryGetValue<T>(this IReadOnlyDictionary<string, object> dictionary, string key, out T value) {
+			// argument checks
+			if (dictionary == null) {
+				throw new ArgumentNullException(nameof(dictionary));
+			}
+			if (key == null) {
+				throw new ArgumentNullException(nameof(key));
+			}
+			// key can be empty
+
+			// try to get value
+			object originalValue;
+			return CheckValue<T>(dictionary.TryGetValue(key, out originalValue), originalValue, out value);
+		}
+
+		public static bool TryGetValue<T>(this IDictionary<string, object> dictionary, string key, out T value) {
+			// argument checks
+			if (dictionary == null) {
+				throw new ArgumentNullException(nameof(dictionary));
+			}
+			if (key == null) {
+				throw new ArgumentNullException(nameof(key));
+			}
+			// key can be empty
+
+			// try to get value
+			object originalValue;
+			return CheckValue<T>(dictionary.TryGetValue(key, out originalValue), originalValue, out value);
+		}
+
+		public static (bool, T) GetOptionalValue<T>(this IReadOnlyDictionary<string, object> dictionary, string key) {
+			T value;
+			bool exist = TryGetValue(dictionary, key, out value);
+			return (exist, value);
+		}
+
+		public static (bool, T) GetOptionalValue<T>(this IDictionary<string, object> dictionary, string key) {
+			T value;
+			bool exist = TryGetValue(dictionary, key, out value);
+			return (exist, value);
+		}
+
+		public static T GetOptionalValue<T>(this IReadOnlyDictionary<string, object> dictionary, string key, T defaultValue) {
+			T value;
+			return TryGetValue(dictionary, key, out value) ? value : defaultValue;
+		}
+
+		public static T GetOptionalValue<T>(this IDictionary<string, object> dictionary, string key, T defaultValue) {
+			T value;
+			return TryGetValue(dictionary, key, out value) ? value : defaultValue;
+		}
+
+		public static T GetIndispensableValue<T>(this IReadOnlyDictionary<string, object> dictionary, string key) {
+			T value;
+			if (TryGetValue(dictionary, key, out value)) {
+				return value;
+			} else {
+				throw new KeyNotFoundException($"The indispensable key '{key}' was not present in the dictionary.");
+			}
+		}
+
+		public static T GetIndispensableValue<T>(this IDictionary<string, object> dictionary, string key) {
+			T value;
+			if (TryGetValue(dictionary, key, out value)) {
+				return value;
+			} else {
+				throw new KeyNotFoundException($"The indispensable key '{key}' was not present in the dictionary.");
+			}
+		}
+
 		public static object CloneJsonObject(object src) {
 			// argument checks
 			if (src == null) {
