@@ -6,27 +6,41 @@ namespace PandocUtil.PandocFilter.Filters {
 	public abstract class ConvertingFilter: Filter {
 		#region data
 
-		public readonly Uri InputFileUri;
+		/// <summary>
+		/// The URI of the file which pandoc converts from.
+		/// </summary>
+		/// <remarks>
+		/// Note that this file is not the direct input of this filter.
+		/// The direct input is the AST data converted from the file. 
+		/// </remarks>
+		public readonly Uri FromFileUri;
 
-		public readonly Uri OutputFileUri;
+		/// <summary>
+		/// The URI of the file which pandoc converts to.
+		/// </summary>
+		/// <remarks>
+		/// Note that this file is not the direct output of this filter.
+		/// The direct output is the AST data to be converted to the file. 
+		/// </remarks>
+		public readonly Uri ToFileUri;
 
 		#endregion
 
 
 		#region constructors
 
-		protected ConvertingFilter(string inputFilePath, string outputFilePath): base() {
+		protected ConvertingFilter(string fromFilePath, string toFilePath): base() {
 			// argument checks
-			if (string.IsNullOrEmpty(inputFilePath)) {
-				throw new ArgumentNullException(nameof(inputFilePath));
+			if (string.IsNullOrEmpty(fromFilePath)) {
+				throw new ArgumentNullException(nameof(fromFilePath));
 			}
-			if (string.IsNullOrEmpty(outputFilePath)) {
-				throw new ArgumentNullException(nameof(outputFilePath));
+			if (string.IsNullOrEmpty(toFilePath)) {
+				throw new ArgumentNullException(nameof(toFilePath));
 			}
 
 			// initialize members
-			this.InputFileUri = new Uri(Path.GetFullPath(inputFilePath));
-			this.OutputFileUri = new Uri(Path.GetFullPath(outputFilePath));
+			this.FromFileUri = new Uri(Path.GetFullPath(fromFilePath));
+			this.ToFileUri = new Uri(Path.GetFullPath(toFilePath));
 		}
 
 		#endregion
@@ -35,7 +49,7 @@ namespace PandocUtil.PandocFilter.Filters {
 		#region methods
 
 		public string RebaseRelativeUri(string relativeUriString) {
-			return Util.RebaseRelativeUri(this.InputFileUri, relativeUriString, this.OutputFileUri);
+			return Util.RebaseRelativeUri(this.FromFileUri, relativeUriString, this.ToFileUri);
 		}
 
 		#endregion

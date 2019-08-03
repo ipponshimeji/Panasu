@@ -7,7 +7,7 @@ namespace PandocUtil.PandocFilter.Filters {
 	public class ChangingExtensionFilter: ConvertingFilter {
 		#region data
 
-		public readonly bool RebaseOtherRelativeLink;
+		public readonly bool RebaseOtherRelativeLinks;
 
 		private readonly Dictionary<string, string> extensionMap;
 
@@ -27,16 +27,16 @@ namespace PandocUtil.PandocFilter.Filters {
 
 		#region constructors
 
-		public ChangingExtensionFilter(string inputFilePath, string outputFilePath, bool rebaseOtherRelativeLink, IDictionary<string, string> extensionMap) : base(inputFilePath, outputFilePath) {
+		public ChangingExtensionFilter(string fromFilePath, string toFilePath, bool rebaseOtherRelativeLinks, IDictionary<string, string> extensionMap) : base(fromFilePath, toFilePath) {
 			// argument checks
 			// extensionMap can be null
 
 			// initialize membera
-			this.RebaseOtherRelativeLink = rebaseOtherRelativeLink;
+			this.RebaseOtherRelativeLinks = rebaseOtherRelativeLinks;
 			this.extensionMap = (extensionMap == null) ? new Dictionary<string, string>() : new Dictionary<string, string>(extensionMap);
 		}
 
-		public ChangingExtensionFilter(string inputFilePath, string outputFilePath, bool rebaseOtherRelativeLink, string inputExtension, string outputExtension) : base(inputFilePath, outputFilePath) {
+		public ChangingExtensionFilter(string fromFilePath, string toFilePath, bool rebaseOtherRelativeLinks, string inputExtension, string outputExtension) : base(fromFilePath, toFilePath) {
 			// argument checks
 			if (inputExtension == null) {
 				inputExtension = string.Empty;
@@ -46,7 +46,7 @@ namespace PandocUtil.PandocFilter.Filters {
 			}
 
 			// initialize membera
-			this.RebaseOtherRelativeLink = rebaseOtherRelativeLink;
+			this.RebaseOtherRelativeLinks = rebaseOtherRelativeLinks;
 			this.extensionMap = new Dictionary<string, string>(1);
 			this.extensionMap.Add(inputExtension, outputExtension);
 		}
@@ -119,10 +119,10 @@ namespace PandocUtil.PandocFilter.Filters {
 				}
 			} else {
 				// not a target to change extension
-				if (!this.RebaseOtherRelativeLink) {
+				if (!this.RebaseOtherRelativeLinks) {
 					newTarget = target;
 				} else {
-					Uri newUri = this.OutputFileUri.MakeRelativeUri(new Uri(this.InputFileUri, unescapedPath));
+					Uri newUri = this.ToFileUri.MakeRelativeUri(new Uri(this.FromFileUri, unescapedPath));
 					newTarget = newUri.ToString();
 					if (0 < fragment.Length) {
 						newTarget = string.Concat(newTarget, fragment);

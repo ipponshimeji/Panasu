@@ -40,7 +40,7 @@ param (
     [string]$outputDir = '..\html',
     [string]$outputFormat = 'html',
     [string]$outputExtension = '.html',
-    [string]$filter = '',
+    [string]$filter = './ExtensionChanger -RebaseOtherRelativeLink $inputFilePath $outputFilePath',
     [string[]]$otherOptions = @('--standalone'),
     [Switch]
     [bool]$rebuild = $false
@@ -106,7 +106,7 @@ function Convert([string]$inputFileRelPath) {
             # with the specified filter
             RunOnShell (
                 'pandoc $metadataOption -f $inputFormat -t json $inputFilePath | ' `
-                + $filter `
+                + (Invoke-Expression $filter) `
                 + ' | pandoc -f json -t $outputFormat -o $outputFilePath'
             )
         }

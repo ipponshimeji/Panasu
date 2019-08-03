@@ -10,13 +10,13 @@ namespace PandocUtil.PandocFilter.Commands {
 	public class ExtensionChangerCommand: Command {
 		#region data
 
-		protected string InputFilePath { get; set; } = null;
+		protected string FromFilePath { get; set; } = null;
 
-		protected string OutputFilePath { get; set; } = null;
+		protected string ToFilePath { get; set; } = null;
 
 		protected readonly Dictionary<string, string> ExtensionMap = new Dictionary<string, string>();
 
-		protected bool RebaseOtherRelativeLink { get; private set; } = false;
+		protected bool RebaseOtherRelativeLinks { get; private set; } = false;
 
 		#endregion
 
@@ -37,10 +37,10 @@ namespace PandocUtil.PandocFilter.Commands {
 
 			switch (arg.Index) {
 				case 0:
-					this.InputFilePath = arg.Value;
+					this.FromFilePath = arg.Value;
 					break;
 				case 1:
-					this.OutputFilePath = arg.Value;
+					this.ToFilePath = arg.Value;
 					break;
 			}
 		}
@@ -64,23 +64,23 @@ namespace PandocUtil.PandocFilter.Commands {
 
 				(string from, string to) = SplitExtensions(arg.Value);
 				this.ExtensionMap.Add(from, to);
-			} else if (AreSameOptionNames(name, "RebaseOtherRelativeLink")) {
-				this.RebaseOtherRelativeLink = true;
+			} else if (AreSameOptionNames(name, "RebaseOtherRelativeLinks")) {
+				this.RebaseOtherRelativeLinks = true;
 			}
 		}
 
 		protected override void OnExecuting() {
 			// state checks
-			if (string.IsNullOrEmpty(this.InputFilePath)) {
+			if (string.IsNullOrEmpty(this.FromFilePath)) {
 				throw new InvalidOperationException("The indispensable argument 'InputFilePath' is missing.");
 			}
-			if (string.IsNullOrEmpty(this.OutputFilePath)) {
+			if (string.IsNullOrEmpty(this.ToFilePath)) {
 				throw new InvalidOperationException("The indispensable argument 'OutputFilePath' is missing.");
 			}
 		}
 
 		protected override void Execute() {
-			ChangingExtensionFilter filter = new ChangingExtensionFilter(this.InputFilePath, this.OutputFilePath, false, this.ExtensionMap);
+			ChangingExtensionFilter filter = new ChangingExtensionFilter(this.FromFilePath, this.ToFilePath, false, this.ExtensionMap);
 
 			// read input AST
 			Dictionary<string, object> ast;

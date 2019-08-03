@@ -13,19 +13,19 @@ namespace PandocUtil.PandocFilter.Commands.Test {
 
 			public new string InputFilePath {
 				get {
-					return base.InputFilePath;
+					return base.FromFilePath;
 				}
 			}
 
 			public new string OutputFilePath {
 				get {
-					return base.OutputFilePath;
+					return base.ToFilePath;
 				}
 			}
 
 			public new bool RebaseOtherRelativeLink {
 				get {
-					return base.RebaseOtherRelativeLink;
+					return base.RebaseOtherRelativeLinks;
 				}
 			}
 

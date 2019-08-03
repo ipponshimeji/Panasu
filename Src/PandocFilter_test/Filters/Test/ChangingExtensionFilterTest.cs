@@ -10,57 +10,26 @@ using PandocUtil.PandocFilter.Test;
 
 namespace PandocUtil.PandocFilter.Filters.Test {
 	public class ChangingExtensionFilterTest {
-		#region properties
+		#region constants
 
-		public static string ResourceDirPath {
-			get {
-				return Path.Combine(TestUtil.ResourceDirPath, "ChangingExtensionFilterTest");
-			}
-		}
+		public const string FilteringSampleGroup = "ChangingExtension";
 
-		#endregion
-
-
-		#region utilities
 		#endregion
 
 
 		#region test classes
 
 		public class Filtering {
-			#region properties
-
-			public static string ResourceDirPath {
-				get {
-					return Path.Combine(TestUtil.ResourceDirPath, "ChangingExtensionFilterTest/Filtering");
-				}
-			}
-
-			#endregion
-
-
 			#region utilities
 
-			public static (string inputFilePath, string answerFilePath) GetSampleFilePaths(string sampleFileName) {
-				// argument checks
-				Debug.Assert(!string.IsNullOrEmpty(sampleFileName));
-
-				string resourceDirPath = ResourceDirPath;
-				return (
-					Path.Combine(resourceDirPath, $"Inputs/{sampleFileName}"),
-					Path.Combine(resourceDirPath, $"Answers/{sampleFileName}")
-				);
-			}
-
-			public static void TestFiltering(ChangingExtensionFilter target, string sampleFileName, bool generate) {
+			public static void TestFiltering(ChangingExtensionFilter target, FilteringSample sample) {
 				// argument checks
 				Debug.Assert(target != null);
-				Debug.Assert(!string.IsNullOrEmpty(sampleFileName));
 
-				(string inputFilePath, string answerFilePath) = GetSampleFilePaths(sampleFileName);
-				FilterTestUtil.TestFiltering(target, inputFilePath, answerFilePath, generate);
+				// test each pattern
+				TestUtil.TestFiltering(target, false, false, sample);	// modify, single-thread
+				TestUtil.TestFiltering(target, false, true, sample);	// modify, concurrent
 			}
-
 
 			#endregion
 
@@ -70,15 +39,16 @@ namespace PandocUtil.PandocFilter.Filters.Test {
 			[Fact]
 			public void Simple() {
 				// Arrange
-				string sampleFileName = "simple.json";
+				string sampleName = "simple";
+				FilteringSample sample = FilteringSample.GetSample(FilteringSampleGroup, sampleName);
 				string inputExtension = ".md";
 				string outputExtension = ".html";
-				(string inputFilePath, string outputFilePath) = FilterTestUtil.GetDummyInputOutputFilePaths(inputExtension, outputExtension, sampleFileName);
-				bool rebaseOtherRelativeLink = false;
-				ChangingExtensionFilter target = new ChangingExtensionFilter(inputFilePath, outputFilePath, rebaseOtherRelativeLink, inputExtension, outputExtension);
+				(string fromFilePath, string toFilePath) = FilterTestUtil.GetDummyInputOutputFilePaths(inputExtension, outputExtension, sampleName);
+				bool rebaseOtherRelativeLinks = false;
+				ChangingExtensionFilter target = new ChangingExtensionFilter(fromFilePath, toFilePath, rebaseOtherRelativeLinks, inputExtension, outputExtension);
 
 				// Act and Assert
-				TestFiltering(target, sampleFileName, false);
+				TestFiltering(target, sample);
 			}
 
 			#endregion
