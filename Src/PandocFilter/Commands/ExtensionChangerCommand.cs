@@ -77,6 +77,11 @@ namespace PandocUtil.PandocFilter.Commands {
 			if (string.IsNullOrEmpty(this.ToFilePath)) {
 				throw new InvalidOperationException("The indispensable argument 'OutputFilePath' is missing.");
 			}
+
+			string fromExtension = Path.GetExtension(this.FromFilePath);
+			if (!this.ExtensionMap.ContainsKey(fromExtension)) {
+				this.ExtensionMap.Add(fromExtension, Path.GetExtension(this.ToFilePath));
+			}
 		}
 
 		protected override void Execute(Stream inputStream, Stream outputStream) {
