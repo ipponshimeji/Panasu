@@ -1,79 +1,67 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Collections;
 
 namespace PandocUtil.PandocFilter.Filters {
 	public class Filter {
 		#region types
 
-		protected class Context {
-			#region constants
-
-			public const int UndefinedIndex = -1;
-
-			#endregion
-
-
+		protected class Context<ActualContext>: WorkingTreeNode<ActualContext> where ActualContext: WorkingTreeNodeBase {
 			#region data
 
-			private static object classLocker = new object();
+			private object value = null;
 
-			private static Context instanceCacheChainTop = null;
+			private Dictionary<string, object> objValue = null;
 
-
-			private ReaderWriterLockSlim contextLock;
-
-			public Context Root { get; private set; }
-
-			public Context Parent { get; private set; }
-
-			public string Name { get; private set; }
-
-			public int Index { get; private set; }
-
-			public object Value { get; private set; }
-
-			public IDictionary<string, object> data;
+			private List<object> arrayValue = null;
 
 			#endregion
 
 
 			#region properties
 
-			public bool Concurrent {
+			public object Value {
 				get {
-					return this.contextLock != null;
+					return this.value;
+				}
+				protected set {
+					SetValueTUS(value);
 				}
 			}
 
-			public IDictionary<string, object> Data {
+			protected Dictionary<string, object> ObjectValue {
 				get {
-					IDictionary<string, object> value = this.data;
+					Dictionary<string, object> value = this.objValue;
 					if (value == null) {
-						RunInWriteLock(() => {
-							value = this.data;  // may be set while we got lock
-							if (value == null) {
-								value = new Dictionary<string, object>();
-								this.data = value;
-							}
-						});
+						throw new InvalidOperationException("The value is not a JSON object.");
 					}
 					return value;
 				}
 			}
 
-			public bool IsParentObject {
+			protected List<object> ArrayValue {
 				get {
-					return this.Name != null;
+					List<object> value = this.arrayValue;
+					if (value == null) {
+						throw new InvalidOperationException("The value is not a JSON array.");
+					}
+					return value;
 				}
 			}
 
-			public bool IsParentArray {
+			public bool IsObject {
 				get {
-					return this.Index != UndefinedIndex;
+					return this.objValue != null;
+				}
+			}
+
+			public bool IsArray {
+				get {
+					return this.arrayValue != null;
 				}
 			}
 
@@ -82,114 +70,495 @@ namespace PandocUtil.PandocFilter.Filters {
 
 			#region creation and destruction
 
-			private Context() {
-				// initialize members
-				this.contextLock = null;
-				this.Root = null;
-				this.Parent = null;
-				this.Name = null;
-				this.Index = UndefinedIndex;
-				this.Value = null;
-				this.data = null;
-			}
-
-			private void Clear() {
-				// clear members
-				Util.ClearDisposable(ref this.contextLock);
-				this.Root = null;
-				this.Parent = null;
-				this.Name = null;
-				this.Index = UndefinedIndex;
-				this.Value = null;
-				if (this.data != null) {
-					this.data.Clear();
-				}
+			protected Context() {
 			}
 
 
-			private static Context CreateContext() {
-				Context instance;
-
-				// try to get an instance from the cache
-				lock (classLocker) {
-					instance = instanceCacheChainTop;
-					if (instance != null) {
-						instanceCacheChainTop = instance.Parent;
-						instance.Parent = null;
-					}
-				}
-				
-				// create an instance if cache is empty
-				if (instance == null) {
-					instance = new Context();
-				}
-
-				return instance;
-			}
-
-			private static Context CreateContext(bool concurrent, object value) {
+			protected void Initialize(object value) {
 				// argument checks
 				// value can be null
 
-				// create and setup an instance
-				Context instance = CreateContext();
-				Debug.Assert(instance.contextLock == null);
-				Debug.Assert(instance.Root == null);
-				Debug.Assert(instance.Parent == null);
-				Debug.Assert(instance.Name == null);
-				Debug.Assert(instance.Index == UndefinedIndex);
-				instance.Value = value;
-				Debug.Assert(instance.data == null || instance.data.Count == 0);
+				// initialize this instance
+				base.Initialize();
+				SetValueTUS(value);
+			}
 
-				if (concurrent) {
-					instance.contextLock = new ReaderWriterLockSlim();
+			protected new void Initialize(ActualContext parent) {
+				// argument checks
+				if (parent == null) {
+					throw new ArgumentOutOfRangeException(nameof(parent));
+				}
+
+				// initialize this instance
+				base.Initialize(parent);
+				SetValueTUS(null);
+			}
+
+			protected void Initialize(ActualContext parent, string name, object value) {
+				// argument checks
+				if (parent == null) {
+					throw new ArgumentOutOfRangeException(nameof(parent));
+				}
+				if (name == null) {
+					throw new ArgumentOutOfRangeException(nameof(name));
+				}
+				// value can be null
+
+				// initialize this instance
+				base.Initialize(parent, name);
+				SetValueTUS(value);
+			}
+
+			protected void Initialize(ActualContext parent, int index, object value) {
+				// argument checks
+				if (parent == null) {
+					throw new ArgumentOutOfRangeException(nameof(parent));
+				}
+				if (index < 0) {
+					throw new ArgumentOutOfRangeException(nameof(index));
+				}
+				// value can be null
+
+				// initialize this instance
+				base.Initialize(parent, index);
+				SetValueTUS(value);
+			}
+
+			protected new void Clear() {
+				// clear this instance
+				SetValueTUS(null);
+				base.Clear();
+			}
+
+			// thread-unsafe
+			private void SetValueTUS(object value) {
+				this.value = value;
+				switch (value) {
+					case Dictionary<string, object> obj:
+						// value is an object
+						this.objValue = obj;
+						this.arrayValue = null;
+						break;
+					case List<object> array:
+						// value is an array
+						this.objValue = null;
+						this.arrayValue = array;
+						break;
+					default:
+						this.objValue = null;
+						this.arrayValue = null;
+						break;
+				}
+			}
+
+			#endregion
+		}
+
+		protected class ModifyingContext: Context<ModifyingContext> {
+			#region types
+
+			public class ArrayEditor: IEnumerable<object> {
+				#region data
+
+				private static readonly object Removed = new object();
+
+
+				private LinkedList<object> precedentSlot = null;
+
+				private readonly object[] array = null;
+
+				#endregion
+
+
+				#region properties
+
+				public LinkedList<object> this[int index] {
+					get {
+						// argument checks
+						if (index < -1 || this.array.Length <= index) {
+							throw new ArgumentOutOfRangeException(nameof(index));
+						}
+
+						return (index == -1) ? this.precedentSlot : GetExtendedSlot(index);
+					}
+				}
+
+				#endregion
+
+
+				#region constructors
+
+				public ArrayEditor(IReadOnlyList<object> original) {
+					// argument checks
+					if (original == null) {
+						throw new ArgumentNullException(nameof(original));
+					}
+
+					// initialize members
+					this.array = original.ToArray();
+				}
+
+				#endregion
+
+
+				#region IEnumerator
+
+				IEnumerator IEnumerable.GetEnumerator() {
+					return GetEnumerator();
+				}
+
+				#endregion
+
+
+				#region IEnumerator<object>
+
+				public IEnumerator<object> GetEnumerator() {
+					// precedent slot
+					if (this.precedentSlot != null) {
+						foreach (object item in this.precedentSlot) {
+							yield return item;
+						}
+					}
+
+					// slots in the array
+					foreach (object slot in array) {
+						switch (slot) {
+							case LinkedList<object> extendedSlot:
+								// the slot is extended
+								foreach (object item in extendedSlot) {
+									if (item != Removed) {
+										yield return item;
+									}
+								}
+								break;
+							default:
+								// the slot is not extended
+								if (slot != Removed) {
+									yield return slot;
+								}
+								break;
+						}
+					}
+				}
+
+				#endregion
+
+
+				#region methods
+
+				public IList<object> ToList() {
+					return new List<object>(this);
+				}
+
+				public object Get(int index) {
+					// argument checks
+					if (index < 0 || this.array.Length <= index) {
+						throw new ArgumentOutOfRangeException(nameof(index));
+					}
+
+					// replace the value of the slot
+					object value = this.array[index];
+					switch (value) {
+						case LinkedList<object> extendedSlot:
+							// this slot has been extended
+							return extendedSlot.First.Value;
+						default:
+							return value;
+					}
+				}
+
+				public void Set(int index, object value) {
+					// argument checks
+					if (index < 0 || this.array.Length <= index) {
+						throw new ArgumentOutOfRangeException(nameof(index));
+					}
+
+					// replace the value of the slot
+					switch (this.array[index]) {
+						case LinkedList<object> extendedSlot:
+							// this slot has been extended
+							extendedSlot.First.Value = value;
+							break;
+						default:
+							// this slot is not extended yet
+							this.array[index] = value;
+							break;
+					}
+				}
+
+				public void Remove(int index) {
+					// mark as Removed
+					Set(index, Removed);
+				}
+
+				public void InsertBefore(int index, object value) {
+					// argument checks
+					if (index < 0 || this.array.Length <= index) {
+						throw new ArgumentOutOfRangeException(nameof(index));
+					}
+
+					// extend the slot for the previous index
+					LinkedList<object> extendedSlot = GetExtendedSlot(index - 1);
+					// append the object into the extended slot
+					extendedSlot.AddLast(value);
+				}
+
+				public void InsertAfter(int index, object value) {
+					// argument checks
+					if (index < 0 || this.array.Length <= index) {
+						throw new ArgumentOutOfRangeException(nameof(index));
+					}
+
+					// extend the slot for the index
+					LinkedList<object> extendedRoom = GetExtendedSlot(index);
+					// insert the object into the extended slot
+					extendedRoom.AddAfter(extendedRoom.First, value);
+				}
+
+				private LinkedList<object> GetExtendedSlot(int index) {
+					// argument checks
+					Debug.Assert(-1 <= index && index < this.array.Length);
+
+					LinkedList<object> extendedSlot;
+					if (index == -1) {
+						// precedence of the array
+						extendedSlot = this.precedentSlot;
+					} else {
+						// inside the array
+						object value = this.array[index];
+						extendedSlot = value as LinkedList<object>;
+						if (extendedSlot == null) {
+							// this slot is not extended yet
+							// extend the slot
+							extendedSlot = new LinkedList<object>();
+							extendedSlot.AddFirst(value);
+							this.array[index] = extendedSlot;
+						}
+					}
+
+					return extendedSlot;
+				}
+
+				#endregion
+			}
+
+			#endregion
+
+
+			#region data
+
+			private static object classLocker = new object();
+
+			private static Stack<ModifyingContext> instanceCache = new Stack<ModifyingContext>();
+
+
+			private RWLock contextLock = null;
+
+			private readonly NodeAnnotation annotation = new NodeAnnotation();
+
+			public ModifyingContext Root { get; private set; } = null;
+
+			public ModifyingContext Metadata { get; private set; } = null;
+
+			public ArrayEditor arrayEditor = null;
+
+			#endregion
+
+
+			#region properties
+
+			public new IDictionary<string, object> ObjectValue {
+				get {
+					return base.ObjectValue;
+				}
+			}
+
+			// This property returns a read only interface to the array.
+			// To get an editable interface to the array,
+			// reference the ArrayEditor.
+			public new IReadOnlyList<object> ArrayValue {
+				get {
+					return base.ArrayValue;
+				}
+			}
+
+			public RWLock Lock {
+				get {
+					return this.contextLock;
+				}
+			}
+
+			public bool Concurrent {
+				get {
+					return !this.contextLock.IsDummy;
+				}
+			}
+
+			public Annotation Annotation {
+				get {
+					return this.annotation;
+				}
+			}
+
+			public IDictionary<string, object> AST {
+				get {
+					return this.Root.ObjectValue;
+				}
+			}
+
+			public IDictionary<string, object> Meta {
+				get {
+					IDictionary<string, object> ast = this.AST;
+					IDictionary<string, object> value;
+					if (ast == null || ast.TryGetValue(Schema.Names.Meta, out value) == false) {
+						value = null;
+					}
+
+					return value;
+				}
+			}
+
+			#endregion
+
+
+			#region creation and destruction
+
+			private ModifyingContext(): base() {
+			}
+
+
+			private void InitializeThisClassLevel(bool concurrent, ModifyingContext root) {
+				// argument checks
+				Debug.Assert(root != null);
+
+				// state checks
+				Debug.Assert(this.contextLock == null);
+
+				// initialize this class level
+				this.contextLock = concurrent ? new RWLock() : RWLock.Dummy;
+				this.annotation.Initialize(this.contextLock);
+				this.Root = root;
+				Debug.Assert(this.arrayEditor == null);
+			}
+
+			private void InitializeThisClassLevel(ModifyingContext parent) {
+				// argument checks
+				Debug.Assert(parent != null);
+
+				InitializeThisClassLevel(parent.Concurrent, parent.Root);
+			}
+
+			private void Initialize(bool concurrent, Dictionary<string, object> ast) {
+				// argument checks
+				if (ast == null) {
+					throw new ArgumentNullException(nameof(ast));
+				}
+
+				// initialize this instance
+				base.Initialize(ast);
+				InitializeThisClassLevel(concurrent, this);
+			}
+
+			private new void Initialize(ModifyingContext parent) {
+				// argument checks
+				if (parent == null) {
+					throw new ArgumentNullException(nameof(parent));
+				}
+				// value can be null
+
+				// initialize this instance
+				base.Initialize(parent);
+				InitializeThisClassLevel(parent);
+			}
+
+			private new void Initialize(ModifyingContext parent, string name, object value) {
+				// argument checks
+				if (name == null) {
+					throw new ArgumentNullException(nameof(name));
+				}
+				// value can be null
+
+				// initialize this instance
+				base.Initialize(parent, name, value);
+				InitializeThisClassLevel(parent);
+			}
+
+			private new void Initialize(ModifyingContext parent, int index, object value) {
+				// argument checks
+				if (index < 0) {
+					throw new ArgumentOutOfRangeException(nameof(index));
+				}
+				// value can be null
+
+				// initialize this instance
+				base.Initialize(parent, index, value);
+				InitializeThisClassLevel(parent);
+			}
+
+			private new void Clear() {
+				// clear members
+				this.arrayEditor = null;
+				this.Metadata = null;
+				this.Root = null;
+				this.annotation.Clear();
+				Util.ClearDisposable(ref this.contextLock);
+				base.Clear();
+			}
+
+
+			private static ModifyingContext CreateContext() {
+				ModifyingContext instance;
+
+				// try to get an instance from the cache
+				lock (classLocker) {
+					instanceCache.TryPop(out instance);
+				}
+
+				// create an instance if cache is empty
+				if (instance == null) {
+					instance = new ModifyingContext();
 				}
 
 				return instance;
 			}
 
-			private static Context CreateContext(bool concurrent, IDictionary<string, object> ast) {
-				// argument checks
-				Debug.Assert(ast != null);
-
+			private static ModifyingContext CreateContext(bool concurrent, Dictionary<string, object> ast) {
 				// create and setup an instance
-				Context instance = CreateContext(concurrent, (object)ast);
-				instance.Root = instance;
+				ModifyingContext instance = CreateContext();
+				instance.Initialize(concurrent, ast);
 				return instance;
 			}
 
-			private Context CreateChildContext(object childValue) {
+			private ModifyingContext CreateChildContext() {
 				// create and setup a child context
-				Context childContext = CreateContext(this.Concurrent, childValue);
-				childContext.Root = this.Root;
-				childContext.Parent = this;
+				ModifyingContext childContext = CreateContext();
+				childContext.Initialize(this);
 				return childContext;
 			}
 
-			private Context CreateChildContext(string childName, object childValue) {
-				// argument checks
-				Debug.Assert(childName != null);
-
+			private ModifyingContext CreateChildContext(string childName, object childValue) {
 				// create and setup a child context
-				Context childContext = CreateChildContext(childValue);
-				childContext.Name = childName;
+				ModifyingContext childContext = CreateContext();
+				childContext.Initialize(this, childName, childValue);
 				return childContext;
 			}
 
-			private Context CreateChildContext(int childIndex, object childValue) {
-				// argument checks
-				Debug.Assert(0 <= childIndex);
-
+			private ModifyingContext CreateChildContext(int childIndex, object childValue) {
 				// create and setup a child context
-				Context childContext = CreateChildContext(childValue);
-				childContext.Index = childIndex;
+				ModifyingContext childContext = CreateContext();
+				childContext.Initialize(this, childIndex, childValue);
 				return childContext;
 			}
 
-			private static void ReleaseContext(Context instance) {
+			private static void ReleaseContext(ModifyingContext instance) {
 				// argument checks
 				if (instance == null) {
 					return;
+				}
+
+				// if array is edited, replace the array value
+				if (instance.arrayEditor != null) {
+					instance.ReplaceValue(instance.arrayEditor.ToList());
 				}
 
 				// clear the instance
@@ -197,8 +566,7 @@ namespace PandocUtil.PandocFilter.Filters {
 
 				// cache the instance
 				lock (classLocker) {
-					instance.Parent = instanceCacheChainTop;
-					instanceCacheChainTop = instance;
+					instanceCache.Push(instance);
 				}
 
 				return;
@@ -207,9 +575,9 @@ namespace PandocUtil.PandocFilter.Filters {
 			#endregion
 
 
-			#region methods
+			#region methods - context operations
 
-			public static void RunInContext(bool concurrent, IDictionary<string, object> ast, Action<Context> action) {
+			public static void RunInContext(bool concurrent, Dictionary<string, object> ast, Action<ModifyingContext> action) {
 				// argument checks
 				if (ast == null) {
 					throw new ArgumentNullException(nameof(ast));
@@ -219,7 +587,7 @@ namespace PandocUtil.PandocFilter.Filters {
 				}
 
 				// run the action in the context
-				Context context = CreateContext(concurrent, ast);
+				ModifyingContext context = CreateContext(concurrent, ast);
 				try {
 					action(context);
 				} finally {
@@ -227,7 +595,7 @@ namespace PandocUtil.PandocFilter.Filters {
 				}
 			}
 
-			public void RunInChildContext(string childName, object childValue, Action<Context> action) {
+			public void RunInChildContext(string childName, object childValue, Action<ModifyingContext> action) {
 				// argument checks
 				if (childName == null) {
 					throw new ArgumentNullException(nameof(childName));
@@ -238,7 +606,7 @@ namespace PandocUtil.PandocFilter.Filters {
 				}
 
 				// run the action in the context
-				Context childContext = CreateChildContext(childName, childValue);
+				ModifyingContext childContext = CreateChildContext(childName, childValue);
 				try {
 					action(childContext);
 				} finally {
@@ -246,7 +614,7 @@ namespace PandocUtil.PandocFilter.Filters {
 				}
 			}
 
-			public void RunInChildContext(int childIndex, object childValue, Action<Context> action) {
+			public void RunInChildContext(int childIndex, object childValue, Action<ModifyingContext> action) {
 				// argument checks
 				if (childIndex < 0) {
 					throw new ArgumentOutOfRangeException(nameof(childIndex));
@@ -257,7 +625,7 @@ namespace PandocUtil.PandocFilter.Filters {
 				}
 
 				// run the action in the context
-				Context childContext = CreateChildContext(childIndex, childValue);
+				ModifyingContext childContext = CreateChildContext(childIndex, childValue);
 				try {
 					action(childContext);
 				} finally {
@@ -265,20 +633,20 @@ namespace PandocUtil.PandocFilter.Filters {
 				}
 			}
 
-			public void RunInEachChildContext(IList<object> array, Action<Context> action) {
+			public void RunInEachChildContext(IReadOnlyList<object> array, Action<ModifyingContext> action) {
 				// argument checks
+				if (array == null) {
+					return;
+				}
 				if (this.Concurrent) {
-					throw new NotSupportedException("This method is optimized version only for single thread mode.");
+					throw new NotSupportedException("This method is an optimized version only for single thread mode.");
 				}
 				if (action == null) {
 					throw new ArgumentNullException(nameof(action));
 				}
-				if (array == null) {
-					return;
-				}
 
 				// run the action in the context
-				Context context = CreateChildContext(null);
+				ModifyingContext context = CreateChildContext();
 				try {
 					for (int i = 0; i < array.Count; ++i) {
 						context.Index = i;
@@ -290,48 +658,199 @@ namespace PandocUtil.PandocFilter.Filters {
 				}
 			}
 
-			public T RunInReadLock<T>(Func<T> func) {
-				// argument checks
-				if (func == null) {
-					throw new ArgumentNullException(nameof(func));
+			#endregion
+
+
+			#region methods - modifying
+
+			public ArrayEditor GetArrayEditor() {
+				ArrayEditor value = this.arrayEditor;
+				if (value == null) {
+					value = this.Lock.RunInWriteLock(GetArrayEditorTUS);
 				}
 
-				// run the func inside the read lock
-				ReaderWriterLockSlim contextLock = this.contextLock;
-				if (contextLock == null) {
-					// running in single thread mode
-					return func();
+				return value;
+			}
+
+			// Note this method is not thread safe.
+			private ArrayEditor GetArrayEditorTUS() {
+				ArrayEditor value = this.arrayEditor;
+				if (value == null) {
+					value = new ArrayEditor(this.ArrayValue);
+					this.arrayEditor = value;
+				}
+
+				return value;
+			}
+
+			private void ReplaceChild(string name, object value) {
+				// argument checks
+				Debug.Assert(name != null);
+				// name can be empty
+				// value can be null;
+
+				// state checks
+				Debug.Assert(this.IsObject);
+
+				// replace the value of the child
+				this.Lock.RunInWriteLock(() => {
+					this.ObjectValue[name] = value;
+				});
+			}
+
+			private void ReplaceChild(int index, object value) {
+				// argument checks
+				Debug.Assert(0 <= index);
+				// value can be null;
+
+				// state checks
+				Debug.Assert(this.IsArray);
+
+				// replace the value of the child
+				this.Lock.RunInWriteLock(() => {
+					ArrayEditor arrayEditor = GetArrayEditorTUS();
+					arrayEditor.Set(index, value);
+				});
+			}
+
+			private void RemoveChild(string name) {
+				// argument checks
+				Debug.Assert(name != null);
+				// name can be empty
+
+				// state checks
+				Debug.Assert(this.IsObject);
+
+				// remove the child
+				this.Lock.RunInWriteLock(() => {
+					this.ObjectValue.Remove(name);
+				});
+			}
+
+			private void RemoveChild(int index) {
+				// argument checks
+				Debug.Assert(0 <= index);
+
+				// state checks
+				Debug.Assert(this.IsArray);
+
+				// remove the child
+				this.Lock.RunInWriteLock(() => {
+					ArrayEditor arrayEditor = GetArrayEditorTUS();
+					arrayEditor.Remove(index);
+				});
+			}
+
+			private void AddChild(string name, object value) {
+				// argument checks
+				Debug.Assert(name != null);
+				// name can be empty
+				// value can be null;
+
+				// state checks
+				Debug.Assert(this.IsObject);
+
+				// add the child
+				this.Lock.RunInWriteLock(() => {
+					this.ObjectValue[name] = value;
+				});
+			}
+
+			private void InsertChildBefore(int index, object value) {
+				// argument checks
+				Debug.Assert(0 <= index);
+				// value can be null;
+
+				// state checks
+				Debug.Assert(this.IsArray);
+
+				// insert the value before the child
+				this.Lock.RunInWriteLock(() => {
+					ArrayEditor arrayEditor = GetArrayEditorTUS();
+					arrayEditor.InsertBefore(index, value);
+				});
+			}
+
+			private void InsertChildAfter(int index, object value) {
+				// argument checks
+				Debug.Assert(0 <= index);
+				// value can be null;
+
+				// state checks
+				Debug.Assert(this.IsArray);
+
+				// insert the value after the value
+				this.Lock.RunInWriteLock(() => {
+					ArrayEditor arrayEditor = GetArrayEditorTUS();
+					arrayEditor.InsertAfter(index, value);
+				});
+			}
+
+
+			public void ReplaceValue(object value) {
+				ModifyingContext parent = this.Parent;
+				if (this.IsParentObject) {
+					Debug.Assert(parent != null);
+					parent.ReplaceChild(this.Name, value);
+				} else if (this.IsParentArray) {
+					Debug.Assert(parent != null);
+					parent.ReplaceChild(this.Index, value);
 				} else {
-					// running in concurrent mode
-					contextLock.EnterReadLock();
-					try {
-						return func();
-					} finally {
-						contextLock.ExitReadLock();
-					}
+					throw new InvalidOperationException("The value is not contained by a JSON object or an array.");
 				}
 			}
 
-			public void RunInWriteLock(Action action) {
+			public void RemoveValue() {
+				ModifyingContext parent = this.Parent;
+				if (this.IsParentObject) {
+					Debug.Assert(parent != null);
+					parent.RemoveChild(this.Name);
+				} else if (this.IsParentArray) {
+					Debug.Assert(parent != null);
+					parent.RemoveChild(this.Index);
+				} else {
+					throw new InvalidOperationException("The value is not contained by a JSON object or an array.");
+				}
+			}
+
+			public void AddSibling(string name, object value) {
 				// argument checks
-				if (action == null) {
-					throw new ArgumentNullException(nameof(action));
+				if (name == null) {
+					throw new ArgumentNullException(nameof(name));
+				}
+				// name can be empty
+				// value can be null
+
+				// state checks
+				if (this.IsParentObject == false) {
+					throw new InvalidOperationException("The value of the parent must be a JSON object.");
 				}
 
-				// run the func inside the write lock
-				ReaderWriterLockSlim contextLock = this.contextLock;
-				if (contextLock == null) {
-					// running in single thread mode
-					action();
-				} else {
-					// running in concurrent mode
-					contextLock.EnterWriteLock();
-					try {
-						action();
-					} finally {
-						contextLock.ExitWriteLock();
-					}
+				this.Parent.AddChild(name, value);
+			}
+
+			public void InsertSiblingBefore(object value) {
+				// argument checks
+				// value can be null
+
+				// state checks
+				if (this.IsParentArray == false) {
+					throw new InvalidOperationException("The parent must be an array.");
 				}
+
+				this.Parent.InsertChildBefore(this.Index, value);
+			}
+
+			public void InsertSiblingAfter(object value) {
+				// argument checks
+				// value can be null
+
+				// state checks
+				if (this.IsParentArray == false) {
+					throw new InvalidOperationException("The value of the parent must be an array.");
+				}
+
+				this.Parent.InsertChildAfter(this.Index, value);
 			}
 
 			#endregion
@@ -350,14 +869,14 @@ namespace PandocUtil.PandocFilter.Filters {
 
 		#region methods
 
-		public void Modify(IDictionary<string, object> ast, bool concurrent = true) {
+		public void Modify(Dictionary<string, object> ast, bool concurrent = true) {
 			// argument checks
 			if (ast == null) {
 				throw new ArgumentNullException(nameof(ast));
 			}
 
 			// single thread mode
-			Context.RunInContext(concurrent, ast, (rootContext) => {
+			ModifyingContext.RunInContext(concurrent, ast, (rootContext) => {
 				foreach (KeyValuePair<string, object> item in ast) {
 					switch (item.Key) {
 						case Schema.Names.Blocks:
@@ -384,39 +903,32 @@ namespace PandocUtil.PandocFilter.Filters {
 
 		#region overridables - modify
 
-		protected virtual void ModifyValue(Context context) {
+		protected virtual void ModifyValue(ModifyingContext context) {
 			// argument checks
 			if (context == null) {
 				throw new ArgumentNullException(nameof(context));
 			}
 
 			// modify depending on type of the value
-			switch (context.Value) {
-				// Check IDictionary<string, object> prior to IList<object> to detect object,
-				// because IDictionary<string, object> implements IList<object>.
-				case IDictionary<string, object> obj:
-					// value is an object
-					ModifyObject(context, obj);
-					break;
-				case IList<object> array:
-					// value is an array
-					ModifyArray(context, array);
-					break;
+			if (context.IsObject) {
+				// value is an object
+				ModifyObject(context);
+			} else if (context.IsArray) {
+				ModifyArray(context);
 			}
 
 			return;
 		}
 
-		protected virtual void ModifyArray(Context context, IList<object> array) {
+		protected virtual void ModifyArray(ModifyingContext context) {
 			// argument checks
 			if (context == null) {
 				throw new ArgumentNullException(nameof(context));
 			}
-			if (array == null) {
-				throw new ArgumentNullException(nameof(array));
-			}
+			Debug.Assert(context.IsArray);
 
 			// modify each element
+			IReadOnlyList<object> array = context.ArrayValue;
 			if (context.Concurrent) {
 				Parallel.For(0, array.Count, (i) => {
 					context.RunInChildContext(i, array[i], ModifyValue);
@@ -426,32 +938,28 @@ namespace PandocUtil.PandocFilter.Filters {
 			}
 		}
 
-		protected virtual void ModifyObject(Context context, IDictionary<string, object> obj) {
+		protected virtual void ModifyObject(ModifyingContext context) {
 			// argument checks
 			if (context == null) {
 				throw new ArgumentNullException(nameof(context));
 			}
-			if (obj == null) {
-				throw new ArgumentNullException(nameof(obj));
-			}
+			Debug.Assert(context.IsObject);
 
 			// modify only elements, by default
+			IDictionary<string, object> obj = context.ObjectValue;
 			(bool _, string type) = obj.GetOptionalValue<string>(Schema.Names.T);
 			(bool _, object content) = obj.GetOptionalValue<object>(Schema.Names.C);
 			if (!string.IsNullOrEmpty(type)) {
 				// value is an element
 				// Note that content may be null.
-				ModifyElement(context, obj, type, content);
+				ModifyElement(context, type, content);
 			}
 		}
 
-		protected virtual void ModifyElement(Context context, IDictionary<string, object> element, string type, object contents) {
+		protected virtual void ModifyElement(ModifyingContext context, string type, object contents) {
 			// argument checks
 			if (context == null) {
 				throw new ArgumentNullException(nameof(context));
-			}
-			if (element == null) {
-				throw new ArgumentNullException(nameof(element));
 			}
 			if (string.IsNullOrEmpty(type)) {
 				throw new ArgumentNullException(nameof(type));

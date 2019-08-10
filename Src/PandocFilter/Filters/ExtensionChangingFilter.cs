@@ -56,9 +56,9 @@ namespace PandocUtil.PandocFilter.Filters {
 
 		#region overrides
 
-		protected override void ModifyElement(Context context, IDictionary<string, object> element, string type, object contents) {
+		protected override void ModifyElement(ModifyingContext context, string type, object contents) {
 			// argument checks
-			Debug.Assert(element != null);
+			Debug.Assert(context != null);
 			Debug.Assert(type != null);
 
 			switch (type) {
@@ -88,9 +88,21 @@ namespace PandocUtil.PandocFilter.Filters {
 					}
 					break;
 				}
+				case Schema.TypeNames.Header: {
+					IList<object> array = contents as IList<object>;
+					if (array != null && 1 < array.Count) {
+						// get heading level
+						object level = array[0];
+						if (level is double && (double)level == 1.0) {
+							// level-1 header
+							AdjustHeader1(context, type, array);
+						}
+					}
+					break;
+				}
 			}
 
-			base.ModifyElement(context, element, type, contents);
+			base.ModifyElement(context, type, contents);
 		}
 
 		#endregion
@@ -131,6 +143,29 @@ namespace PandocUtil.PandocFilter.Filters {
 			}
 
 			return newTarget;
+		}
+
+		protected virtual void AdjustHeader1(ModifyingContext context, string type, IList<object> contents) {
+			// argument checks
+			Debug.Assert(context != null);
+			Debug.Assert(type == Schema.TypeNames.Header);
+			Debug.Assert(contents != null);
+
+			IDictionary<string, object> meta = context.Meta;
+			IDictionary<string, object> title;
+			if (meta.TryGetValue(Schema.Names.Title, out title) == false) {
+				// the ast has no title metadata
+				// set the header contents to the title
+				title = new Dictionary<string, object>();
+				title[Schema.Names.T] = Schema.TypeNames.MetaInlines;
+				if (3 <= contents.Count) {
+					title[Schema.Names.C] = contents[2];
+				}
+				meta[Schema.Names.Title] = title;
+			}
+
+			// remove the header element
+			context.RemoveValue();
 		}
 
 		#endregion
