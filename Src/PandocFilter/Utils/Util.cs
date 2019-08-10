@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
-namespace PandocUtil.PandocFilter {
+namespace PandocUtil.PandocFilter.Utils {
 	public static class Util {
 		#region methods
 

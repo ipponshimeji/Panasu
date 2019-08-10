@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Threading;
 
-namespace PandocUtil.PandocFilter {
+namespace PandocUtil.PandocFilter.Utils {
 	public class RWLock: IDisposable {
 		#region data
 

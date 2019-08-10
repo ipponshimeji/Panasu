@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using PandocUtil.PandocFilter.Utils;
 
 namespace PandocUtil.PandocFilter.Filters {
 	public class WorkingTreeNodeBase {
@@ -12,6 +13,8 @@ namespace PandocUtil.PandocFilter.Filters {
 			public NodeAnnotation() {
 			}
 
+
+			// expose Initialize() and Clear() methods as public
 
 			public new void Initialize(RWLock rwLock) {
 				base.Initialize(rwLock);

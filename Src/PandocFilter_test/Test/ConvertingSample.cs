@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using PandocUtil.PandocFilter.Utils;
 
 namespace PandocUtil.PandocFilter.Test {
 	public class ConvertingSample: FilteringSample {

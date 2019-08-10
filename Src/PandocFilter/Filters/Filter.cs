@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Collections;
+using PandocUtil.PandocFilter.Utils;
 
 namespace PandocUtil.PandocFilter.Filters {
 	public class Filter {
@@ -406,18 +407,6 @@ namespace PandocUtil.PandocFilter.Filters {
 				}
 			}
 
-			public IDictionary<string, object> Meta {
-				get {
-					IDictionary<string, object> ast = this.AST;
-					IDictionary<string, object> value;
-					if (ast == null || ast.TryGetValue(Schema.Names.Meta, out value) == false) {
-						value = null;
-					}
-
-					return value;
-				}
-			}
-
 			#endregion
 
 
@@ -438,6 +427,7 @@ namespace PandocUtil.PandocFilter.Filters {
 				this.contextLock = concurrent ? new RWLock() : RWLock.Dummy;
 				this.annotation.Initialize(this.contextLock);
 				this.Root = root;
+				this.Metadata = root.Metadata;
 				Debug.Assert(this.arrayEditor == null);
 			}
 
@@ -457,6 +447,17 @@ namespace PandocUtil.PandocFilter.Filters {
 				// initialize this instance
 				base.Initialize(ast);
 				InitializeThisClassLevel(concurrent, this);
+
+				// create Metadata context
+				string name = Schema.Names.Meta;
+				(bool exist, Dictionary<string, object> metadata) = this.ObjectValue.GetOptionalValue<Dictionary<string, object>>(name);
+				if (!exist) {
+					metadata = new Dictionary<string, object>();
+					this.ObjectValue.Add(name, metadata);
+				}
+				this.Metadata = CreateChildContext(name, metadata);
+				Debug.Assert(this.Metadata == null);    // null at this point
+				this.Metadata.Metadata = this.Metadata;
 			}
 
 			private new void Initialize(ModifyingContext parent) {
@@ -498,6 +499,11 @@ namespace PandocUtil.PandocFilter.Filters {
 			private new void Clear() {
 				// clear members
 				this.arrayEditor = null;
+				if (this == this.Root) {
+					// this context is root context
+					// clear the metadata context
+					ReleaseContext(this.Metadata);
+				}
 				this.Metadata = null;
 				this.Root = null;
 				this.annotation.Clear();
@@ -683,7 +689,7 @@ namespace PandocUtil.PandocFilter.Filters {
 				return value;
 			}
 
-			private void ReplaceChild(string name, object value) {
+			public void ReplaceChild(string name, object value) {
 				// argument checks
 				Debug.Assert(name != null);
 				// name can be empty
@@ -698,7 +704,7 @@ namespace PandocUtil.PandocFilter.Filters {
 				});
 			}
 
-			private void ReplaceChild(int index, object value) {
+			public void ReplaceChild(int index, object value) {
 				// argument checks
 				Debug.Assert(0 <= index);
 				// value can be null;
@@ -713,7 +719,7 @@ namespace PandocUtil.PandocFilter.Filters {
 				});
 			}
 
-			private void RemoveChild(string name) {
+			public void RemoveChild(string name) {
 				// argument checks
 				Debug.Assert(name != null);
 				// name can be empty
@@ -727,7 +733,7 @@ namespace PandocUtil.PandocFilter.Filters {
 				});
 			}
 
-			private void RemoveChild(int index) {
+			public void RemoveChild(int index) {
 				// argument checks
 				Debug.Assert(0 <= index);
 
@@ -741,7 +747,7 @@ namespace PandocUtil.PandocFilter.Filters {
 				});
 			}
 
-			private void AddChild(string name, object value) {
+			public void AddChild(string name, object value) {
 				// argument checks
 				Debug.Assert(name != null);
 				// name can be empty
@@ -756,7 +762,7 @@ namespace PandocUtil.PandocFilter.Filters {
 				});
 			}
 
-			private void InsertChildBefore(int index, object value) {
+			public void InsertChildBefore(int index, object value) {
 				// argument checks
 				Debug.Assert(0 <= index);
 				// value can be null;
@@ -771,7 +777,7 @@ namespace PandocUtil.PandocFilter.Filters {
 				});
 			}
 
-			private void InsertChildAfter(int index, object value) {
+			public void InsertChildAfter(int index, object value) {
 				// argument checks
 				Debug.Assert(0 <= index);
 				// value can be null;
