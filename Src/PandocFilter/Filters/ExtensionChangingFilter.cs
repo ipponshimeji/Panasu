@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using PandocUtil.PandocFilter.Utils;
 
 namespace PandocUtil.PandocFilter.Filters {
 	public class ExtensionChangingFilter: ConvertingFilter {
@@ -152,9 +151,9 @@ namespace PandocUtil.PandocFilter.Filters {
 			Debug.Assert(type == Schema.TypeNames.Header);
 			Debug.Assert(contents != null);
 
-			IDictionary<string, object> meta = context.Metadata.ObjectValue;
+			IDictionary<string, object> metadata = context.Meta;
 			IDictionary<string, object> title;
-			if (meta.TryGetValue(Schema.Names.Title, out title) == false) {
+			if (metadata.TryGetValue(Schema.Names.Title, out title) == false) {
 				// the ast has no title metadata
 				// set the header contents to the title
 				title = new Dictionary<string, object>();
@@ -162,8 +161,7 @@ namespace PandocUtil.PandocFilter.Filters {
 				if (3 <= contents.Count) {
 					title[Schema.Names.C] = contents[2];
 				}
-//				meta[Schema.Names.Title] = title;
-				context.Metadata.AddChild(Schema.Names.Title, title);
+				metadata[Schema.Names.Title] = title;
 			}
 
 			// remove the header element

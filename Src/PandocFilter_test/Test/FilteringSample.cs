@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.IO;
 using Utf8Json;
 using Xunit;
-using PandocUtil.PandocFilter.Utils;
 
 namespace PandocUtil.PandocFilter.Test {
 	public class FilteringSample {

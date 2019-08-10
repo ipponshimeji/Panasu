@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Collections;
-using PandocUtil.PandocFilter.Utils;
 
 namespace PandocUtil.PandocFilter.Filters {
 	public class ASTEditor {
@@ -14,24 +13,21 @@ namespace PandocUtil.PandocFilter.Filters {
 		protected class Node: WorkingTreeNode<Node> {
 			#region data
 
-			private RWLock nodeLock = null;
-
-			private readonly NodeAnnotation annotation = new NodeAnnotation();
+			private Dictionary<string, object> annotation = null;
 
 			#endregion
 
 
 			#region properties
 
-			public Annotation Annotation {
+			public IDictionary<string, object> Annotation {
 				get {
-					return this.annotation;
-				}
-			}
-
-			public bool Concurrent {
-				get {
-					return !this.nodeLock.IsDummy;
+					Dictionary<string, object> value = this.annotation;
+					if (value == null) {
+						value = new Dictionary<string, object>();
+						this.annotation = value;
+					}
+					return value;
 				}
 			}
 
@@ -44,37 +40,11 @@ namespace PandocUtil.PandocFilter.Filters {
 			}
 
 
-			private void InitializeThisClassLevel(bool concurrent) {
-				// initialize an instance
-				Debug.Assert(this.nodeLock == null);
-
-				this.nodeLock = concurrent? new RWLock(): RWLock.Dummy;
-			}
-
-			protected void Initialize(bool concurrent) {
-				// initialize this instance
-				base.Initialize();
-				InitializeThisClassLevel(concurrent);
-			}
-
-			protected new void Initialize(Node parent, string name) {
-				// initialize this instance
-				base.Initialize(parent, name);
-				Debug.Assert(parent != null);
-				InitializeThisClassLevel(parent.Concurrent);
-			}
-
-			protected new void Initialize(Node parent, int index) {
-				// initialize this instance
-				Initialize(parent, index);
-				Debug.Assert(parent != null);
-				InitializeThisClassLevel(parent.Concurrent);
-			}
-
 			protected new void Clear() {
-				// clear members
-				this.annotation.Clear();
-				Util.ClearDisposable(ref this.nodeLock);
+				// clear this instance
+				if (this.annotation != null) {
+					this.annotation.Clear();
+				}
 				base.Clear();
 			}
 

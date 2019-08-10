@@ -93,7 +93,7 @@ namespace PandocUtil.PandocFilter.Test {
 			sample.AssertEqual(actual);
 		}
 
-		public static void TestFiltering(Filter targetFilter, bool generate, bool concurrent, FilteringSample sample) {
+		public static void TestFiltering(Filter targetFilter, bool generate, FilteringSample sample) {
 			// argument checks
 			if (targetFilter ==  null) {
 				throw new ArgumentNullException(nameof(targetFilter));
@@ -107,9 +107,9 @@ namespace PandocUtil.PandocFilter.Test {
 				// filter
 				IDictionary<string, object> filtered;
 				if (generate) {
-					filtered = targetFilter.Generate(ast, concurrent);
+					filtered = targetFilter.Generate(ast);
 				} else {
-					targetFilter.Modify(ast, concurrent);
+					targetFilter.Modify(ast);
 					filtered = ast;
 				}
 

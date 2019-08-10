@@ -25,8 +25,7 @@ namespace PandocUtil.PandocFilter.Filters.Test {
 				ExtensionChangingFilter target = new ExtensionChangingFilter(sample.SupposedFromFileUri, sample.SupposedToFileUri, sample.RebaseOtherRelativeLinks, sample.ExtensionMap);
 
 				// test each pattern
-				TestUtil.TestFiltering(target, false, false, sample);   // modify, single-thread
-				TestUtil.TestFiltering(target, false, true, sample);    // modify, concurrent
+				TestUtil.TestFiltering(target, false, sample);   // modify, single-thread
 			}
 
 			#endregion

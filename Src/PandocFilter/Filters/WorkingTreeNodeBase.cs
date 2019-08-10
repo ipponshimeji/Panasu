@@ -1,35 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using PandocUtil.PandocFilter.Utils;
 
 namespace PandocUtil.PandocFilter.Filters {
 	public class WorkingTreeNodeBase {
-		#region types
-
-		protected class NodeAnnotation: Annotation {
-			#region creation and destruction
-
-			public NodeAnnotation() {
-			}
-
-
-			// expose Initialize() and Clear() methods as public
-
-			public new void Initialize(RWLock rwLock) {
-				base.Initialize(rwLock);
-			}
-
-			public new void Clear() {
-				base.Clear();
-			}
-
-			#endregion
-		}
-
-		#endregion
-
-
 		#region constants
 
 		public const int UndefinedIndex = -1;

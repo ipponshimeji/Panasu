@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Collections;
-using PandocUtil.PandocFilter.Utils;
 
 namespace PandocUtil.PandocFilter.Filters {
 	public class Filter {
@@ -30,7 +29,7 @@ namespace PandocUtil.PandocFilter.Filters {
 					return this.value;
 				}
 				protected set {
-					SetValueTUS(value);
+					SetValue(value);
 				}
 			}
 
@@ -81,7 +80,7 @@ namespace PandocUtil.PandocFilter.Filters {
 
 				// initialize this instance
 				base.Initialize();
-				SetValueTUS(value);
+				SetValue(value);
 			}
 
 			protected new void Initialize(ActualContext parent) {
@@ -92,7 +91,7 @@ namespace PandocUtil.PandocFilter.Filters {
 
 				// initialize this instance
 				base.Initialize(parent);
-				SetValueTUS(null);
+				SetValue(null);
 			}
 
 			protected void Initialize(ActualContext parent, string name, object value) {
@@ -107,7 +106,7 @@ namespace PandocUtil.PandocFilter.Filters {
 
 				// initialize this instance
 				base.Initialize(parent, name);
-				SetValueTUS(value);
+				SetValue(value);
 			}
 
 			protected void Initialize(ActualContext parent, int index, object value) {
@@ -122,17 +121,16 @@ namespace PandocUtil.PandocFilter.Filters {
 
 				// initialize this instance
 				base.Initialize(parent, index);
-				SetValueTUS(value);
+				SetValue(value);
 			}
 
 			protected new void Clear() {
 				// clear this instance
-				SetValueTUS(null);
+				SetValue(null);
 				base.Clear();
 			}
 
-			// thread-unsafe
-			private void SetValueTUS(object value) {
+			private void SetValue(object value) {
 				this.value = value;
 				switch (value) {
 					case Dictionary<string, object> obj:
@@ -353,15 +351,11 @@ namespace PandocUtil.PandocFilter.Filters {
 			private static Stack<ModifyingContext> instanceCache = new Stack<ModifyingContext>();
 
 
-			private RWLock contextLock = null;
-
-			private readonly NodeAnnotation annotation = new NodeAnnotation();
-
 			public ModifyingContext Root { get; private set; } = null;
 
-			public ModifyingContext Metadata { get; private set; } = null;
-
 			public ArrayEditor arrayEditor = null;
+
+			private Dictionary<string, object> annotation = null;
 
 			#endregion
 
@@ -383,27 +377,28 @@ namespace PandocUtil.PandocFilter.Filters {
 				}
 			}
 
-			public RWLock Lock {
-				get {
-					return this.contextLock;
-				}
-			}
-
-			public bool Concurrent {
-				get {
-					return !this.contextLock.IsDummy;
-				}
-			}
-
-			public Annotation Annotation {
-				get {
-					return this.annotation;
-				}
-			}
-
 			public IDictionary<string, object> AST {
 				get {
 					return this.Root.ObjectValue;
+				}
+			}
+
+			public IDictionary<string, object> Meta {
+				get {
+					IDictionary<string, object> ast = this.AST;
+					Debug.Assert(ast != null);
+					return ast.GetOptionalValue<IDictionary<string, object>>(Schema.Names.Meta, null);
+				}
+			}
+
+			public IDictionary<string, object> Annotation {
+				get {
+					Dictionary<string, object> value = this.annotation;
+					if (value == null) {
+						value = new Dictionary<string, object>();
+						this.annotation = value;
+					}
+					return value;
 				}
 			}
 
@@ -416,29 +411,17 @@ namespace PandocUtil.PandocFilter.Filters {
 			}
 
 
-			private void InitializeThisClassLevel(bool concurrent, ModifyingContext root) {
+			private void InitializeThisClassLevel(ModifyingContext root) {
 				// argument checks
 				Debug.Assert(root != null);
 
-				// state checks
-				Debug.Assert(this.contextLock == null);
-
 				// initialize this class level
-				this.contextLock = concurrent ? new RWLock() : RWLock.Dummy;
-				this.annotation.Initialize(this.contextLock);
 				this.Root = root;
-				this.Metadata = root.Metadata;
 				Debug.Assert(this.arrayEditor == null);
+				Debug.Assert(this.annotation == null || this.annotation.Count == 0);
 			}
 
-			private void InitializeThisClassLevel(ModifyingContext parent) {
-				// argument checks
-				Debug.Assert(parent != null);
-
-				InitializeThisClassLevel(parent.Concurrent, parent.Root);
-			}
-
-			private void Initialize(bool concurrent, Dictionary<string, object> ast) {
+			private void Initialize(Dictionary<string, object> ast) {
 				// argument checks
 				if (ast == null) {
 					throw new ArgumentNullException(nameof(ast));
@@ -446,18 +429,7 @@ namespace PandocUtil.PandocFilter.Filters {
 
 				// initialize this instance
 				base.Initialize(ast);
-				InitializeThisClassLevel(concurrent, this);
-
-				// create Metadata context
-				string name = Schema.Names.Meta;
-				(bool exist, Dictionary<string, object> metadata) = this.ObjectValue.GetOptionalValue<Dictionary<string, object>>(name);
-				if (!exist) {
-					metadata = new Dictionary<string, object>();
-					this.ObjectValue.Add(name, metadata);
-				}
-				this.Metadata = CreateChildContext(name, metadata);
-				Debug.Assert(this.Metadata == null);    // null at this point
-				this.Metadata.Metadata = this.Metadata;
+				InitializeThisClassLevel(this);
 			}
 
 			private new void Initialize(ModifyingContext parent) {
@@ -465,11 +437,10 @@ namespace PandocUtil.PandocFilter.Filters {
 				if (parent == null) {
 					throw new ArgumentNullException(nameof(parent));
 				}
-				// value can be null
 
 				// initialize this instance
 				base.Initialize(parent);
-				InitializeThisClassLevel(parent);
+				InitializeThisClassLevel(parent.Root);
 			}
 
 			private new void Initialize(ModifyingContext parent, string name, object value) {
@@ -481,7 +452,7 @@ namespace PandocUtil.PandocFilter.Filters {
 
 				// initialize this instance
 				base.Initialize(parent, name, value);
-				InitializeThisClassLevel(parent);
+				InitializeThisClassLevel(parent.Root);
 			}
 
 			private new void Initialize(ModifyingContext parent, int index, object value) {
@@ -493,21 +464,16 @@ namespace PandocUtil.PandocFilter.Filters {
 
 				// initialize this instance
 				base.Initialize(parent, index, value);
-				InitializeThisClassLevel(parent);
+				InitializeThisClassLevel(parent.Root);
 			}
 
 			private new void Clear() {
 				// clear members
-				this.arrayEditor = null;
-				if (this == this.Root) {
-					// this context is root context
-					// clear the metadata context
-					ReleaseContext(this.Metadata);
+				if (this.annotation != null) {
+					this.annotation.Clear();
 				}
-				this.Metadata = null;
+				this.arrayEditor = null;
 				this.Root = null;
-				this.annotation.Clear();
-				Util.ClearDisposable(ref this.contextLock);
 				base.Clear();
 			}
 
@@ -528,10 +494,10 @@ namespace PandocUtil.PandocFilter.Filters {
 				return instance;
 			}
 
-			private static ModifyingContext CreateContext(bool concurrent, Dictionary<string, object> ast) {
+			private static ModifyingContext CreateContext(Dictionary<string, object> ast) {
 				// create and setup an instance
 				ModifyingContext instance = CreateContext();
-				instance.Initialize(concurrent, ast);
+				instance.Initialize(ast);
 				return instance;
 			}
 
@@ -583,7 +549,7 @@ namespace PandocUtil.PandocFilter.Filters {
 
 			#region methods - context operations
 
-			public static void RunInContext(bool concurrent, Dictionary<string, object> ast, Action<ModifyingContext> action) {
+			public static void RunInContext(Dictionary<string, object> ast, Action<ModifyingContext> action) {
 				// argument checks
 				if (ast == null) {
 					throw new ArgumentNullException(nameof(ast));
@@ -593,7 +559,7 @@ namespace PandocUtil.PandocFilter.Filters {
 				}
 
 				// run the action in the context
-				ModifyingContext context = CreateContext(concurrent, ast);
+				ModifyingContext context = CreateContext(ast);
 				try {
 					action(context);
 				} finally {
@@ -644,9 +610,6 @@ namespace PandocUtil.PandocFilter.Filters {
 				if (array == null) {
 					return;
 				}
-				if (this.Concurrent) {
-					throw new NotSupportedException("This method is an optimized version only for single thread mode.");
-				}
 				if (action == null) {
 					throw new ArgumentNullException(nameof(action));
 				}
@@ -672,16 +635,6 @@ namespace PandocUtil.PandocFilter.Filters {
 			public ArrayEditor GetArrayEditor() {
 				ArrayEditor value = this.arrayEditor;
 				if (value == null) {
-					value = this.Lock.RunInWriteLock(GetArrayEditorTUS);
-				}
-
-				return value;
-			}
-
-			// Note this method is not thread safe.
-			private ArrayEditor GetArrayEditorTUS() {
-				ArrayEditor value = this.arrayEditor;
-				if (value == null) {
 					value = new ArrayEditor(this.ArrayValue);
 					this.arrayEditor = value;
 				}
@@ -691,7 +644,9 @@ namespace PandocUtil.PandocFilter.Filters {
 
 			public void ReplaceChild(string name, object value) {
 				// argument checks
-				Debug.Assert(name != null);
+				if (name == null) {
+					throw new ArgumentNullException(nameof(name));
+				}
 				// name can be empty
 				// value can be null;
 
@@ -699,57 +654,57 @@ namespace PandocUtil.PandocFilter.Filters {
 				Debug.Assert(this.IsObject);
 
 				// replace the value of the child
-				this.Lock.RunInWriteLock(() => {
-					this.ObjectValue[name] = value;
-				});
+				this.ObjectValue[name] = value;
 			}
 
 			public void ReplaceChild(int index, object value) {
 				// argument checks
-				Debug.Assert(0 <= index);
+				if (index < 0 || this.ArrayValue.Count <= index) {
+					throw new ArgumentOutOfRangeException(nameof(index));
+				}
 				// value can be null;
 
 				// state checks
 				Debug.Assert(this.IsArray);
 
 				// replace the value of the child
-				this.Lock.RunInWriteLock(() => {
-					ArrayEditor arrayEditor = GetArrayEditorTUS();
-					arrayEditor.Set(index, value);
-				});
+				ArrayEditor arrayEditor = GetArrayEditor();
+				arrayEditor.Set(index, value);
 			}
 
 			public void RemoveChild(string name) {
 				// argument checks
-				Debug.Assert(name != null);
+				if (name == null) {
+					throw new ArgumentNullException(nameof(name));
+				}
 				// name can be empty
 
 				// state checks
 				Debug.Assert(this.IsObject);
 
 				// remove the child
-				this.Lock.RunInWriteLock(() => {
-					this.ObjectValue.Remove(name);
-				});
+				this.ObjectValue.Remove(name);
 			}
 
 			public void RemoveChild(int index) {
 				// argument checks
-				Debug.Assert(0 <= index);
+				if (index < 0 || this.ArrayValue.Count <= index) {
+					throw new ArgumentOutOfRangeException(nameof(index));
+				}
 
 				// state checks
 				Debug.Assert(this.IsArray);
 
 				// remove the child
-				this.Lock.RunInWriteLock(() => {
-					ArrayEditor arrayEditor = GetArrayEditorTUS();
-					arrayEditor.Remove(index);
-				});
+				ArrayEditor arrayEditor = GetArrayEditor();
+				arrayEditor.Remove(index);
 			}
 
 			public void AddChild(string name, object value) {
 				// argument checks
-				Debug.Assert(name != null);
+				if (name == null) {
+					throw new ArgumentNullException(nameof(name));
+				}
 				// name can be empty
 				// value can be null;
 
@@ -757,39 +712,37 @@ namespace PandocUtil.PandocFilter.Filters {
 				Debug.Assert(this.IsObject);
 
 				// add the child
-				this.Lock.RunInWriteLock(() => {
-					this.ObjectValue[name] = value;
-				});
+				this.ObjectValue[name] = value;
 			}
 
 			public void InsertChildBefore(int index, object value) {
 				// argument checks
-				Debug.Assert(0 <= index);
+				if (index < 0 || this.ArrayValue.Count <= index) {
+					throw new ArgumentOutOfRangeException(nameof(index));
+				}
 				// value can be null;
 
 				// state checks
 				Debug.Assert(this.IsArray);
 
 				// insert the value before the child
-				this.Lock.RunInWriteLock(() => {
-					ArrayEditor arrayEditor = GetArrayEditorTUS();
-					arrayEditor.InsertBefore(index, value);
-				});
+				ArrayEditor arrayEditor = GetArrayEditor();
+				arrayEditor.InsertBefore(index, value);
 			}
 
 			public void InsertChildAfter(int index, object value) {
 				// argument checks
-				Debug.Assert(0 <= index);
+				if (index < 0 || this.ArrayValue.Count <= index) {
+					throw new ArgumentOutOfRangeException(nameof(index));
+				}
 				// value can be null;
 
 				// state checks
 				Debug.Assert(this.IsArray);
 
 				// insert the value after the value
-				this.Lock.RunInWriteLock(() => {
-					ArrayEditor arrayEditor = GetArrayEditorTUS();
-					arrayEditor.InsertAfter(index, value);
-				});
+				ArrayEditor arrayEditor = GetArrayEditor();
+				arrayEditor.InsertAfter(index, value);
 			}
 
 
@@ -875,14 +828,14 @@ namespace PandocUtil.PandocFilter.Filters {
 
 		#region methods
 
-		public void Modify(Dictionary<string, object> ast, bool concurrent = true) {
+		public void Modify(Dictionary<string, object> ast) {
 			// argument checks
 			if (ast == null) {
 				throw new ArgumentNullException(nameof(ast));
 			}
 
 			// single thread mode
-			ModifyingContext.RunInContext(concurrent, ast, (rootContext) => {
+			ModifyingContext.RunInContext(ast, (rootContext) => {
 				foreach (KeyValuePair<string, object> item in ast) {
 					switch (item.Key) {
 						case Schema.Names.Blocks:
@@ -935,13 +888,7 @@ namespace PandocUtil.PandocFilter.Filters {
 
 			// modify each element
 			IReadOnlyList<object> array = context.ArrayValue;
-			if (context.Concurrent) {
-				Parallel.For(0, array.Count, (i) => {
-					context.RunInChildContext(i, array[i], ModifyValue);
-				});
-			} else {
-				context.RunInEachChildContext(array, ModifyValue);
-			}
+			context.RunInEachChildContext(array, ModifyValue);
 		}
 
 		protected virtual void ModifyObject(ModifyingContext context) {

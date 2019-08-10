@@ -2,10 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 using PandocUtil.PandocFilter;
-using PandocUtil.PandocFilter.Utils;
 using Xunit;
 
-namespace PandocUtil.PandocFilter.Utils.Test {
+namespace PandocUtil.PandocFilter.Test {
 	public class UtilTest {
 		#region tests
 

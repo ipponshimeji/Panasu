@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using Utf8Json;
-using PandocUtil.PandocFilter.Utils;
 
 namespace PandocUtil.PandocFilter.Test {
 	public class ExtensionChangingSample: ConvertingSample {
