@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Collections;
 
 namespace PandocUtil.PandocFilter.Filters {
@@ -39,6 +37,7 @@ namespace PandocUtil.PandocFilter.Filters {
 					if (value == null) {
 						throw new InvalidOperationException("The value is not a JSON object.");
 					}
+
 					return value;
 				}
 			}
@@ -49,6 +48,7 @@ namespace PandocUtil.PandocFilter.Filters {
 					if (value == null) {
 						throw new InvalidOperationException("The value is not a JSON array.");
 					}
+
 					return value;
 				}
 			}
@@ -74,54 +74,57 @@ namespace PandocUtil.PandocFilter.Filters {
 			}
 
 
+			private void InitializeThisClassLevel(object value) {
+				// argument checks
+				// value can be null
+
+				// initialize this class level
+				SetValue(value);
+
+				return;
+			}
+
 			protected void Initialize(object value) {
 				// argument checks
 				// value can be null
 
 				// initialize this instance
 				base.Initialize();
-				SetValue(value);
+				InitializeThisClassLevel(value);
+
+				return;
 			}
 
 			protected new void Initialize(ActualContext parent) {
 				// argument checks
-				if (parent == null) {
-					throw new ArgumentOutOfRangeException(nameof(parent));
-				}
 
 				// initialize this instance
 				base.Initialize(parent);
-				SetValue(null);
+				InitializeThisClassLevel(null);
+
+				return;
 			}
 
 			protected void Initialize(ActualContext parent, string name, object value) {
 				// argument checks
-				if (parent == null) {
-					throw new ArgumentOutOfRangeException(nameof(parent));
-				}
-				if (name == null) {
-					throw new ArgumentOutOfRangeException(nameof(name));
-				}
 				// value can be null
 
 				// initialize this instance
 				base.Initialize(parent, name);
-				SetValue(value);
+				InitializeThisClassLevel(value);
+
+				return;
 			}
 
 			protected void Initialize(ActualContext parent, int index, object value) {
 				// argument checks
-				if (parent == null) {
-					throw new ArgumentOutOfRangeException(nameof(parent));
-				}
-				if (index < 0) {
-					throw new ArgumentOutOfRangeException(nameof(index));
-				}
 				// value can be null
 
 				// initialize this instance
 				base.Initialize(parent, index);
-				SetValue(value);
+				InitializeThisClassLevel(value);
+
+				return;
 			}
 
 			protected new void Clear() {
@@ -156,6 +159,24 @@ namespace PandocUtil.PandocFilter.Filters {
 		protected class ModifyingContext: Context<ModifyingContext> {
 			#region types
 
+			private class InstanceCache: InstanceCache<ModifyingContext> {
+				#region creation and disposal
+
+				public InstanceCache(): base(nameof(ModifyingContext)) {
+				}
+
+				#endregion
+
+
+				#region overrides
+
+				protected override ModifyingContext CreateInstance() {
+					return new ModifyingContext();
+				}
+
+				#endregion
+			}
+
 			public class ArrayEditor: IEnumerable<object> {
 				#region data
 
@@ -178,7 +199,7 @@ namespace PandocUtil.PandocFilter.Filters {
 							throw new ArgumentOutOfRangeException(nameof(index));
 						}
 
-						return (index == -1) ? this.precedentSlot : GetExtendedSlot(index);
+						return GetExtendedSlot(index);
 					}
 				}
 
@@ -238,6 +259,8 @@ namespace PandocUtil.PandocFilter.Filters {
 								break;
 						}
 					}
+
+					yield break;
 				}
 
 				#endregion
@@ -245,7 +268,7 @@ namespace PandocUtil.PandocFilter.Filters {
 
 				#region methods
 
-				public IList<object> ToList() {
+				public List<object> ToList() {
 					return new List<object>(this);
 				}
 
@@ -256,6 +279,7 @@ namespace PandocUtil.PandocFilter.Filters {
 					}
 
 					// replace the value of the slot
+					// Note that the value may be the 'Removed' object.
 					object value = this.array[index];
 					switch (value) {
 						case LinkedList<object> extendedSlot:
@@ -283,10 +307,14 @@ namespace PandocUtil.PandocFilter.Filters {
 							this.array[index] = value;
 							break;
 					}
+
+					return;
 				}
 
 				public void Remove(int index) {
 					// mark as Removed
+					// The items which come from the original array are treated as "landmark",
+					// so it should not be removed but keep the location and are marked as 'Removed'.
 					Set(index, Removed);
 				}
 
@@ -298,8 +326,10 @@ namespace PandocUtil.PandocFilter.Filters {
 
 					// extend the slot for the previous index
 					LinkedList<object> extendedSlot = GetExtendedSlot(index - 1);
-					// append the object into the extended slot
+					// append the object at the last of the extended slot
 					extendedSlot.AddLast(value);
+
+					return;
 				}
 
 				public void InsertAfter(int index, object value) {
@@ -309,9 +339,11 @@ namespace PandocUtil.PandocFilter.Filters {
 					}
 
 					// extend the slot for the index
-					LinkedList<object> extendedRoom = GetExtendedSlot(index);
-					// insert the object into the extended slot
-					extendedRoom.AddAfter(extendedRoom.First, value);
+					LinkedList<object> extendedSlot = GetExtendedSlot(index);
+					// insert the object at the next of the item
+					extendedSlot.AddAfter(extendedSlot.First, value);
+
+					return;
 				}
 
 				private LinkedList<object> GetExtendedSlot(int index) {
@@ -322,6 +354,10 @@ namespace PandocUtil.PandocFilter.Filters {
 					if (index == -1) {
 						// precedence of the array
 						extendedSlot = this.precedentSlot;
+						if (extendedSlot == null) {
+							extendedSlot = new LinkedList<object>();
+							this.precedentSlot = extendedSlot;
+						}
 					} else {
 						// inside the array
 						object value = this.array[index];
@@ -346,16 +382,12 @@ namespace PandocUtil.PandocFilter.Filters {
 
 			#region data
 
-			private static object classLocker = new object();
-
-			private static Stack<ModifyingContext> instanceCache = new Stack<ModifyingContext>();
+			private static readonly InstanceCache instanceCache = new InstanceCache();
 
 
 			public ModifyingContext Root { get; private set; } = null;
 
 			public ArrayEditor arrayEditor = null;
-
-			private Dictionary<string, object> annotation = null;
 
 			#endregion
 
@@ -369,8 +401,7 @@ namespace PandocUtil.PandocFilter.Filters {
 			}
 
 			// This property returns a read only interface to the array.
-			// To get an editable interface to the array,
-			// reference the ArrayEditor.
+			// An editable interface to the array is provided by ArrayEditor.
 			public new IReadOnlyList<object> ArrayValue {
 				get {
 					return base.ArrayValue;
@@ -380,25 +411,6 @@ namespace PandocUtil.PandocFilter.Filters {
 			public IDictionary<string, object> AST {
 				get {
 					return this.Root.ObjectValue;
-				}
-			}
-
-			public IDictionary<string, object> Meta {
-				get {
-					IDictionary<string, object> ast = this.AST;
-					Debug.Assert(ast != null);
-					return ast.GetOptionalValue<IDictionary<string, object>>(Schema.Names.Meta, null);
-				}
-			}
-
-			public IDictionary<string, object> Annotation {
-				get {
-					Dictionary<string, object> value = this.annotation;
-					if (value == null) {
-						value = new Dictionary<string, object>();
-						this.annotation = value;
-					}
-					return value;
 				}
 			}
 
@@ -418,7 +430,6 @@ namespace PandocUtil.PandocFilter.Filters {
 				// initialize this class level
 				this.Root = root;
 				Debug.Assert(this.arrayEditor == null);
-				Debug.Assert(this.annotation == null || this.annotation.Count == 0);
 			}
 
 			private void Initialize(Dictionary<string, object> ast) {
@@ -430,102 +441,87 @@ namespace PandocUtil.PandocFilter.Filters {
 				// initialize this instance
 				base.Initialize(ast);
 				InitializeThisClassLevel(this);
+
+				return;
 			}
 
 			private new void Initialize(ModifyingContext parent) {
 				// argument checks
-				if (parent == null) {
-					throw new ArgumentNullException(nameof(parent));
-				}
 
 				// initialize this instance
 				base.Initialize(parent);
+				Debug.Assert(parent != null);	// checked by the base class
 				InitializeThisClassLevel(parent.Root);
+
+				return;
 			}
 
 			private new void Initialize(ModifyingContext parent, string name, object value) {
 				// argument checks
-				if (name == null) {
-					throw new ArgumentNullException(nameof(name));
-				}
-				// value can be null
 
 				// initialize this instance
 				base.Initialize(parent, name, value);
+				Debug.Assert(parent != null);   // checked by the base class
 				InitializeThisClassLevel(parent.Root);
+
+				return;
 			}
 
 			private new void Initialize(ModifyingContext parent, int index, object value) {
 				// argument checks
-				if (index < 0) {
-					throw new ArgumentOutOfRangeException(nameof(index));
-				}
-				// value can be null
 
 				// initialize this instance
 				base.Initialize(parent, index, value);
+				Debug.Assert(parent != null);   // checked by the base class
 				InitializeThisClassLevel(parent.Root);
+
+				return;
 			}
 
 			private new void Clear() {
-				// clear members
-				if (this.annotation != null) {
-					this.annotation.Clear();
-				}
+				// clear this instance
 				this.arrayEditor = null;
 				this.Root = null;
 				base.Clear();
 			}
 
 
-			private static ModifyingContext CreateContext() {
-				ModifyingContext instance;
-
-				// try to get an instance from the cache
-				lock (classLocker) {
-					instanceCache.TryPop(out instance);
-				}
-
-				// create an instance if cache is empty
-				if (instance == null) {
-					instance = new ModifyingContext();
-				}
-
-				return instance;
-			}
-
 			private static ModifyingContext CreateContext(Dictionary<string, object> ast) {
 				// create and setup an instance
-				ModifyingContext instance = CreateContext();
+				ModifyingContext instance = instanceCache.AllocInstance();
 				instance.Initialize(ast);
+
 				return instance;
 			}
 
 			private ModifyingContext CreateChildContext() {
 				// create and setup a child context
-				ModifyingContext childContext = CreateContext();
+				ModifyingContext childContext = instanceCache.AllocInstance();
 				childContext.Initialize(this);
+
 				return childContext;
 			}
 
 			private ModifyingContext CreateChildContext(string childName, object childValue) {
 				// create and setup a child context
-				ModifyingContext childContext = CreateContext();
+				ModifyingContext childContext = instanceCache.AllocInstance();
 				childContext.Initialize(this, childName, childValue);
+
 				return childContext;
 			}
 
 			private ModifyingContext CreateChildContext(int childIndex, object childValue) {
 				// create and setup a child context
-				ModifyingContext childContext = CreateContext();
+				ModifyingContext childContext = instanceCache.AllocInstance();
 				childContext.Initialize(this, childIndex, childValue);
+
 				return childContext;
 			}
 
 			private static void ReleaseContext(ModifyingContext instance) {
 				// argument checks
 				if (instance == null) {
-					return;
+					throw new ArgumentNullException(nameof(instance));
 				}
 
 				// if array is edited, replace the array value
@@ -537,9 +533,7 @@ namespace PandocUtil.PandocFilter.Filters {
 				instance.Clear();
 
 				// cache the instance
-				lock (classLocker) {
-					instanceCache.Push(instance);
-				}
+				instanceCache.ReleaseInstance(instance);
 
 				return;
 			}
@@ -565,6 +559,8 @@ namespace PandocUtil.PandocFilter.Filters {
 				} finally {
 					ReleaseContext(context);
 				}
+
+				return;
 			}
 
 			public void RunInChildContext(string childName, object childValue, Action<ModifyingContext> action) {
@@ -572,6 +568,7 @@ namespace PandocUtil.PandocFilter.Filters {
 				if (childName == null) {
 					throw new ArgumentNullException(nameof(childName));
 				}
+				// childName can be empty
 				// childValue can be null
 				if (action == null) {
 					throw new ArgumentNullException(nameof(action));
@@ -584,6 +581,8 @@ namespace PandocUtil.PandocFilter.Filters {
 				} finally {
 					ReleaseContext(childContext);
 				}
+
+				return;
 			}
 
 			public void RunInChildContext(int childIndex, object childValue, Action<ModifyingContext> action) {
@@ -632,7 +631,26 @@ namespace PandocUtil.PandocFilter.Filters {
 
 			#region methods - modifying
 
+			public IDictionary<string, object> GetMetadata(bool createIfNotExist = false) {
+				IDictionary<string, object> ast = this.AST;
+				Debug.Assert(ast != null);
+
+				IDictionary<string, object> metadata = ast.GetOptionalValue<IDictionary<string, object>>(Schema.Names.Meta, null);
+				if (metadata == null && createIfNotExist) {
+					metadata = new Dictionary<string, object>();
+					ast[Schema.Names.Meta] = metadata;
+				}
+
+				return metadata;
+			}
+
 			public ArrayEditor GetArrayEditor() {
+				// state checks
+				if (this.IsArray == false) {
+					throw new InvalidOperationException("The value is not JSON array.");
+				}
+
+				// get the ArrayEditor
 				ArrayEditor value = this.arrayEditor;
 				if (value == null) {
 					value = new ArrayEditor(this.ArrayValue);
@@ -650,9 +668,6 @@ namespace PandocUtil.PandocFilter.Filters {
 				// name can be empty
 				// value can be null;
 
-				// state checks
-				Debug.Assert(this.IsObject);
-
 				// replace the value of the child
 				this.ObjectValue[name] = value;
 			}
@@ -664,12 +679,8 @@ namespace PandocUtil.PandocFilter.Filters {
 				}
 				// value can be null;
 
-				// state checks
-				Debug.Assert(this.IsArray);
-
 				// replace the value of the child
-				ArrayEditor arrayEditor = GetArrayEditor();
-				arrayEditor.Set(index, value);
+				GetArrayEditor().Set(index, value);
 			}
 
 			public void RemoveChild(string name) {
@@ -678,9 +689,6 @@ namespace PandocUtil.PandocFilter.Filters {
 					throw new ArgumentNullException(nameof(name));
 				}
 				// name can be empty
-
-				// state checks
-				Debug.Assert(this.IsObject);
 
 				// remove the child
 				this.ObjectValue.Remove(name);
@@ -692,12 +700,8 @@ namespace PandocUtil.PandocFilter.Filters {
 					throw new ArgumentOutOfRangeException(nameof(index));
 				}
 
-				// state checks
-				Debug.Assert(this.IsArray);
-
 				// remove the child
-				ArrayEditor arrayEditor = GetArrayEditor();
-				arrayEditor.Remove(index);
+				GetArrayEditor().Remove(index);
 			}
 
 			public void AddChild(string name, object value) {
@@ -707,9 +711,6 @@ namespace PandocUtil.PandocFilter.Filters {
 				}
 				// name can be empty
 				// value can be null;
-
-				// state checks
-				Debug.Assert(this.IsObject);
 
 				// add the child
 				this.ObjectValue[name] = value;
@@ -722,12 +723,8 @@ namespace PandocUtil.PandocFilter.Filters {
 				}
 				// value can be null;
 
-				// state checks
-				Debug.Assert(this.IsArray);
-
 				// insert the value before the child
-				ArrayEditor arrayEditor = GetArrayEditor();
-				arrayEditor.InsertBefore(index, value);
+				GetArrayEditor().InsertBefore(index, value);
 			}
 
 			public void InsertChildAfter(int index, object value) {
@@ -737,36 +734,30 @@ namespace PandocUtil.PandocFilter.Filters {
 				}
 				// value can be null;
 
-				// state checks
-				Debug.Assert(this.IsArray);
-
 				// insert the value after the value
-				ArrayEditor arrayEditor = GetArrayEditor();
-				arrayEditor.InsertAfter(index, value);
+				GetArrayEditor().InsertAfter(index, value);
 			}
 
 
 			public void ReplaceValue(object value) {
-				ModifyingContext parent = this.Parent;
 				if (this.IsParentObject) {
-					Debug.Assert(parent != null);
-					parent.ReplaceChild(this.Name, value);
+					Debug.Assert(this.Parent != null);
+					this.Parent.ReplaceChild(this.Name, value);
 				} else if (this.IsParentArray) {
-					Debug.Assert(parent != null);
-					parent.ReplaceChild(this.Index, value);
+					Debug.Assert(this.Parent != null);
+					this.Parent.ReplaceChild(this.Index, value);
 				} else {
 					throw new InvalidOperationException("The value is not contained by a JSON object or an array.");
 				}
 			}
 
 			public void RemoveValue() {
-				ModifyingContext parent = this.Parent;
 				if (this.IsParentObject) {
-					Debug.Assert(parent != null);
-					parent.RemoveChild(this.Name);
+					Debug.Assert(this.Parent != null);
+					this.Parent.RemoveChild(this.Name);
 				} else if (this.IsParentArray) {
-					Debug.Assert(parent != null);
-					parent.RemoveChild(this.Index);
+					Debug.Assert(this.Parent != null);
+					this.Parent.RemoveChild(this.Index);
 				} else {
 					throw new InvalidOperationException("The value is not contained by a JSON object or an array.");
 				}
@@ -774,11 +765,6 @@ namespace PandocUtil.PandocFilter.Filters {
 
 			public void AddSibling(string name, object value) {
 				// argument checks
-				if (name == null) {
-					throw new ArgumentNullException(nameof(name));
-				}
-				// name can be empty
-				// value can be null
 
 				// state checks
 				if (this.IsParentObject == false) {
@@ -790,7 +776,6 @@ namespace PandocUtil.PandocFilter.Filters {
 
 			public void InsertSiblingBefore(object value) {
 				// argument checks
-				// value can be null
 
 				// state checks
 				if (this.IsParentArray == false) {
@@ -802,7 +787,6 @@ namespace PandocUtil.PandocFilter.Filters {
 
 			public void InsertSiblingAfter(object value) {
 				// argument checks
-				// value can be null
 
 				// state checks
 				if (this.IsParentArray == false) {
@@ -834,20 +818,25 @@ namespace PandocUtil.PandocFilter.Filters {
 				throw new ArgumentNullException(nameof(ast));
 			}
 
-			// single thread mode
+			// modify the ast
 			ModifyingContext.RunInContext(ast, (rootContext) => {
-				foreach (KeyValuePair<string, object> item in ast) {
-					switch (item.Key) {
-						case Schema.Names.Blocks:
-							rootContext.RunInChildContext(item.Key, item.Value, ModifyValue);
-							break;
-						// TODO: meta
-					}
+				object value;
+
+				// Metadata
+				if (ast.TryGetValue(Schema.Names.Meta, out value)) {
+					rootContext.RunInChildContext(Schema.Names.Blocks, value, ModifyMetadata);
+				}
+
+				// Blocks
+				if (ast.TryGetValue(Schema.Names.Blocks, out value)) {
+					rootContext.RunInChildContext(Schema.Names.Blocks, value, ModifyValue);
 				}
 			});
+
+			return;
 		}
 
-		public IDictionary<string, object> Generate(IDictionary<string, object> ast, bool concurrent = true) {
+		public IDictionary<string, object> Generate(IDictionary<string, object> ast) {
 			// argument checks
 			if (ast == null) {
 				throw new ArgumentNullException(nameof(ast));
@@ -861,6 +850,16 @@ namespace PandocUtil.PandocFilter.Filters {
 
 
 		#region overridables - modify
+
+		protected virtual void ModifyMetadata(ModifyingContext context) {
+			// argument checks
+			if (context == null) {
+				throw new ArgumentNullException(nameof(context));
+			}
+
+			// do nothing, by default
+			return;
+		}
 
 		protected virtual void ModifyValue(ModifyingContext context) {
 			// argument checks
@@ -887,8 +886,7 @@ namespace PandocUtil.PandocFilter.Filters {
 			Debug.Assert(context.IsArray);
 
 			// modify each element
-			IReadOnlyList<object> array = context.ArrayValue;
-			context.RunInEachChildContext(array, ModifyValue);
+			context.RunInEachChildContext(context.ArrayValue, ModifyValue);
 		}
 
 		protected virtual void ModifyObject(ModifyingContext context) {

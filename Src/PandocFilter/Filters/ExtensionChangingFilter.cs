@@ -36,19 +36,19 @@ namespace PandocUtil.PandocFilter.Filters {
 			this.extensionMap = (extensionMap == null) ? new Dictionary<string, string>() : new Dictionary<string, string>(extensionMap);
 		}
 
-		public ExtensionChangingFilter(string fromFilePath, string toFilePath, bool rebaseOtherRelativeLinks, string inputExtension, string outputExtension) : base(fromFilePath, toFilePath) {
+		public ExtensionChangingFilter(string fromFilePath, string toFilePath, bool rebaseOtherRelativeLinks, string fromExtension, string toExtension) : base(fromFilePath, toFilePath) {
 			// argument checks
-			if (inputExtension == null) {
-				inputExtension = string.Empty;
+			if (fromExtension == null) {
+				fromExtension = string.Empty;
 			}
-			if (outputExtension == null) {
-				outputExtension = string.Empty;
+			if (toExtension == null) {
+				toExtension = string.Empty;
 			}
 
 			// initialize membera
 			this.RebaseOtherRelativeLinks = rebaseOtherRelativeLinks;
 			this.extensionMap = new Dictionary<string, string>(1);
-			this.extensionMap.Add(inputExtension, outputExtension);
+			this.extensionMap.Add(fromExtension, toExtension);
 		}
 
 		#endregion
@@ -62,20 +62,8 @@ namespace PandocUtil.PandocFilter.Filters {
 			Debug.Assert(type != null);
 
 			switch (type) {
+				case Schema.TypeNames.Image:
 				case Schema.TypeNames.Link: {
-					IList<object> array = contents as IList<object>;
-					if (array != null && 2 < array.Count) {
-						IList<object> val = array[2] as IList<object>;
-						if (val != null && 0 < val.Count) {
-							string target = val[0] as string;
-							if (target != null) {
-								val[0] = ConvertLink(target);
-							}
-						}
-					}
-					break;
-				}
-				case Schema.TypeNames.Image: {
 					IList<object> array = contents as IList<object>;
 					if (array != null && 2 < array.Count) {
 						IList<object> val = array[2] as IList<object>;
@@ -151,7 +139,7 @@ namespace PandocUtil.PandocFilter.Filters {
 			Debug.Assert(type == Schema.TypeNames.Header);
 			Debug.Assert(contents != null);
 
-			IDictionary<string, object> metadata = context.Meta;
+			IDictionary<string, object> metadata = context.GetMetadata(true);
 			IDictionary<string, object> title;
 			if (metadata.TryGetValue(Schema.Names.Title, out title) == false) {
 				// the ast has no title metadata
@@ -165,6 +153,7 @@ namespace PandocUtil.PandocFilter.Filters {
 			}
 
 			// remove the header element
+			// Many writers such as HTML writer generate H1 element from the title metadata.
 			context.RemoveValue();
 		}
 

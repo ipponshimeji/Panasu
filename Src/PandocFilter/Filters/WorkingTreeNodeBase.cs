@@ -17,10 +17,24 @@ namespace PandocUtil.PandocFilter.Filters {
 
 		public int Index { get; protected set; } = UndefinedIndex;
 
+		private Dictionary<string, object> annotation = null;
+
 		#endregion
 
 
 		#region properties
+
+		public IDictionary<string, object> Annotation {
+			get {
+				Dictionary<string, object> value = this.annotation;
+				if (value == null) {
+					value = new Dictionary<string, object>();
+					this.annotation = value;
+				}
+
+				return value;
+			}
+		}
 
 		public bool IsParentObject {
 			get {
@@ -50,6 +64,9 @@ namespace PandocUtil.PandocFilter.Filters {
 			// initialize this instance
 			Debug.Assert(this.Name == null);
 			Debug.Assert(this.Index == UndefinedIndex);
+			Debug.Assert(this.annotation == null || this.annotation.Count == 0);
+
+			return;
 		}
 
 		protected void Initialize(string name) {
@@ -57,10 +74,14 @@ namespace PandocUtil.PandocFilter.Filters {
 			if (name == null) {
 				throw new ArgumentOutOfRangeException(nameof(name));
 			}
+			// name can be empty
 
 			// initialize this instance
 			this.Name = name;
 			Debug.Assert(this.Index == UndefinedIndex);
+			Debug.Assert(this.annotation == null || this.annotation.Count == 0);
+
+			return;
 		}
 
 		protected void Initialize(int index) {
@@ -72,12 +93,20 @@ namespace PandocUtil.PandocFilter.Filters {
 			// initialize this instance
 			Debug.Assert(this.Name == null);
 			this.Index = index;
+			Debug.Assert(this.annotation == null || this.annotation.Count == 0);
+
+			return;
 		}
 
 		protected void Clear() {
-			// clear members
+			// clear this instance
+			if (this.annotation != null) {
+				this.annotation.Clear();
+			}
 			this.Index = UndefinedIndex;
 			this.Name = null;
+
+			return;
 		}
 
 		#endregion

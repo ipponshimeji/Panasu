@@ -23,6 +23,8 @@ namespace PandocUtil.PandocFilter.Filters {
 			// initialize this instance
 			base.Initialize();
 			Debug.Assert(this.Parent == null);
+
+			return;
 		}
 
 		protected void Initialize(ActualNode parent) {
@@ -34,6 +36,8 @@ namespace PandocUtil.PandocFilter.Filters {
 			// initialize this instance
 			base.Initialize();
 			this.Parent = parent;
+
+			return;
 		}
 
 		protected void Initialize(ActualNode parent, string name) {
@@ -45,6 +49,8 @@ namespace PandocUtil.PandocFilter.Filters {
 			// initialize this instance
 			base.Initialize(name);
 			this.Parent = parent;
+
+			return;
 		}
 
 		protected void Initialize(ActualNode parent, int index) {
@@ -56,10 +62,12 @@ namespace PandocUtil.PandocFilter.Filters {
 			// initialize this instance
 			base.Initialize(index);
 			this.Parent = parent;
+
+			return;
 		}
 
 		protected new void Clear() {
-			// clear members
+			// clear this instance
 			this.Parent = null;
 			base.Clear();
 		}
