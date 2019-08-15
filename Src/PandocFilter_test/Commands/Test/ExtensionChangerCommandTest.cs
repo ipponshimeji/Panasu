@@ -18,10 +18,10 @@ namespace PandocUtil.PandocFilter.Commands.Test {
 				// Arrange
 				List<string> args = new List<string>();
 				if (sample.RebaseOtherRelativeLinks) {
-					args.Add("/RebaseOtherRelativeLinks");
+					args.Add("-RebaseOtherRelativeLinks");
 				}
 				foreach (KeyValuePair<string, string> pair in sample.ExtensionMap) {
-					args.Add($"/Map:{pair.Key}:{pair.Value}");
+					args.Add($"-Map:{pair.Key}:{pair.Value}");
 				}
 				args.Add(sample.SupposedFromFileUri);
 				args.Add(sample.SupposedToFileUri);

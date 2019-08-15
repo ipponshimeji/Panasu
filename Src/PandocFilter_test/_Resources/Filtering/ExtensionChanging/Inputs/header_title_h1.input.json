@@ -1,0 +1,1 @@
+{"blocks":[{"t":"Header","c":[1,["header-1",[],[]],[{"t":"Str","c":"Header"},{"t":"Space"},{"t":"Str","c":"1"}]]},{"t":"Para","c":[{"t":"Str","c":"dummy"}]}],"pandoc-api-version":[1,17,5,4],"meta":{"title":{"t":"MetaInlines","c":[{"t":"Str","c":"DocTitle"}]}}}

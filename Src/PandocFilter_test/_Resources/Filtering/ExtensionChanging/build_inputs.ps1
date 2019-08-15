@@ -1,5 +1,10 @@
 #!/usr/bin/env pwsh
 
+param (
+    [bool]$rebuild = $false
+)
+
+
 # Globals
 
 $baseDir = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -8,6 +13,21 @@ $inputsDir = Join-Path $baseDir 'Inputs'
 
 
 # Functions
+
+function IsUpToDate([string]$sourceFile, [string]$destFile) {
+    if (-not (Test-Path $destFile -PathType Leaf)) {
+        # destFile does not exist
+        $false  # not up-to-date
+    } else {
+        # destFile exists
+        $destWriteTime = $(Get-ItemProperty $destFile).LastWriteTimeUtc
+        $sourceWriteTime = $(Get-ItemProperty $sourceFile).LastWriteTimeUtc
+        if ($destWriteTime -lt $sourceWriteTime) {
+            return $false   # not up-to-date
+        }
+        $true   # up-to-date
+    }
+}
 
 function ProcessFile([string]$fileRelPath) {
     # decide the path of the from file and the to file
@@ -20,11 +40,13 @@ function ProcessFile([string]$fileRelPath) {
         New-Item $toFileDir -ItemType Directory | Out-Null
     }
     
-    # convert the file by pandoc
-    & 'pandoc' -o $toFilePath -t json $fromFilePath
+    if ($rebuild -or -not (IsUpToDate $fromFilePath $toFilePath)) {
+        # convert the file by pandoc
+        & 'pandoc' -o $toFilePath -t json $fromFilePath
 
-    # report to output
-    "Converted: $toFilePath"
+        # report to output
+        "Converted: $toFilePath"
+    }
 }
 
 

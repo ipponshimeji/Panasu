@@ -1,0 +1,13 @@
+{
+    "Description": "link_absolute",
+    "Spec": "The filter should not change an absolute link.",
+    "InputFilePath": "Inputs/link_absolute.input.json",
+    "AnswerFilePath": "Answers/link_absolute.answer.json",
+    "SupposedFromFileUri": "From/link_absolute.md",
+    "SupposedToFileUri": "To/link_absolute.html",
+    "RebaseOtherRelativeLinks": false,
+    "ExtensionMap": {
+        ".md": ".html",
+        ".jpeg": ".png"
+    }
+}

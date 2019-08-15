@@ -1,0 +1,12 @@
+{
+    "Description": "link_nonmapped_rebase",
+    "Spec": "The filter should rebase a relative link whose extension is not specified to be mapped.",
+    "InputFilePath": "Inputs/link_nonmapped_rebase.input.json",
+    "AnswerFilePath": "Answers/link_nonmapped_rebase.answer.json",
+    "SupposedFromFileUri": "From/x/y/z/link_nonmapped_rebase.md",
+    "SupposedToFileUri": "To/x/y/z/link_nonmapped_rebase.html",
+    "RebaseOtherRelativeLinks": true,
+    "ExtensionMap": {
+        ".md": ".html"
+    }
+}

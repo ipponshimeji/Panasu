@@ -82,12 +82,14 @@ namespace PandocUtil.PandocFilter.Test {
 			return File.OpenRead(this.InputFilePath);
 		}
 
-		public string GetExpected() {
-			return File.ReadAllText(this.AnswerFilePath);
+		public Dictionary<string, object> GetExpected() {
+			using (Stream stream = File.OpenRead(this.AnswerFilePath)) {
+				return JsonSerializer.Deserialize<Dictionary<string, object>>(stream);
+			}
 		}
 
-		public void AssertEqual(string actual) {
-			Assert.Equal(GetExpected(), actual);
+		public void AssertEqual(IReadOnlyDictionary<string, object> actual) {
+			TestUtil.EqualJson(GetExpected(), actual);
 		}
 
 		#endregion

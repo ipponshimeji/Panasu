@@ -29,7 +29,7 @@ namespace PandocUtil.PandocFilter.Commands {
 		#endregion
 
 
-		#region overridables
+		#region overrides
 
 		protected override void ProcessNormalArgument(Argument arg) {
 			// argument checks
@@ -85,7 +85,7 @@ namespace PandocUtil.PandocFilter.Commands {
 		}
 
 		protected override void Execute(Stream inputStream, Stream outputStream) {
-			ExtensionChangingFilter filter = new ExtensionChangingFilter(this.FromFilePath, this.ToFilePath, false, this.ExtensionMap);
+			ExtensionChangingFilter filter = new ExtensionChangingFilter(this.FromFilePath, this.ToFilePath, this.RebaseOtherRelativeLinks, this.ExtensionMap);
 
 			// read input AST
 			Dictionary<string, object> ast = JsonSerializer.Deserialize<Dictionary<string, object>>(inputStream);
