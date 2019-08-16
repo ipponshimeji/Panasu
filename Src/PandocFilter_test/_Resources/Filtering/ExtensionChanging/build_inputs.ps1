@@ -5,7 +5,7 @@ param (
 )
 
 
-# Globals
+# Script Globals
 
 $baseDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $sourcesDir = Join-Path $baseDir 'Sources'
@@ -22,10 +22,8 @@ function IsUpToDate([string]$sourceFile, [string]$destFile) {
         # destFile exists
         $destWriteTime = $(Get-ItemProperty $destFile).LastWriteTimeUtc
         $sourceWriteTime = $(Get-ItemProperty $sourceFile).LastWriteTimeUtc
-        if ($destWriteTime -lt $sourceWriteTime) {
-            return $false   # not up-to-date
-        }
-        $true   # up-to-date
+
+        ($sourceWriteTime -le $destWriteTime)
     }
 }
 
@@ -34,18 +32,29 @@ function ProcessFile([string]$fileRelPath) {
     $fromFilePath = Join-Path $sourcesDir $fileRelPath
     $toFilePath = Join-Path $inputsDir ([System.IO.Path]::ChangeExtension($fileRelPath, '.input.json'))
 
-    # make sure that the target directory exists
-    $toFileDir = Split-Path $toFilePath -Parent
-    if (-not (Test-Path $toFileDir -PathType Container)) {
-        New-Item $toFileDir -ItemType Directory | Out-Null
-    }
+    if ((-not $rebuild) -and (IsUpToDate $fromFilePath $toFilePath)) {
+        # no need to copy
+        "Skipped (up-to-date): ${fileRelPath}"
+    } else {
+        # make sure that the target directory exists
+        $toFileDir = Split-Path $toFilePath -Parent
+        if (-not (Test-Path $toFileDir -PathType Container)) {
+            New-Item $toFileDir -ItemType Directory | Out-Null
+            if (-not $?) {
+                Write-Error "Failed: ${fileRelPath}"
+                return;
+            }
+        }
     
-    if ($rebuild -or -not (IsUpToDate $fromFilePath $toFilePath)) {
         # convert the file by pandoc
         & 'pandoc' -o $toFilePath -t json $fromFilePath
 
         # report to output
-        "Converted: $toFilePath"
+        if ($LastExitCode -eq 0) {
+            "Convert: ${fileRelPath}"
+        } else {
+            Write-Error "Failed: ${fileRelPath}"
+        }
     }
 }
 

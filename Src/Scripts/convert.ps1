@@ -1,3 +1,5 @@
+#!/usr/bin/env pwsh
+
 <# 
 .SYNOPSIS 
     Converts documents using pandoc.
@@ -22,10 +24,15 @@
     The extension of the output document files.
     The default value is '.html'.
 .PARAMETER RebaseOtherRelativeLinks 
-    TBU
+    Whether relative links which are not target of extension mapping
+    should be rebase so that the links keep to reference its target
+    in the original location.
+    If such other files are copied to $ToDir along with the files to
+    be converted, it should be $false.
     The default value is $true.
 .PARAMETER OtherExtensionMap 
-    TBU
+    The extension mappings other than the pair of FromExtension and ToExtension.
+    The conversion converts those extensions in relative links.
 .PARAMETER OtherOptions 
     The array of other options to be provided to pandoc.
     The default value is @('--standalone').
@@ -51,10 +58,28 @@ param (
     [bool]$rebaseOtherRelativeLinks = $true,
     [hashtable]$otherExtensionMap = @{},
     [string[]]$otherOptions = @('--standalone'),
-    [Switch]
     [bool]$rebuild = $false
 )
 
+
+# Script Globals
+
+[int]$convertedCount = 0
+[int]$copiedCount = 0
+[int]$upToDateCount = 0
+[int]$nonTargetCount = 0
+[int]$failedCount = 0
+
+
+# Functions
+
+function Report([string]$filePath, [string]$description, [bool]$error = $false) {
+    if ($error) {
+        Write-Error "${filePath}: $description"
+    } else {
+        "${filePath}: $description"
+    }
+}
 
 function IsUpToDate([string[]]$sourceFiles, [string]$destFile) {
     if (-not (Test-Path $destFile -PathType Leaf)) {
@@ -63,13 +88,12 @@ function IsUpToDate([string[]]$sourceFiles, [string]$destFile) {
     } else {
         # destFile exists
         $destWriteTime = $(Get-ItemProperty $destFile).LastWriteTimeUtc
-        foreach ($sourceFile in $sourceFiles) {
-            $sourceWriteTime = $(Get-ItemProperty $sourceFile).LastWriteTimeUtc
-            if ($destWriteTime -lt $sourceWriteTime) {
-                return $false   # not up-to-date
-            }
-        }
-        $true   # up-to-date
+
+        $oneOfUpdatedSource = $sourceFiles `
+          | Where-Object { $destWriteTime -lt $(Get-ItemProperty $_).LastWriteTimeUtc } `
+          | Select-Object -First 1
+
+        -not [bool]$oneOfUpdatedSource
     }
 }
 
@@ -103,7 +127,8 @@ function ConvertFile([string]$fromFileRelPath) {
 
     if ((-not $rebuild) -and (IsUpToDate $sourceFiles $toFilePath)) {
         # no need to convert
-        "${fromFileRelPath}: Skipped (up-to-date)."
+        ++$script:upToDateCount
+        Report $fromFileRelPath "Skipped (up-to-date)."
     } else {
         # convert the output 
 
@@ -111,6 +136,11 @@ function ConvertFile([string]$fromFileRelPath) {
         $toFileDir = Split-Path $toFilePath -Parent
         if (-not (Test-Path $toFileDir -PathType Container)) {
             New-Item $toFileDir -ItemType Directory | Out-Null
+            if (-not $?) {
+                ++$script:failedCount
+                Report $fromFileRelPath "Conversion failed." $true
+                return;
+            }
         }
 
         # run pandoc
@@ -128,10 +158,12 @@ function ConvertFile([string]$fromFileRelPath) {
 
         # reported
         if ($succeeded) {
-            "${fromFileRelPath}: Converted to '$toFileRelPath'."
+            ++$script:convertedCount
+            Report $fromFileRelPath "Converted to '$toFileRelPath'."
         } else {
             # pandoc failed
-            Write-Error "${fromFileRelPath}: Conversion failed."
+            ++$script:failedCount
+            Report $fromFileRelPath "Conversion failed." $true
         }
     }
 }
@@ -142,7 +174,8 @@ function CopyFile([string]$fromFileRelPath) {
 
     if ((-not $rebuild) -and (IsUpToDate $fromFilePath $toFilePath)) {
         # no need to copy
-        "${fromFileRelPath}: Skipped (up-to-date)."
+        ++$script:upToDateCount
+        Report $fromFileRelPath "Skipped (up-to-date)."
     } else {
         # copy the file
 
@@ -150,11 +183,22 @@ function CopyFile([string]$fromFileRelPath) {
         $toFileDir = Split-Path $toFilePath -Parent
         if (-not (Test-Path $toFileDir -PathType Container)) {
             New-Item $toFileDir -ItemType Directory | Out-Null
+            if (-not $?) {
+                ++$script:failedCount
+                Report $fromFileRelPath "Copy failed." $true
+                return;
+            }
         }
 
         # copy the file
         Copy-Item $fromFilePath -Destination $toFilePath
-        "${fromFileRelPath}: Copied."
+        if ($?) {
+            ++$script:copiedCount
+            Report $fromFileRelPath "Copied."
+        } else {
+            ++$script:failedCount
+            Report $fromFileRelPath "Copy failed." $true
+        }
     }
 }
 
@@ -166,23 +210,28 @@ function ProcessFile([string]$fromFileRelPath) {
     } elseif ($otherExtensionMap.ContainsKey($extension)) {
         # target of another conversion session
         # Do nothing. The other session will process it.
-        "${fromFileRelPath}: Skipped (not a target)."
+        ++$script:nonTargetCount
+        Report $fromFileRelPath "Skipped (not a target)."
     } else {
         # other files
         # copy the file if you don't want rebasing
         if (-not $rebaseOtherRelativeLinks) {
             CopyFile $fromFileRelPath
         } else {
-            "${fromFileRelPath}: Skipped (not a target)."
+            ++$script:nonTargetCount
+            Report $fromFileRelPath "Skipped (not a target)."
         }
     }
 }
 
 
 # make the paths absolute
-$fromDir = Convert-Path $fromDir
-$toDir = Convert-Path $toDir
+$fromDir = Convert-Path $fromDir -ErrorAction Stop
+$toDir = Convert-Path $toDir -ErrorAction Stop
 
 # convert all input files in the input directory
 Get-ChildItem $fromDir -File -Name -Recurse `
   | ForEach-Object { ProcessFile $_ }
+
+# report the result
+"Converted: $convertedCount, Copied: $copiedCount, Failed: $failedCount, Up-To-Date: $upToDateCount, Non-Target: $nonTargetCount"
