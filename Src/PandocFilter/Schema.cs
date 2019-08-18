@@ -9,6 +9,7 @@ namespace PandocUtil.PandocFilter {
 			public const string Blocks = "blocks";
 			public const string C = "c";
 			public const string Meta = "meta";
+			public const string PandocApiVersion = "pandoc-api-version";
 			public const string T = "t";
 			public const string Title = "title";
 		}

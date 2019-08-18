@@ -139,7 +139,7 @@ namespace PandocUtil.PandocFilter.Filters {
 			Debug.Assert(type == Schema.TypeNames.Header);
 			Debug.Assert(contents != null);
 
-			IDictionary<string, object> metadata = context.GetMetadata(true);
+			IDictionary<string, object> metadata = context.AST.GetMetadata(true);
 			IDictionary<string, object> title;
 			if (metadata.TryGetValue(Schema.Names.Title, out title) == false) {
 				// the ast has no title metadata

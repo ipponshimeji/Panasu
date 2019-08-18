@@ -387,6 +387,8 @@ namespace PandocUtil.PandocFilter.Filters {
 
 			public ModifyingContext Root { get; private set; } = null;
 
+			public AST AST { get; private set; } = null;
+
 			public ArrayEditor arrayEditor = null;
 
 			#endregion
@@ -408,12 +410,6 @@ namespace PandocUtil.PandocFilter.Filters {
 				}
 			}
 
-			public IDictionary<string, object> AST {
-				get {
-					return this.Root.ObjectValue;
-				}
-			}
-
 			#endregion
 
 
@@ -423,24 +419,26 @@ namespace PandocUtil.PandocFilter.Filters {
 			}
 
 
-			private void InitializeThisClassLevel(ModifyingContext root) {
+			private void InitializeThisClassLevel(ModifyingContext root, AST ast) {
 				// argument checks
 				Debug.Assert(root != null);
+				Debug.Assert(ast != null);
 
 				// initialize this class level
 				this.Root = root;
+				this.AST = ast;
 				Debug.Assert(this.arrayEditor == null);
 			}
 
-			private void Initialize(Dictionary<string, object> ast) {
+			private void Initialize(AST ast) {
 				// argument checks
 				if (ast == null) {
 					throw new ArgumentNullException(nameof(ast));
 				}
 
 				// initialize this instance
-				base.Initialize(ast);
-				InitializeThisClassLevel(this);
+				base.Initialize(ast.JsonValue);
+				InitializeThisClassLevel(this, ast);
 
 				return;
 			}
@@ -451,7 +449,7 @@ namespace PandocUtil.PandocFilter.Filters {
 				// initialize this instance
 				base.Initialize(parent);
 				Debug.Assert(parent != null);	// checked by the base class
-				InitializeThisClassLevel(parent.Root);
+				InitializeThisClassLevel(parent.Root, parent.AST);
 
 				return;
 			}
@@ -462,7 +460,7 @@ namespace PandocUtil.PandocFilter.Filters {
 				// initialize this instance
 				base.Initialize(parent, name, value);
 				Debug.Assert(parent != null);   // checked by the base class
-				InitializeThisClassLevel(parent.Root);
+				InitializeThisClassLevel(parent.Root, parent.AST);
 
 				return;
 			}
@@ -473,7 +471,7 @@ namespace PandocUtil.PandocFilter.Filters {
 				// initialize this instance
 				base.Initialize(parent, index, value);
 				Debug.Assert(parent != null);   // checked by the base class
-				InitializeThisClassLevel(parent.Root);
+				InitializeThisClassLevel(parent.Root, parent.AST);
 
 				return;
 			}
@@ -481,12 +479,13 @@ namespace PandocUtil.PandocFilter.Filters {
 			private new void Clear() {
 				// clear this instance
 				this.arrayEditor = null;
+				this.AST = null;
 				this.Root = null;
 				base.Clear();
 			}
 
 
-			private static ModifyingContext CreateContext(Dictionary<string, object> ast) {
+			private static ModifyingContext CreateContext(AST ast) {
 				// create and setup an instance
 				ModifyingContext instance = instanceCache.AllocInstance();
 				instance.Initialize(ast);
@@ -543,7 +542,7 @@ namespace PandocUtil.PandocFilter.Filters {
 
 			#region methods - context operations
 
-			public static void RunInContext(Dictionary<string, object> ast, Action<ModifyingContext> action) {
+			public static void RunInContext(AST ast, Action<ModifyingContext> action) {
 				// argument checks
 				if (ast == null) {
 					throw new ArgumentNullException(nameof(ast));
@@ -630,19 +629,6 @@ namespace PandocUtil.PandocFilter.Filters {
 
 
 			#region methods - modifying
-
-			public IDictionary<string, object> GetMetadata(bool createIfNotExist = false) {
-				IDictionary<string, object> ast = this.AST;
-				Debug.Assert(ast != null);
-
-				IDictionary<string, object> metadata = ast.GetOptionalValue<IDictionary<string, object>>(Schema.Names.Meta, null);
-				if (metadata == null && createIfNotExist) {
-					metadata = new Dictionary<string, object>();
-					ast[Schema.Names.Meta] = metadata;
-				}
-
-				return metadata;
-			}
 
 			public ArrayEditor GetArrayEditor() {
 				// state checks
@@ -812,23 +798,26 @@ namespace PandocUtil.PandocFilter.Filters {
 
 		#region methods
 
-		public void Modify(Dictionary<string, object> ast) {
+		public void Modify(Dictionary<string, object> astJsonValue) {
 			// argument checks
-			if (ast == null) {
-				throw new ArgumentNullException(nameof(ast));
+			if (astJsonValue == null) {
+				throw new ArgumentNullException(nameof(astJsonValue));
 			}
+
+			// modify the ast
+			AST ast = new AST(astJsonValue);
 
 			// modify the ast
 			ModifyingContext.RunInContext(ast, (rootContext) => {
 				object value;
 
 				// Metadata
-				if (ast.TryGetValue(Schema.Names.Meta, out value)) {
+				if (astJsonValue.TryGetValue(Schema.Names.Meta, out value)) {
 					rootContext.RunInChildContext(Schema.Names.Blocks, value, ModifyMetadata);
 				}
 
 				// Blocks
-				if (ast.TryGetValue(Schema.Names.Blocks, out value)) {
+				if (astJsonValue.TryGetValue(Schema.Names.Blocks, out value)) {
 					rootContext.RunInChildContext(Schema.Names.Blocks, value, ModifyValue);
 				}
 			});
