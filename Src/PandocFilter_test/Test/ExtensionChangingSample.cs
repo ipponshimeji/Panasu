@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using Utf8Json;
 
 namespace PandocUtil.PandocFilter.Test {
 	public class ExtensionChangingSample: ConvertingSample {
@@ -87,8 +86,8 @@ namespace PandocUtil.PandocFilter.Test {
 
 		#region creation
 
-		public ExtensionChangingSample(string description, string inputFilePath, string answerFilePath, string supposedFromFileUri, string supposedToFileUri, bool rebaseOtherRelativeLinks, Dictionary<string, string> extensionMap) :
-		base(description, inputFilePath, answerFilePath, supposedFromFileUri, supposedToFileUri) {
+		public ExtensionChangingSample(string description, string inputFilePath, string answerFilePath, string supposedFromBaseDirUri, string supposedFromFileRelPath, string supposedToBaseDirUri, string supposedToFileRelPath, bool rebaseOtherRelativeLinks, Dictionary<string, string> extensionMap) :
+		base(description, inputFilePath, answerFilePath, supposedFromBaseDirUri, supposedFromFileRelPath, supposedToBaseDirUri, supposedToFileRelPath) {
 			// argument checks
 			// extension can be null
 

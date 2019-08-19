@@ -13,7 +13,7 @@ namespace PandocUtil.PandocFilter.Filters {
 
 		#region data
 
-		public string Name { get; private set; } = null;
+		public string Name { get; protected set; } = null;
 
 		public int Index { get; protected set; } = UndefinedIndex;
 

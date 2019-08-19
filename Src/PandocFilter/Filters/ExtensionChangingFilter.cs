@@ -27,7 +27,8 @@ namespace PandocUtil.PandocFilter.Filters {
 
 		#region constructors
 
-		public ExtensionChangingFilter(string fromFilePath, string toFilePath, bool rebaseOtherRelativeLinks, IReadOnlyDictionary<string, string> extensionMap) : base(fromFilePath, toFilePath) {
+		public ExtensionChangingFilter(string fromBaseDirPath, string fromFileRelPath, string toBaseDirPath, string toFileRelPath, bool rebaseOtherRelativeLinks, IReadOnlyDictionary<string, string> extensionMap) :
+		base(fromBaseDirPath, fromFileRelPath, toBaseDirPath, toFileRelPath) {
 			// argument checks
 			// extensionMap can be null
 
@@ -36,7 +37,8 @@ namespace PandocUtil.PandocFilter.Filters {
 			this.extensionMap = (extensionMap == null) ? new Dictionary<string, string>() : new Dictionary<string, string>(extensionMap);
 		}
 
-		public ExtensionChangingFilter(string fromFilePath, string toFilePath, bool rebaseOtherRelativeLinks, string fromExtension, string toExtension) : base(fromFilePath, toFilePath) {
+		public ExtensionChangingFilter(string fromBaseDirPath, string fromFileRelPath, string toBaseDirPath, string toFileRelPath, bool rebaseOtherRelativeLinks, string fromExtension, string toExtension) :
+		base(fromBaseDirPath, fromFileRelPath, toBaseDirPath, toFileRelPath) {
 			// argument checks
 			if (fromExtension == null) {
 				fromExtension = string.Empty;

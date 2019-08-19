@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using Xunit;
 using PandocUtil.PandocFilter.Test;
-using PandocUtil.PandocFilter.Filters.Test;
 
 namespace PandocUtil.PandocFilter.Commands.Test {
 	public class ExtensionChangerCommandTest {
@@ -23,8 +22,10 @@ namespace PandocUtil.PandocFilter.Commands.Test {
 				foreach (KeyValuePair<string, string> pair in sample.ExtensionMap) {
 					args.Add($"-Map:{pair.Key}:{pair.Value}");
 				}
-				args.Add(sample.SupposedFromFileUri);
-				args.Add(sample.SupposedToFileUri);
+				args.Add(sample.SupposedFromBaseDirUri);
+				args.Add(sample.SupposedFromFileRelPath);
+				args.Add(sample.SupposedToBaseDirUri);
+				args.Add(sample.SupposedToFileRelPath);
 
 				void filter(Stream inputStream, Stream outputStream) {
 					ExtensionChangerCommand command = new ExtensionChangerCommand();

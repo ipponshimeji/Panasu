@@ -3,8 +3,10 @@
     "Spec": "The filter should change the extension of a relative link with the specified extension.",
     "InputFilePath": "Inputs/link_mapped.input.json",
     "AnswerFilePath": "Answers/link_mapped.answer.json",
-    "SupposedFromFileUri": "From/link_mapped.md",
-    "SupposedToFileUri": "To/link_mapped.html",
+    "SupposedFromBaseDirUri": "From/",
+    "SupposedFromFileRelPath": "link_mapped.md",
+    "SupposedToBaseDirUri": "To/",
+    "SupposedToFileRelPath": "link_mapped.html",
     "RebaseOtherRelativeLinks": false,
     "ExtensionMap": {
         ".md": ".html",

@@ -54,7 +54,7 @@ param (
     [string]$toDir = '../html',
     [string]$toFormat = 'html',
     [string]$toExtension = '.html',
-    [string]$filter = 'dotnet.exe ExtensionChanger.dll -R $fromFilePath $toFilePath',
+    [string]$filter = 'dotnet.exe ExtensionChanger.dll -R $fromDir $fromFileRelPath $toDir $toFileRelPath',
     [bool]$rebaseOtherRelativeLinks = $true,
     [hashtable]$otherExtensionMap = @{},
     [string[]]$otherOptions = @('--standalone'),
@@ -146,11 +146,11 @@ function ConvertFile([string]$fromFileRelPath) {
         # run pandoc
         if ([string]::IsNullOrWhiteSpace($filter)) {
             # with no filter
-            pandoc $otherOptions $metadataOption -f $fromFormat -t $toFormat -o $toFilePath $inputFilePath
+            pandoc $metadataOption $otherOptions -f $fromFormat -t $toFormat -o $toFilePath $inputFilePath
             $succeeded = $?
         } else {
             # with the specified filter
-            $commandLine = "pandoc $otherOptions $metadataOption -f $fromFormat -t json $fromFilePath | " `
+            $commandLine = "pandoc $metadataOption $otherOptions -f $fromFormat -t json $fromFilePath | " `
             + (Invoke-Expression "`"$filter`"") `
             + " | pandoc $otherOptions -f json -t $toFormat -o $toFilePath"
             $succeeded = RunOnShell $commandLine

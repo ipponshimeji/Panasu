@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using Utf8Json;
 using PandocUtil.PandocFilter.Filters;
 
@@ -10,9 +9,13 @@ namespace PandocUtil.PandocFilter.Commands {
 	public class ExtensionChangerCommand: FilteringCommand {
 		#region data
 
-		protected string FromFilePath { get; set; } = null;
+		protected string FromBaseDirPath { get; set; } = null;
 
-		protected string ToFilePath { get; set; } = null;
+		protected string FromFileRelPath { get; set; } = null;
+
+		protected string ToBaseDirPath { get; set; } = null;
+
+		protected string ToFileRelPath { get; set; } = null;
 
 		protected readonly Dictionary<string, string> ExtensionMap = new Dictionary<string, string>();
 
@@ -37,10 +40,16 @@ namespace PandocUtil.PandocFilter.Commands {
 
 			switch (arg.Index) {
 				case 0:
-					this.FromFilePath = arg.Value;
+					this.FromBaseDirPath = arg.Value;
 					break;
 				case 1:
-					this.ToFilePath = arg.Value;
+					this.FromFileRelPath = arg.Value;
+					break;
+				case 2:
+					this.ToBaseDirPath = arg.Value;
+					break;
+				case 3:
+					this.ToFileRelPath = arg.Value;
 					break;
 			}
 		}
@@ -71,21 +80,27 @@ namespace PandocUtil.PandocFilter.Commands {
 
 		protected override void OnExecuting() {
 			// state checks
-			if (string.IsNullOrEmpty(this.FromFilePath)) {
-				throw new InvalidOperationException("The indispensable argument 'InputFilePath' is missing.");
+			if (string.IsNullOrEmpty(this.FromBaseDirPath)) {
+				throw CreateMissingIndispensableArgumentException(nameof(FromBaseDirPath));
 			}
-			if (string.IsNullOrEmpty(this.ToFilePath)) {
-				throw new InvalidOperationException("The indispensable argument 'OutputFilePath' is missing.");
+			if (string.IsNullOrEmpty(this.FromFileRelPath)) {
+				throw CreateMissingIndispensableArgumentException(nameof(FromFileRelPath));
+			}
+			if (string.IsNullOrEmpty(this.ToBaseDirPath)) {
+				throw CreateMissingIndispensableArgumentException(nameof(ToBaseDirPath));
+			}
+			if (string.IsNullOrEmpty(this.ToFileRelPath)) {
+				throw CreateMissingIndispensableArgumentException(nameof(ToFileRelPath));
 			}
 
-			string fromExtension = Path.GetExtension(this.FromFilePath);
+			string fromExtension = Path.GetExtension(this.FromFileRelPath);
 			if (!this.ExtensionMap.ContainsKey(fromExtension)) {
-				this.ExtensionMap.Add(fromExtension, Path.GetExtension(this.ToFilePath));
+				this.ExtensionMap.Add(fromExtension, Path.GetExtension(this.ToFileRelPath));
 			}
 		}
 
 		protected override void Execute(Stream inputStream, Stream outputStream) {
-			ExtensionChangingFilter filter = new ExtensionChangingFilter(this.FromFilePath, this.ToFilePath, this.RebaseOtherRelativeLinks, this.ExtensionMap);
+			ExtensionChangingFilter filter = new ExtensionChangingFilter(this.FromBaseDirPath, this.FromFileRelPath, this.ToBaseDirPath, this.ToFileRelPath, this.RebaseOtherRelativeLinks, this.ExtensionMap);
 
 			// read input AST
 			Dictionary<string, object> ast = JsonSerializer.Deserialize<Dictionary<string, object>>(inputStream);

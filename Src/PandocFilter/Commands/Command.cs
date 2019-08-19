@@ -36,6 +36,16 @@ namespace PandocUtil.PandocFilter.Commands {
 			return OnExecuted(error);
 		}
 
+
+		protected static InvalidOperationException CreateMissingIndispensableArgumentException(string argName) {
+			// argument checks
+			if (string.IsNullOrEmpty(argName)) {
+				argName = "(unknown)";
+			}
+
+			throw new InvalidOperationException($"The indispensable argument '{argName}' is missing.");
+		}
+
 		#endregion
 
 

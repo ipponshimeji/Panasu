@@ -2,9 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Text;
-using Utf8Json;
-using Xunit;
 using PandocUtil.PandocFilter.Test;
 
 namespace PandocUtil.PandocFilter.Filters.Test {

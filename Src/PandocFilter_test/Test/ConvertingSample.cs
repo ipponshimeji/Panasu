@@ -7,28 +7,40 @@ namespace PandocUtil.PandocFilter.Test {
 	public class ConvertingSample: FilteringSample {
 		#region data
 
-		public readonly string SupposedFromFileUri;
+		public readonly string SupposedFromBaseDirUri;
 
-		public readonly string SupposedToFileUri;
+		public readonly string SupposedFromFileRelPath;
+
+		public readonly string SupposedToBaseDirUri;
+
+		public readonly string SupposedToFileRelPath;
 
 		#endregion
 
 
 		#region creation
 
-		public ConvertingSample(string description, string inputFilePath, string answerFilePath, string supposedFromFileUri, string supposedToFileUri):
+		public ConvertingSample(string description, string inputFilePath, string answerFilePath, string supposedFromBaseDirUri, string supposedFromFileRelPath, string supposedToBaseDirUri, string supposedToFileRelPath):
 		base(description, inputFilePath, answerFilePath) {
 			// argument checks
-			if (string.IsNullOrEmpty(supposedFromFileUri)) {
-				throw new ArgumentNullException(nameof(supposedFromFileUri));
+			if (string.IsNullOrEmpty(supposedFromBaseDirUri)) {
+				throw new ArgumentNullException(nameof(supposedFromBaseDirUri));
 			}
-			if (string.IsNullOrEmpty(supposedToFileUri)) {
-				throw new ArgumentNullException(nameof(supposedToFileUri));
+			if (string.IsNullOrEmpty(supposedFromFileRelPath)) {
+				throw new ArgumentNullException(nameof(supposedFromFileRelPath));
+			}
+			if (string.IsNullOrEmpty(supposedToBaseDirUri)) {
+				throw new ArgumentNullException(nameof(supposedToBaseDirUri));
+			}
+			if (string.IsNullOrEmpty(supposedToFileRelPath)) {
+				throw new ArgumentNullException(nameof(supposedToFileRelPath));
 			}
 
 			// initialize members
-			this.SupposedFromFileUri = supposedFromFileUri;
-			this.SupposedToFileUri = supposedToFileUri;
+			this.SupposedFromBaseDirUri = supposedFromBaseDirUri;
+			this.SupposedFromFileRelPath = supposedFromFileRelPath;
+			this.SupposedToBaseDirUri = supposedToBaseDirUri;
+			this.SupposedToFileRelPath = supposedToFileRelPath;
 		}
 
 		protected ConvertingSample(IReadOnlyDictionary<string, object> config, string basePath): base(config, basePath) {
@@ -42,8 +54,10 @@ namespace PandocUtil.PandocFilter.Test {
 			}
 
 			try {
-				this.SupposedFromFileUri = getFullPath(config.GetIndispensableValue<string>("SupposedFromFileUri"));
-				this.SupposedToFileUri = getFullPath(config.GetIndispensableValue<string>("SupposedToFileUri"));
+				this.SupposedFromBaseDirUri = getFullPath(config.GetIndispensableValue<string>("SupposedFromBaseDirUri"));
+				this.SupposedFromFileRelPath = config.GetIndispensableValue<string>("SupposedFromFileRelPath");
+				this.SupposedToBaseDirUri = getFullPath(config.GetIndispensableValue<string>("SupposedToBaseDirUri"));
+				this.SupposedToFileRelPath = config.GetIndispensableValue<string>("SupposedToFileRelPath");
 			} catch (KeyNotFoundException exception) {
 				throw new ArgumentException(exception.Message, nameof(config));
 			}

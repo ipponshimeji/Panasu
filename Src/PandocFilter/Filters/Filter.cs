@@ -625,6 +625,29 @@ namespace PandocUtil.PandocFilter.Filters {
 				}
 			}
 
+			public void RunInEachChildContext(IDictionary<string, object> obj, Action<ModifyingContext> action) {
+				// argument checks
+				if (obj == null) {
+					return;
+				}
+				if (action == null) {
+					throw new ArgumentNullException(nameof(action));
+				}
+
+				// run the action in the context
+				ModifyingContext context = CreateChildContext();
+				try {
+					string[] keys = obj.Keys.ToArray();	// fix the current keys
+					foreach (string key in keys) {
+						context.Name = key;
+						context.Value = obj[key];
+						action(context);
+					}
+				} finally {
+					ReleaseContext(context);
+				}
+			}
+
 			#endregion
 
 
@@ -813,7 +836,7 @@ namespace PandocUtil.PandocFilter.Filters {
 
 				// Metadata
 				if (astJsonValue.TryGetValue(Schema.Names.Meta, out value)) {
-					rootContext.RunInChildContext(Schema.Names.Blocks, value, ModifyMetadata);
+					rootContext.RunInChildContext(Schema.Names.Meta, value, ModifyMetadata);
 				}
 
 				// Blocks
@@ -846,8 +869,7 @@ namespace PandocUtil.PandocFilter.Filters {
 				throw new ArgumentNullException(nameof(context));
 			}
 
-			// do nothing, by default
-			return;
+			context.RunInEachChildContext(context.ObjectValue, ModifyValue);
 		}
 
 		protected virtual void ModifyValue(ModifyingContext context) {
@@ -886,13 +908,11 @@ namespace PandocUtil.PandocFilter.Filters {
 			Debug.Assert(context.IsObject);
 
 			// modify only elements, by default
-			IDictionary<string, object> obj = context.ObjectValue;
-			(bool _, string type) = obj.GetOptionalValue<string>(Schema.Names.T);
-			(bool _, object content) = obj.GetOptionalValue<object>(Schema.Names.C);
-			if (!string.IsNullOrEmpty(type)) {
+			(string type, object contents) = Schema.IsElement(context.ObjectValue);
+			if (type != null) {
 				// value is an element
 				// Note that content may be null.
-				ModifyElement(context, type, content);
+				ModifyElement(context, type, contents);
 			}
 		}
 
@@ -906,10 +926,25 @@ namespace PandocUtil.PandocFilter.Filters {
 			}
 			// contents can be null
 
+			// process the element
+			switch (type) {
+				case Schema.TypeNames.MetaMap:
+					(string name, IReadOnlyDictionary<string, object> macro) = Schema.IsMacro(contents);
+					if (name != null) {
+						ModifyMacro(context, name, macro);
+						return;
+					}
+					break;
+			}
+
 			// modify contents
 			if (contents != null) {
 				context.RunInChildContext(Schema.Names.C, contents, ModifyValue);
 			}
+		}
+
+		protected virtual void ModifyMacro(ModifyingContext context, string name, IReadOnlyDictionary<string, object> macro) {
+			throw new ApplicationException($"Undefined macro: {name}");
 		}
 
 		#endregion

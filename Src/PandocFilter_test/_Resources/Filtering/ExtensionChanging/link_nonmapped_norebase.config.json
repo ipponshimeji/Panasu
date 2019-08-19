@@ -3,8 +3,10 @@
     "Spec": "The filter should not change a relative link whose extension is not specified to be mapped.",
     "InputFilePath": "Inputs/link_nonmapped_norebase.input.json",
     "AnswerFilePath": "Answers/link_nonmapped_norebase.answer.json",
-    "SupposedFromFileUri": "From/x/y/z/link_nonmapped_norebase.md",
-    "SupposedToFileUri": "To/x/y/z/link_nonmapped_norebase.html",
+    "SupposedFromBaseDirUri": "From/",
+    "SupposedFromFileRelPath": "x/y/z/link_nonmapped_norebase.md",
+    "SupposedToBaseDirUri": "To/",
+    "SupposedToFileRelPath": "x/y/z/link_nonmapped_norebase.html",
     "RebaseOtherRelativeLinks": false,
     "ExtensionMap": {
         ".md": ".html"

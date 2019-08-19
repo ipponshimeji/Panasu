@@ -3,8 +3,10 @@
     "Spec": "The filter should move contents of level-1 header to title metadata if level-1 header exists and title metadata does not.",
     "InputFilePath": "Inputs/header_only_h1.input.json",
     "AnswerFilePath": "Answers/header_only_h1.answer.json",
-    "SupposedFromFileUri": "From/header_only_h1.md",
-    "SupposedToFileUri": "To/header_only_h1.html",
+    "SupposedFromBaseDirUri": "From/",
+    "SupposedFromFileRelPath": "header_only_h1.md",
+    "SupposedToBaseDirUri": "To/",
+    "SupposedToFileRelPath": "header_only_h1.html",
     "RebaseOtherRelativeLinks": false,
     "ExtensionMap": {
         ".md": ".html"

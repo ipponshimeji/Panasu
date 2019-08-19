@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using Utf8Json;
-using Xunit;
 
 namespace PandocUtil.PandocFilter.Test {
 	public class FilteringSample {
