@@ -10,6 +10,7 @@
     The default value is '../md'.
 .PARAMETER FromFormat 
     The format of the input documents.
+    This value must be one which can be passed to -f option of pandoc.
     The default value is 'markdown'.
 .PARAMETER FromExtension 
     The extension of the input document files.
@@ -19,6 +20,7 @@
     The default value is '../html'.
 .PARAMETER ToFormat 
     The format of the output documents.
+    This value must be one which can be passed to -t option of pandoc.
     The default value is 'html'.
 .PARAMETER ToExtension 
     The extension of the output document files.
@@ -27,13 +29,17 @@
     Whether relative links which are not target of extension mapping
     should be rebase so that the links keep to reference its target
     in the original location.
-    If such other files are copied to $ToDir along with the files to
-    be converted, it should be $false.
+    If this value is $false, this script copys such files into $ToDir
+    along with the converted files, and do not rebase links to the
+    files.
     The default value is $true.
 .PARAMETER OtherExtensionMap 
     The extension mappings other than the pair of FromExtension and ToExtension.
-    The conversion converts those extensions in relative links.
-.PARAMETER OtherOptions 
+    This script converts those extensions in relative links.
+.PARAMETER OtherReadOptions 
+    The array of other read options to be provided to pandoc.
+    The default value is @().
+.PARAMETER OtherWriteOptions 
     The array of other options to be provided to pandoc.
     The default value is @('--standalone').
 .PARAMETER Filter 
@@ -54,30 +60,50 @@ param (
     [string]$toDir = '../html',
     [string]$toFormat = 'html',
     [string]$toExtension = '.html',
-    [string]$filter = 'dotnet.exe ExtensionChanger.dll -R $fromDir $fromFileRelPath $toDir $toFileRelPath',
+    [string]$filter = "dotnet $(Split-Path -Parent $MyInvocation.MyCommand.Path)/ExtensionChanger.dll -R $fromDir $fromFileRelPath $toDir $toFileRelPath",
     [bool]$rebaseOtherRelativeLinks = $true,
     [hashtable]$otherExtensionMap = @{},
-    [string[]]$otherOptions = @('--standalone'),
+    [string[]]$otherReadOptions = @(),
+    [string[]]$otherWriteOptions = @('--standalone'),
     [bool]$rebuild = $false
 )
 
 
 # Script Globals
 
-[int]$convertedCount = 0
-[int]$copiedCount = 0
-[int]$upToDateCount = 0
-[int]$nonTargetCount = 0
-[int]$failedCount = 0
+# result constants
+Set-Variable -Name 'Result_Converted' -Value 0 -Option Constant -Scope Script
+Set-Variable -Name 'Result_Copied' -Value 1 -Option Constant -Scope Script
+Set-Variable -Name 'Result_Skipped_UpToDate' -Value 2 -Option Constant -Scope Script
+Set-Variable -Name 'Result_Skipped_NotTarget' -Value 3 -Option Constant -Scope Script
+Set-Variable -Name 'Result_Failed' -Value 4 -Option Constant -Scope Script
+
+# variables
+[int[]]$resultCount = @(0; 0; 0; 0; 0)
 
 
 # Functions
 
-function Report([string]$filePath, [string]$description, [bool]$error = $false) {
-    if ($error) {
-        Write-Error "${filePath}: $description"
+function Report([string]$fromfileRelPath, [string]$toFileRelPath, [int]$result) {
+    # select the description for the result
+    switch ($result) {
+        $Result_Converted { $description = "Converted to '$toFileRelPath'." }
+        $Result_Copied { $description = 'Copied.' }
+        $Result_Skipped_UpToDate { $description = 'Skipped (up-to-date).' }
+        $Result_Skipped_NotTarget { $description = 'Skipped (not a target).' }
+        $Result_Failed { $description = 'Failed.' }
+        default { Write-Error "Invalid result code: $result" -ErrorAction Stop }
+    }    
+
+    # update the statistics
+    ++$script:resultCount[$result]
+
+    # report the result
+    $message = "${fromfileRelPath}: $description"
+    if ($result -eq $Result_Failed) {
+        Write-Error $message
     } else {
-        "${filePath}: $description"
+        $message
     }
 }
 
@@ -89,6 +115,7 @@ function IsUpToDate([string[]]$sourceFiles, [string]$destFile) {
         # destFile exists
         $destWriteTime = $(Get-ItemProperty $destFile).LastWriteTimeUtc
 
+        # is there updated source?
         $oneOfUpdatedSource = $sourceFiles `
           | Where-Object { $destWriteTime -lt $(Get-ItemProperty $_).LastWriteTimeUtc } `
           | Select-Object -First 1
@@ -103,11 +130,25 @@ function RunOnShell([string]$commandLine) {
         Invoke-Expression "$env:ComSpec /c `"$commandLine`""
     } else {
         # on other than Windows
-        Invoke-Expression "$env:SHELL -c '$commandLine'" 
+        $shell = "$env:SHELL"
+        if ([string]::IsNullOrEmpty($shell)) {
+            $shell = '/bin/bash'
+        }
+        Invoke-Expression "$shell -c '$commandLine'" 
     }
 
     # returns the result of execution
-    $?
+    ($LastExitCode -eq 0)
+}
+
+function EnsureDirectoryExists([string]$filePath) {
+    $dirPath = Split-Path $filePath -Parent
+    if (Test-Path $dirPath -PathType Container) {
+        $true
+    } else {
+        New-Item $dirPath -ItemType Directory | Out-Null
+        $?
+    }
 }
 
 function ConvertFile([string]$fromFileRelPath) {
@@ -126,79 +167,68 @@ function ConvertFile([string]$fromFileRelPath) {
     }
 
     if ((-not $rebuild) -and (IsUpToDate $sourceFiles $toFilePath)) {
-        # no need to convert
-        ++$script:upToDateCount
-        Report $fromFileRelPath "Skipped (up-to-date)."
+        # the to file is up-to-data
+        Report $fromFileRelPath $toFileRelPath $Result_Skipped_UpToDate
     } else {
         # convert the output 
 
         # make sure that the target directory exists
-        $toFileDir = Split-Path $toFilePath -Parent
-        if (-not (Test-Path $toFileDir -PathType Container)) {
-            New-Item $toFileDir -ItemType Directory | Out-Null
-            if (-not $?) {
-                ++$script:failedCount
-                Report $fromFileRelPath "Conversion failed." $true
-                return;
-            }
+        if (-not (EnsureDirectoryExists $toFilePath)) {
+            Report $fromFileRelPath $toFileRelPath $Result_Failed
+            return
         }
 
         # run pandoc
         if ([string]::IsNullOrWhiteSpace($filter)) {
             # with no filter
-            pandoc $metadataOption $otherOptions -f $fromFormat -t $toFormat -o $toFilePath $inputFilePath
-            $succeeded = $?
+            pandoc $metadataOption $otherReadOptions $otherWriteOptions -f $fromFormat -t $toFormat -o $toFilePath $inputFilePath
+            $succeeded = ($LastExitCode -eq 0)
         } else {
             # with the specified filter
-            $commandLine = "pandoc $metadataOption $otherOptions -f $fromFormat -t json $fromFilePath | " `
+            # Note that this pipeline must not be run on PowerShell but *normal* shell.
+            # Because pipeline of PowerShell is not designed to connect native programs.
+            $commandLine = "pandoc $metadataOption $otherReadOptions -f $fromFormat -t json $fromFilePath | " `
             + (Invoke-Expression "`"$filter`"") `
-            + " | pandoc $otherOptions -f json -t $toFormat -o $toFilePath"
+            + " | pandoc $otherWriteOptions -f json -t $toFormat -o $toFilePath"
             $succeeded = RunOnShell $commandLine
         }
 
         # reported
         if ($succeeded) {
-            ++$script:convertedCount
-            Report $fromFileRelPath "Converted to '$toFileRelPath'."
+            $result = $Result_Converted
         } else {
-            # pandoc failed
-            ++$script:failedCount
-            Report $fromFileRelPath "Conversion failed." $true
+            $result =  $Result_Failed
         }
+        Report $fromFileRelPath $toFileRelPath $result
     }
 }
 
 function CopyFile([string]$fromFileRelPath) {
+    # preparations
     $fromFilePath = Join-Path $fromDir $fromFileRelPath
-    $toFilePath = Join-Path $toDir $fromFileRelPath
+    $toFileRelPath = $fromFileRelPath
+    $toFilePath = Join-Path $toDir $toFileRelPath
 
     if ((-not $rebuild) -and (IsUpToDate $fromFilePath $toFilePath)) {
         # no need to copy
-        ++$script:upToDateCount
-        Report $fromFileRelPath "Skipped (up-to-date)."
+        Report $fromFileRelPath $toFileRelPath $Result_Skipped_UpToDate
     } else {
         # copy the file
 
         # make sure that the target directory exists
-        $toFileDir = Split-Path $toFilePath -Parent
-        if (-not (Test-Path $toFileDir -PathType Container)) {
-            New-Item $toFileDir -ItemType Directory | Out-Null
-            if (-not $?) {
-                ++$script:failedCount
-                Report $fromFileRelPath "Copy failed." $true
-                return;
-            }
+        if (-not (EnsureDirectoryExists $toFilePath)) {
+            Report $fromFileRelPath $toFileRelPath $Result_Failed
+            return
         }
 
         # copy the file
         Copy-Item $fromFilePath -Destination $toFilePath
         if ($?) {
-            ++$script:copiedCount
-            Report $fromFileRelPath "Copied."
+            $result = $Result_Copied
         } else {
-            ++$script:failedCount
-            Report $fromFileRelPath "Copy failed." $true
+            $result =  $Result_Failed
         }
+        Report $fromFileRelPath $toFileRelPath $result
     }
 }
 
@@ -210,28 +240,28 @@ function ProcessFile([string]$fromFileRelPath) {
     } elseif ($otherExtensionMap.ContainsKey($extension)) {
         # target of another conversion session
         # Do nothing. The other session will process it.
-        ++$script:nonTargetCount
-        Report $fromFileRelPath "Skipped (not a target)."
+        Report $fromFileRelPath $toFileRelPath $Result_Skipped_NotTarget
     } else {
         # other files
         # copy the file if you don't want rebasing
         if (-not $rebaseOtherRelativeLinks) {
             CopyFile $fromFileRelPath
         } else {
-            ++$script:nonTargetCount
-            Report $fromFileRelPath "Skipped (not a target)."
+            Report $fromFileRelPath $toFileRelPath $Result_Skipped_NotTarget
         }
     }
 }
 
 
+# Script Main
+
 # make the paths absolute
 $fromDir = Convert-Path $fromDir -ErrorAction Stop
 $toDir = Convert-Path $toDir -ErrorAction Stop
 
-# convert all input files in the input directory
+# process all files in the input directory
 Get-ChildItem $fromDir -File -Name -Recurse `
   | ForEach-Object { ProcessFile $_ }
 
 # report the result
-"Converted: $convertedCount, Copied: $copiedCount, Failed: $failedCount, Up-To-Date: $upToDateCount, Non-Target: $nonTargetCount"
+"Converted: $($resultCount[0]), Copied: $($resultCount[1]), Failed: $($resultCount[4]), Up-To-Date: $($resultCount[2]), Not-A-Target: $($resultCount[3])"

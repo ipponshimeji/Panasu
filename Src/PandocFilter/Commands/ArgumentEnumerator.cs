@@ -8,7 +8,6 @@ namespace PandocUtil.PandocFilter.Commands {
 		#region constants
 
 		public const char OptionMarker = '-';
-		public const char AlternativeOptionMarker = '/';
 		public const char DefaultOptionSeparator = ':';
 
 		#endregion
@@ -132,7 +131,6 @@ namespace PandocUtil.PandocFilter.Commands {
 				} else {
 					switch (arg[0]) {
 						case OptionMarker:
-						case AlternativeOptionMarker:
 							// an option
 							argument = this.DividedOptionStyle ? ParseDividedOption(arg, 1) : ParseJoinedOption(arg, 1);
 							break;
