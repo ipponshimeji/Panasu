@@ -6,15 +6,15 @@ dummy
 # absolute
 var1:
   _macro: "rebase"
-  value: "http://www.example.org/absolute.css"
+  target: "http://www.example.org/absolute.css"
 
 # relative
 var2: 
   _macro: "rebase"
-  value: "styles/doc.css"
+  target: "styles/doc.css"
 
 # list
 var3:
-  - {_macro: "rebase", value: "styles/doc1.css"}
-  - {_macro: "rebase", value: "styles/doc2.css"}
+  - {_macro: "rebase", target: "styles/doc1.css"}
+  - {_macro: "rebase", target: "styles/doc2.css"}
 ---
