@@ -1,0 +1,7 @@
+{
+  "profiles": {
+    "ExtensionChanger": {
+      "commandName": "Executable"
+    }
+  }
+}

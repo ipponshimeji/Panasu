@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 
@@ -101,6 +102,23 @@ namespace PandocUtil.PandocFilter.Filters {
 
 		public string RebaseRelativeUri(string relativeUriString) {
 			return Util.RebaseRelativeUri(this.FromFileUri, relativeUriString, this.ToFileUri);
+		}
+
+		#endregion
+
+
+		#region overrides
+
+		protected override void ModifyMacro(ModifyingContext context, string name, IReadOnlyDictionary<string, object> macro) {
+			switch (name) {
+				case StandardMacros.Names.Rebase:
+					object evaluated = StandardMacros.Rebase(macro, false, this.ToBaseDirUri, this.ToFileUri);
+					context.ReplaceValue(evaluated);
+					return;
+				default:
+					base.ModifyMacro(context, name, macro);
+					return;
+			}
 		}
 
 		#endregion

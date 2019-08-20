@@ -108,7 +108,7 @@ namespace PandocUtil.PandocFilter {
 						case TypeNames.MetaBlocks:
 							string name = GetStringValue(c, ExtendedNames.Macro);
 							if (string.IsNullOrEmpty(name) == false) {
-								return (name, macro);
+								return (name, obj);
 							}
 							break;
 					}

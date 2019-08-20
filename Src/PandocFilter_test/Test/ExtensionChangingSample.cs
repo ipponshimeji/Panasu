@@ -24,7 +24,8 @@ namespace PandocUtil.PandocFilter.Test {
 				GetSample(SampleGroup, "link_nonmapped_norebase"),
 				GetSample(SampleGroup, "link_nonmapped_rebase"),
 				GetSample(SampleGroup, "header_only_h1"),
-				GetSample(SampleGroup, "header_title_h1")
+				GetSample(SampleGroup, "header_title_h1"),
+				GetSample(SampleGroup, "macro_rebase")
 			};
 
 			#endregion
