@@ -264,4 +264,4 @@ Get-ChildItem $fromDir -File -Name -Recurse `
   | ForEach-Object { ProcessFile $_ }
 
 # report the result
-"Converted: $($resultCount[0]), Copied: $($resultCount[1]), Failed: $($resultCount[4]), Up-To-Date: $($resultCount[2]), Not-A-Target: $($resultCount[3])"
+"Converted: $($resultCount[0]), Copied: $($resultCount[1]), Failed: $($resultCount[4]), Up-To-Date: $($resultCount[2]), Not-Target: $($resultCount[3])"
