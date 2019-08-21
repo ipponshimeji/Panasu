@@ -5,20 +5,20 @@ using System.Diagnostics;
 using System.IO;
 
 namespace PandocUtil.PandocFilter.Test {
-	public class ExtensionChangingSample: ConvertingSample {
+	public class FormattingSample: ConvertingSample {
 		#region types
 
 		public class StandardSampleProvider: IEnumerable<object[]> {
 			#region constants
 
-			public const string SampleGroup = "ExtensionChanging";
+			public const string SampleGroup = "Formatting";
 
 			#endregion
 
 
 			#region data
 
-			private static readonly ExtensionChangingSample[] samples = {
+			private static readonly FormattingSample[] samples = {
 				GetSample(SampleGroup, "link_absolute"),
 				GetSample(SampleGroup, "link_mapped"),
 				GetSample(SampleGroup, "link_nonmapped_norebase"),
@@ -33,7 +33,7 @@ namespace PandocUtil.PandocFilter.Test {
 
 			#region properties
 
-			public static IReadOnlyList<ExtensionChangingSample> Samples {
+			public static IReadOnlyList<FormattingSample> Samples {
 				get {
 					return samples;
 				}
@@ -51,10 +51,10 @@ namespace PandocUtil.PandocFilter.Test {
 			#endregion
 
 
-			#region IEnumerator<ExtensionChangingSample>
+			#region IEnumerator<object[]>
 
 			public IEnumerator<object[]> GetEnumerator() {
-				foreach (ExtensionChangingSample sample in samples) {
+				foreach (FormattingSample sample in samples) {
 					yield return new object[] { sample };
 				}
 			}
@@ -87,7 +87,7 @@ namespace PandocUtil.PandocFilter.Test {
 
 		#region creation
 
-		public ExtensionChangingSample(string description, string inputFilePath, string answerFilePath, string supposedFromBaseDirUri, string supposedFromFileRelPath, string supposedToBaseDirUri, string supposedToFileRelPath, bool rebaseOtherRelativeLinks, Dictionary<string, string> extensionMap) :
+		public FormattingSample(string description, string inputFilePath, string answerFilePath, string supposedFromBaseDirUri, string supposedFromFileRelPath, string supposedToBaseDirUri, string supposedToFileRelPath, bool rebaseOtherRelativeLinks, Dictionary<string, string> extensionMap) :
 		base(description, inputFilePath, answerFilePath, supposedFromBaseDirUri, supposedFromFileRelPath, supposedToBaseDirUri, supposedToFileRelPath) {
 			// argument checks
 			// extension can be null
@@ -97,7 +97,7 @@ namespace PandocUtil.PandocFilter.Test {
 			this.extensionMap = extensionMap;
 		}
 
-		protected ExtensionChangingSample(IReadOnlyDictionary<string, object> config, string basePath) : base(config, basePath) {
+		protected FormattingSample(IReadOnlyDictionary<string, object> config, string basePath) : base(config, basePath) {
 			// argument checks
 			Debug.Assert(config != null);
 
@@ -123,7 +123,7 @@ namespace PandocUtil.PandocFilter.Test {
 			this.extensionMap = adapt(config.GetOptionalValue<Dictionary<string, object>>("ExtensionMap", null));
 		}
 
-		public static ExtensionChangingSample GetSample(string configFilePath) {
+		public static FormattingSample GetSample(string configFilePath) {
 			// argument checks
 			if (string.IsNullOrEmpty(configFilePath)) {
 				throw new ArgumentNullException(nameof(configFilePath));
@@ -132,10 +132,10 @@ namespace PandocUtil.PandocFilter.Test {
 			// read a JSON object from the config file
 			string basePath = Path.GetDirectoryName(configFilePath);
 			Dictionary<string, object> config = LoadConfigFile(configFilePath);
-			return new ExtensionChangingSample(config, basePath);
+			return new FormattingSample(config, basePath);
 		}
 
-		public static ExtensionChangingSample GetSample(string group, string name) {
+		public static FormattingSample GetSample(string group, string name) {
 			// argument checks
 			if (string.IsNullOrEmpty(group)) {
 				throw new ArgumentNullException(nameof(group));

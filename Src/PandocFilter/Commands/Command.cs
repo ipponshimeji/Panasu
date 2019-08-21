@@ -21,7 +21,7 @@ namespace PandocUtil.PandocFilter.Commands {
 
 		public string CommandName { get; private set; }
 
-		private string invocationCommand = null;
+		private string invocation = null;
 
 		private string taskKind = null;
 
@@ -30,9 +30,9 @@ namespace PandocUtil.PandocFilter.Commands {
 
 		#region properties
 
-		public string InvocationCommand {
+		public string Invocation {
 			get {
-				return invocationCommand ?? this.CommandName;
+				return invocation ?? this.CommandName;
 			}
 		}
 
@@ -41,7 +41,7 @@ namespace PandocUtil.PandocFilter.Commands {
 
 		#region constructors
 
-		public Command(string commandName, string invocationCommand = null) {
+		public Command(string commandName, string invocation = null) {
 			// argument checks
 			if (commandName == null) {
 				throw new ArgumentNullException(nameof(commandName));
@@ -50,7 +50,7 @@ namespace PandocUtil.PandocFilter.Commands {
 
 			// initialize members
 			this.CommandName = commandName;
-			this.invocationCommand = invocationCommand;
+			this.invocation = invocation;
 		}
 
 		#endregion

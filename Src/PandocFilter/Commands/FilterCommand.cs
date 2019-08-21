@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.IO;
 
 namespace PandocUtil.PandocFilter.Commands {
-	public class FilteringCommand: Command {
+	public class FilterCommand: Command {
 		#region properties
 
 		protected Stream InputStream { get; private set; } = null;
@@ -16,7 +16,7 @@ namespace PandocUtil.PandocFilter.Commands {
 
 		#region constructors
 
-		public FilteringCommand(string commandName, string invocationCommand = null) : base(commandName, invocationCommand) {
+		public FilterCommand(string commandName, string invocation = null) : base(commandName, invocation) {
 		}
 
 		#endregion

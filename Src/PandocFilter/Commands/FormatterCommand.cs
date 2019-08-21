@@ -6,10 +6,10 @@ using Utf8Json;
 using PandocUtil.PandocFilter.Filters;
 
 namespace PandocUtil.PandocFilter.Commands {
-	public class ExtensionChangerCommand: FilteringCommand {
+	public class FormatterCommand: FilterCommand {
 		#region constants
 
-		public const string ChangeExtensionTaskKind = "ChangeExtension";
+		public const string FormatTaskKind = "Format";
 
 		#endregion
 
@@ -33,7 +33,7 @@ namespace PandocUtil.PandocFilter.Commands {
 
 		#region constructors
 
-		public ExtensionChangerCommand(string commandName, string invocationCommand = null) : base(commandName, invocationCommand) {
+		public FormatterCommand(string commandName, string invocation = null) : base(commandName, invocation) {
 		}
 
 		#endregion
@@ -116,12 +116,12 @@ namespace PandocUtil.PandocFilter.Commands {
 				this.ExtensionMap.Add(fromExtension, Path.GetExtension(this.ToFileRelPath));
 			}
 
-			return ChangeExtensionTaskKind;
+			return FormatTaskKind;
 		}
 
 		protected override void Execute(string taskKind) {
 			switch (taskKind) {
-				case ChangeExtensionTaskKind:
+				case FormatTaskKind:
 					Filter(taskKind);
 					break;
 				default:
@@ -147,9 +147,9 @@ namespace PandocUtil.PandocFilter.Commands {
 		}
 
 		protected override void ShowUsage() {
-			Console.WriteLine($"{this.InvocationCommand} [OPTIONS] FromBaseDirPath FromFileRelPath ToBaseDirPath ToFileRelPath");
+			Console.WriteLine($"{this.Invocation} [OPTIONS] FromBaseDirPath FromFileRelPath ToBaseDirPath ToFileRelPath");
 			Console.WriteLine("OPTIONS:");
-			Console.WriteLine("Note that options are case-insensitive.");
+			Console.WriteLine("Note that option names are case-insensitive.");
 			Console.WriteLine("  -Help");
 			Console.WriteLine("  -Map:<fromExt>:<toExt>");
 			Console.WriteLine("  -R[ebaseOtherRelativeLinks]");
@@ -157,7 +157,7 @@ namespace PandocUtil.PandocFilter.Commands {
 		}
 
 		protected override void Filter(string taskKind, Stream inputStream, Stream outputStream) {
-			ExtensionChangingFilter filter = new ExtensionChangingFilter(this.FromBaseDirPath, this.FromFileRelPath, this.ToBaseDirPath, this.ToFileRelPath, this.RebaseOtherRelativeLinks, this.ExtensionMap);
+			FormattingFilter filter = new FormattingFilter(this.FromBaseDirPath, this.FromFileRelPath, this.ToBaseDirPath, this.ToFileRelPath, this.RebaseOtherRelativeLinks, this.ExtensionMap);
 
 			// read input AST
 			Dictionary<string, object> ast = JsonSerializer.Deserialize<Dictionary<string, object>>(inputStream);

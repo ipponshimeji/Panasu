@@ -5,15 +5,15 @@ using Xunit;
 using PandocUtil.PandocFilter.Test;
 
 namespace PandocUtil.PandocFilter.Commands.Test {
-	public class ExtensionChangerCommandTest {
+	public class FormatterCommandTest {
 		#region test classes
 
 		public class Filtering {
 			#region tests
 
 			[Theory(DisplayName = "Filtering")]
-			[ClassData(typeof(ExtensionChangingSample.StandardSampleProvider))]
-			public void TestFiltering(ExtensionChangingSample sample) {
+			[ClassData(typeof(FormattingSample.StandardSampleProvider))]
+			public void TestFiltering(FormattingSample sample) {
 				// Arrange
 				List<string> args = new List<string>();
 				if (sample.RebaseOtherRelativeLinks) {
@@ -28,7 +28,7 @@ namespace PandocUtil.PandocFilter.Commands.Test {
 				args.Add(sample.SupposedToFileRelPath);
 
 				void filter(Stream inputStream, Stream outputStream) {
-					ExtensionChangerCommand command = new ExtensionChangerCommand("unit test");
+					FormatterCommand command = new FormatterCommand("unit test");
 					int exitCode = command.Run(args.ToArray(), inputStream, outputStream);
 					if (exitCode != Command.SuccessExitCode) {
 						throw new ApplicationException($"The command failed. Exit code: {exitCode}");

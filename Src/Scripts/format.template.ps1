@@ -1,7 +1,7 @@
 #!/usr/bin/env pwsh
 
-# The template of wrapper script to convert_base.ps1.  
-# Copy this script as 'convert.ps1' and set your default settings.
+# The template of wrapper script to format_base.ps1.  
+# Copy this script as 'format.ps1' and set your default settings.
 
 param (
     [string]$fromDir = '../md',
@@ -10,7 +10,7 @@ param (
     [string]$toDir = '../html',
     [string]$toFormat = 'html',
     [string]$toExtension = '.html',
-    [string]$filter = "dotnet $(Split-Path -Parent $MyInvocation.MyCommand.Path)/PandocUtil/ExtensionChanger.dll -R `$fromDir `$fromFileRelPath `$toDir `$toFileRelPath",
+    [string]$filter = "dotnet $(Split-Path -Parent $MyInvocation.MyCommand.Path)/PandocUtil/Formatter.dll -R `$fromDir `$fromFileRelPath `$toDir `$toFileRelPath",
     [bool]$rebaseOtherRelativeLinks = $true,
     [hashtable]$otherExtensionMap = @{},
     [string[]]$otherReadOptions = @(),
@@ -20,7 +20,7 @@ param (
 )
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-& "$scriptDir/PandocUtil/convert_base.ps1" `
+& "$scriptDir/PandocUtil/format_base.ps1" `
     -FromDir $fromDir `
     -FromFormat $fromFormat `
     -FromExtension $fromExtension `

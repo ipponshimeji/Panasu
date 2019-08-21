@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.IO;
 
 namespace PandocUtil.PandocFilter.Filters {
-	public class ExtensionChangingFilter: ConvertingFilter {
+	public class FormattingFilter: ConvertingFilter {
 		#region data
 
 		public readonly bool RebaseOtherRelativeLinks;
@@ -27,7 +27,7 @@ namespace PandocUtil.PandocFilter.Filters {
 
 		#region constructors
 
-		public ExtensionChangingFilter(string fromBaseDirPath, string fromFileRelPath, string toBaseDirPath, string toFileRelPath, bool rebaseOtherRelativeLinks, IReadOnlyDictionary<string, string> extensionMap) :
+		public FormattingFilter(string fromBaseDirPath, string fromFileRelPath, string toBaseDirPath, string toFileRelPath, bool rebaseOtherRelativeLinks, IReadOnlyDictionary<string, string> extensionMap) :
 		base(fromBaseDirPath, fromFileRelPath, toBaseDirPath, toFileRelPath) {
 			// argument checks
 			// extensionMap can be null
@@ -37,7 +37,7 @@ namespace PandocUtil.PandocFilter.Filters {
 			this.extensionMap = (extensionMap == null) ? new Dictionary<string, string>() : new Dictionary<string, string>(extensionMap);
 		}
 
-		public ExtensionChangingFilter(string fromBaseDirPath, string fromFileRelPath, string toBaseDirPath, string toFileRelPath, bool rebaseOtherRelativeLinks, string fromExtension, string toExtension) :
+		public FormattingFilter(string fromBaseDirPath, string fromFileRelPath, string toBaseDirPath, string toFileRelPath, bool rebaseOtherRelativeLinks, string fromExtension, string toExtension) :
 		base(fromBaseDirPath, fromFileRelPath, toBaseDirPath, toFileRelPath) {
 			// argument checks
 			if (fromExtension == null) {

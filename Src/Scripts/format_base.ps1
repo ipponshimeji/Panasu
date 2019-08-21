@@ -2,35 +2,35 @@
 
 <# 
 .SYNOPSIS 
-    Converts documents using pandoc.
+    Formats documents using pandoc.
 .DESCRIPTION 
     TBU
 .PARAMETER FromDir 
-    The directory where the input documents are stored.
+    The directory where the source documents are stored.
     The default value is '../md'.
 .PARAMETER FromFormat 
-    The format of the input documents.
+    The format of the source documents.
     This value must be one which can be passed to -f option of pandoc.
     The default value is 'markdown'.
 .PARAMETER FromExtension 
-    The extension of the input document files.
+    The extension of the source document files.
     The default value is '.md'.
 .PARAMETER ToDir 
-    The directory where the output documents are going to be stored.
+    The directory where the destination documents are going to be stored.
     The default value is '../html'.
 .PARAMETER ToFormat 
-    The format of the output documents.
+    The format of the destination documents.
     This value must be one which can be passed to -t option of pandoc.
     The default value is 'html'.
 .PARAMETER ToExtension 
-    The extension of the output document files.
+    The extension of the destination document files.
     The default value is '.html'.
 .PARAMETER RebaseOtherRelativeLinks 
     Whether relative links which are not target of extension mapping
     should be rebase so that the links keep to reference its target
     in the original location.
     If this value is $false, this script copys such files into $ToDir
-    along with the converted files, and do not rebase links to the
+    along with the formatted files, and do not rebase links to the
     files.
     The default value is $true.
 .PARAMETER OtherExtensionMap 
@@ -40,18 +40,19 @@
     The array of other read options to be provided to pandoc.
     The default value is @().
 .PARAMETER OtherWriteOptions 
-    The array of other options to be provided to pandoc.
+    The array of other write options to be provided to pandoc.
     The default value is @('--standalone').
 .PARAMETER Filter 
     The command line of the pandoc filter to be used.
 .PARAMETER Rebuild 
-    Whether converts all documents.
-    By default, only updated documents are converted.
+    Whether formats all source documents.
+    By default, only updated source documents are formatted.
 .INPUTS
     None.
 .OUTPUTS
-    The paths of converted documents.
-    The path is relative to the output directory.
+    The lines which consist of the path of document and how it is processed.
+    The path is relative to $FromDir.
+    The last line is simple statistics of the formatting.
 #>
 param (
     [string]$fromDir = '../md',
@@ -60,7 +61,7 @@ param (
     [string]$toDir = '../html',
     [string]$toFormat = 'html',
     [string]$toExtension = '.html',
-    [string]$filter = "dotnet $(Split-Path -Parent $MyInvocation.MyCommand.Path)/ExtensionChanger.dll -R $fromDir $fromFileRelPath $toDir $toFileRelPath",
+    [string]$filter = "dotnet $(Split-Path -Parent $MyInvocation.MyCommand.Path)/Formatter.dll -R `$fromDir `$fromFileRelPath `$toDir `$toFileRelPath",
     [bool]$rebaseOtherRelativeLinks = $true,
     [hashtable]$otherExtensionMap = @{},
     [string[]]$otherReadOptions = @(),
@@ -72,7 +73,7 @@ param (
 # Script Globals
 
 # result constants
-Set-Variable -Name 'Result_Converted' -Value 0 -Option Constant -Scope Script
+Set-Variable -Name 'Result_Formatted' -Value 0 -Option Constant -Scope Script
 Set-Variable -Name 'Result_Copied' -Value 1 -Option Constant -Scope Script
 Set-Variable -Name 'Result_Skipped_UpToDate' -Value 2 -Option Constant -Scope Script
 Set-Variable -Name 'Result_Skipped_NotTarget' -Value 3 -Option Constant -Scope Script
@@ -87,7 +88,7 @@ Set-Variable -Name 'Result_Failed' -Value 4 -Option Constant -Scope Script
 function Report([string]$fromfileRelPath, [string]$toFileRelPath, [int]$result) {
     # select the description for the result
     switch ($result) {
-        $Result_Converted { $description = "Converted to '$toFileRelPath'." }
+        $Result_Formatted { $description = "Formatted to '$toFileRelPath'." }
         $Result_Copied { $description = 'Copied.' }
         $Result_Skipped_UpToDate { $description = 'Skipped (up-to-date).' }
         $Result_Skipped_NotTarget { $description = 'Skipped (not a target).' }
@@ -151,7 +152,7 @@ function EnsureDirectoryExists([string]$filePath) {
     }
 }
 
-function ConvertFile([string]$fromFileRelPath) {
+function FormatFile([string]$fromFileRelPath) {
     # preparations
     $toFileRelPath = [System.IO.Path]::ChangeExtension($fromFileRelPath, $toExtension)
     $fromFilePath = Join-Path $fromDir $fromFileRelPath
@@ -163,14 +164,15 @@ function ConvertFile([string]$fromFileRelPath) {
     $metadataFilePath = "$fromFilePath.metadata.yaml"
     if (Test-Path $metadataFilePath -PathType Leaf) {
         $sourceFiles += $metadataFilePath
-        $metadataOption = "--metadata-file=$metadataFilePath"
+    } else {
+        $metadataFilePath = ''
     }
 
     if ((-not $rebuild) -and (IsUpToDate $sourceFiles $toFilePath)) {
         # the to file is up-to-data
         Report $fromFileRelPath $toFileRelPath $Result_Skipped_UpToDate
     } else {
-        # convert the output 
+        # format the document 
 
         # make sure that the target directory exists
         if (-not (EnsureDirectoryExists $toFilePath)) {
@@ -181,13 +183,13 @@ function ConvertFile([string]$fromFileRelPath) {
         # run pandoc
         if ([string]::IsNullOrWhiteSpace($filter)) {
             # with no filter
-            pandoc $metadataOption $otherReadOptions $otherWriteOptions -f $fromFormat -t $toFormat -o $toFilePath $inputFilePath
+            pandoc $metadataOption $otherReadOptions $otherWriteOptions -f $fromFormat -t $toFormat -o $toFilePath $fromFilePath $metadataFilePath
             $succeeded = ($LastExitCode -eq 0)
         } else {
             # with the specified filter
             # Note that this pipeline must not be run on PowerShell but *normal* shell.
             # Because pipeline of PowerShell is not designed to connect native programs.
-            $commandLine = "pandoc $metadataOption $otherReadOptions -f $fromFormat -t json $fromFilePath | " `
+            $commandLine = "pandoc $metadataOption $otherReadOptions -f $fromFormat -t json $fromFilePath $metadataFilePath | " `
             + (Invoke-Expression "`"$filter`"") `
             + " | pandoc $otherWriteOptions -f json -t $toFormat -o $toFilePath"
             $succeeded = RunOnShell $commandLine
@@ -195,7 +197,7 @@ function ConvertFile([string]$fromFileRelPath) {
 
         # reported
         if ($succeeded) {
-            $result = $Result_Converted
+            $result = $Result_Formatted
         } else {
             $result =  $Result_Failed
         }
@@ -236,7 +238,7 @@ function ProcessFile([string]$fromFileRelPath) {
     $extension = [System.IO.Path]::GetExtension($fromFileRelPath)
     if ($extension -eq $fromExtension) {
         # target of this conversion session
-        ConvertFile $fromFileRelPath
+        FormatFile $fromFileRelPath
     } elseif ($otherExtensionMap.ContainsKey($extension)) {
         # target of another conversion session
         # Do nothing. The other session will process it.
@@ -264,4 +266,4 @@ Get-ChildItem $fromDir -File -Name -Recurse `
   | ForEach-Object { ProcessFile $_ }
 
 # report the result
-"Converted: $($resultCount[0]), Copied: $($resultCount[1]), Failed: $($resultCount[4]), Up-To-Date: $($resultCount[2]), Not-Target: $($resultCount[3])"
+"Formatted: $($resultCount[0]), Copied: $($resultCount[1]), Failed: $($resultCount[4]), Up-To-Date: $($resultCount[2]), Not-Target: $($resultCount[3])"

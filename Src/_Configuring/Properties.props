@@ -1,7 +1,7 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <PropertyGroup>
-    <Version>0.1.1.0</Version>
+    <Version>0.1.1</Version>
     <Company>Takamasa Uramoto</Company>
     <Product>PandocUtil</Product>
     <Copyright>Copyright 2019 Takamasa Uramoto</Copyright>
