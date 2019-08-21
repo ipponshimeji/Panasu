@@ -158,7 +158,6 @@ function FormatFile([string]$fromFileRelPath) {
     $fromFilePath = Join-Path $fromDir $fromFileRelPath
     $toFilePath = Join-Path $toDir $toFileRelPath
     $sourceFiles = @($fromFilePath)
-    $metadataOption = ''
 
     # check existence of the metadata file
     $metadataFilePath = "$fromFilePath.metadata.yaml"
@@ -183,13 +182,13 @@ function FormatFile([string]$fromFileRelPath) {
         # run pandoc
         if ([string]::IsNullOrWhiteSpace($filter)) {
             # with no filter
-            pandoc $metadataOption $otherReadOptions $otherWriteOptions -f $fromFormat -t $toFormat -o $toFilePath $fromFilePath $metadataFilePath
+            pandoc $otherReadOptions $otherWriteOptions -f $fromFormat -t $toFormat -o $toFilePath $fromFilePath $metadataFilePath
             $succeeded = ($LastExitCode -eq 0)
         } else {
             # with the specified filter
             # Note that this pipeline must not be run on PowerShell but *normal* shell.
             # Because pipeline of PowerShell is not designed to connect native programs.
-            $commandLine = "pandoc $metadataOption $otherReadOptions -f $fromFormat -t json $fromFilePath $metadataFilePath | " `
+            $commandLine = "pandoc $otherReadOptions -f $fromFormat -t json $fromFilePath $metadataFilePath | " `
             + (Invoke-Expression "`"$filter`"") `
             + " | pandoc $otherWriteOptions -f json -t $toFormat -o $toFilePath"
             $succeeded = RunOnShell $commandLine
