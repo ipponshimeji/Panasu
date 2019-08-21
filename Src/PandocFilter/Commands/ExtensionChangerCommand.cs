@@ -7,6 +7,13 @@ using PandocUtil.PandocFilter.Filters;
 
 namespace PandocUtil.PandocFilter.Commands {
 	public class ExtensionChangerCommand: FilteringCommand {
+		#region constants
+
+		public const string ChangeExtensionTaskKind = "ChangeExtension";
+
+		#endregion
+
+
 		#region data
 
 		protected string FromBaseDirPath { get; set; } = null;
@@ -26,7 +33,7 @@ namespace PandocUtil.PandocFilter.Commands {
 
 		#region constructors
 
-		public ExtensionChangerCommand() {
+		public ExtensionChangerCommand(string commandName, string invocationCommand = null) : base(commandName, invocationCommand) {
 		}
 
 		#endregion
@@ -50,6 +57,9 @@ namespace PandocUtil.PandocFilter.Commands {
 					break;
 				case 3:
 					this.ToFileRelPath = arg.Value;
+					break;
+				default:
+					base.ProcessNormalArgument(arg);
 					break;
 			}
 		}
@@ -75,10 +85,18 @@ namespace PandocUtil.PandocFilter.Commands {
 				this.ExtensionMap.Add(from, to);
 			} else if (OptionNameStartsWith("RebaseOtherRelativeLinks", name)) {
 				this.RebaseOtherRelativeLinks = true;
+			} else {
+				base.ProcessOption(arg);
 			}
 		}
 
-		protected override void OnExecuting() {
+		protected override string OnExecuting() {
+			string command = base.OnExecuting();
+			if (command != null) {
+				// reserved command (such as usage or version)
+				return command;
+			}
+
 			// state checks
 			if (string.IsNullOrEmpty(this.FromBaseDirPath)) {
 				throw CreateMissingIndispensableArgumentException(nameof(FromBaseDirPath));
@@ -97,19 +115,19 @@ namespace PandocUtil.PandocFilter.Commands {
 			if (!this.ExtensionMap.ContainsKey(fromExtension)) {
 				this.ExtensionMap.Add(fromExtension, Path.GetExtension(this.ToFileRelPath));
 			}
+
+			return ChangeExtensionTaskKind;
 		}
 
-		protected override void Execute(Stream inputStream, Stream outputStream) {
-			ExtensionChangingFilter filter = new ExtensionChangingFilter(this.FromBaseDirPath, this.FromFileRelPath, this.ToBaseDirPath, this.ToFileRelPath, this.RebaseOtherRelativeLinks, this.ExtensionMap);
-
-			// read input AST
-			Dictionary<string, object> ast = JsonSerializer.Deserialize<Dictionary<string, object>>(inputStream);
-
-			// modify the AST
-			filter.Modify(ast);
-
-			// write output AST
-			JsonSerializer.Serialize(outputStream, ast);
+		protected override void Execute(string taskKind) {
+			switch (taskKind) {
+				case ChangeExtensionTaskKind:
+					Filter(taskKind);
+					break;
+				default:
+					base.Execute(taskKind);
+					break;
+			}
 		}
 
 		protected override int OnExecuted(Exception error) {
@@ -126,6 +144,29 @@ namespace PandocUtil.PandocFilter.Commands {
 			}
 
 			return exitCode;
+		}
+
+		protected override void ShowUsage() {
+			Console.WriteLine($"{this.InvocationCommand} [OPTIONS] FromBaseDirPath FromFileRelPath ToBaseDirPath ToFileRelPath");
+			Console.WriteLine("OPTIONS:");
+			Console.WriteLine("Note that options are case-insensitive.");
+			Console.WriteLine("  -Help");
+			Console.WriteLine("  -Map:<fromExt>:<toExt>");
+			Console.WriteLine("  -R[ebaseOtherRelativeLinks]");
+			Console.WriteLine("  -Version");
+		}
+
+		protected override void Filter(string taskKind, Stream inputStream, Stream outputStream) {
+			ExtensionChangingFilter filter = new ExtensionChangingFilter(this.FromBaseDirPath, this.FromFileRelPath, this.ToBaseDirPath, this.ToFileRelPath, this.RebaseOtherRelativeLinks, this.ExtensionMap);
+
+			// read input AST
+			Dictionary<string, object> ast = JsonSerializer.Deserialize<Dictionary<string, object>>(inputStream);
+
+			// modify the AST
+			filter.Modify(ast);
+
+			// write output AST
+			JsonSerializer.Serialize(outputStream, ast);
 		}
 
 		#endregion

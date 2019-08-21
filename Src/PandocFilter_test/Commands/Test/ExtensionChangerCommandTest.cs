@@ -28,7 +28,7 @@ namespace PandocUtil.PandocFilter.Commands.Test {
 				args.Add(sample.SupposedToFileRelPath);
 
 				void filter(Stream inputStream, Stream outputStream) {
-					ExtensionChangerCommand command = new ExtensionChangerCommand();
+					ExtensionChangerCommand command = new ExtensionChangerCommand("unit test");
 					int exitCode = command.Run(args.ToArray(), inputStream, outputStream);
 					if (exitCode != Command.SuccessExitCode) {
 						throw new ApplicationException($"The command failed. Exit code: {exitCode}");

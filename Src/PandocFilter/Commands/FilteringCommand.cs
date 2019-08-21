@@ -16,7 +16,7 @@ namespace PandocUtil.PandocFilter.Commands {
 
 		#region constructors
 
-		public FilteringCommand(): base() {
+		public FilteringCommand(string commandName, string invocationCommand = null) : base(commandName, invocationCommand) {
 		}
 
 		#endregion
@@ -51,28 +51,23 @@ namespace PandocUtil.PandocFilter.Commands {
 		#endregion
 
 
-		#region overrides
+		#region overridables
 
-		protected override void Execute() {
+		protected virtual void Filter(string taskKind) {
 			if (this.InputStream != null) {
 				Debug.Assert(this.OutputStream != null);
-				Execute(this.InputStream, this.OutputStream);
+				Filter(taskKind, this.InputStream, this.OutputStream);
 			} else {
 				Debug.Assert(this.OutputStream == null);
 				using (Stream inputStream = Console.OpenStandardInput()) {
 					using (Stream outputStream = Console.OpenStandardOutput()) {
-						Execute(inputStream, outputStream);
+						Filter(taskKind, inputStream, outputStream);
 					}
 				}
 			}
 		}
 
-		#endregion
-
-
-		#region overridables
-
-		protected virtual void Execute(Stream inputStream, Stream outputStream) {
+		protected virtual void Filter(string taskKind, Stream inputStream, Stream outputStream) {
 		}
 
 		#endregion
