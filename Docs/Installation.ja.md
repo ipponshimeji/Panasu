@@ -43,7 +43,7 @@ Ubuntu 18.04上でもやってみたら動きました。
 ## インストール
 
 インストーラーはありません。
-[リリースノート](../Releases/README.ja.md)ページからzipファイルをダウンロードして、
+[Releases](https://github.com/ipponshimeji/PandocUtil/releases/)ページからzipファイルをダウンロードして、
 適当なフォルダに展開します。
 
 具体的な使い方は、[チュートリアル](Tutorial.ja.md)を参照してください。

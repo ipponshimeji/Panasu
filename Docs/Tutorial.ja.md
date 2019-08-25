@@ -16,7 +16,7 @@
 1. プロジェクトのルートディレクトリの名前は何でもかまいません。
    ここでは、仮に`Work`とします。
 1. 変換したいmarkdownファイル群を`md`ディレクトリの下に格納します。
-1. [リリースノート](../Releases/README.ja.md)ページからダウンロードしたzipファイルの中身（`PandocUtil`ディレクトリ）を
+1. [Releases](https://github.com/ipponshimeji/PandocUtil/releases/)ページからダウンロードしたzipファイルの中身（`PandocUtil`ディレクトリ）を
    `_scripts`ディレクトリの下へコピーします。
 1. `_scripts/PandocUtil/format.template.ps1`を`_scripts`ディレクトリへコピーして、
    `format.ps1`にリネームします。
