@@ -4,27 +4,35 @@
 .SYNOPSIS 
     Formats documents using pandoc.
 .DESCRIPTION 
-    TBU
+    This script formats a group of source documents using pandoc.
 .PARAMETER FromDir 
     The directory where the source documents are stored.
     The default value is '../md'.
-.PARAMETER FromFormat 
-    The format of the source documents.
-    This value must be one which can be passed to -f option of pandoc.
-    The default value is 'markdown'.
-.PARAMETER FromExtension 
-    The extension of the source document files.
-    The default value is '.md'.
+.PARAMETER FromExtensions 
+    The extensions of the source document files.
+    The default value is @('.md').
+.PARAMETER FromFormats 
+    The formats of the source documents.
+    Each value must be one which can be passed to -f option of pandoc.
+    Each item in this argument corresponds to the item in FromExtensions respectively.
+    The length of this argument must be same to the length of FromExtensions.
+    The default value is @('markdown').
 .PARAMETER ToDir 
     The directory where the destination documents are going to be stored.
     The default value is '../html'.
-.PARAMETER ToFormat 
+.PARAMETER ToExtensions 
+    The extensions of the destination document files.
+    Each item in this argument corresponds to the item in FromExtensions respectively.
+    The length of this argument must be same to the length of FromExtensions.
+    The default value is @('.html').
+.PARAMETER ToFormats 
     The format of the destination documents.
-    This value must be one which can be passed to -t option of pandoc.
-    The default value is 'html'.
-.PARAMETER ToExtension 
-    The extension of the destination document files.
-    The default value is '.html'.
+    Each value must be one which can be passed to -t option of pandoc.
+    Each item in this argument corresponds to the item in FromExtensions respectively.
+    The length of this argument must be same to the length of FromExtensions.
+    The default value is @('html').
+.PARAMETER MetadataFiles 
+    The yaml files which describe metadata for this formatting. 
 .PARAMETER RebaseOtherRelativeLinks 
     Whether relative links which are not target of extension mapping
     should be rebase so that the links keep to reference its target
@@ -34,8 +42,8 @@
     files.
     The default value is $true.
 .PARAMETER OtherExtensionMap 
-    The extension mappings other than the pair of FromExtension and ToExtension.
-    This script converts those extensions in relative links.
+    The extension mappings other than the pair of FromExtensions and ToExtensions.
+    This script replaces those extensions in relative links.
 .PARAMETER OtherReadOptions 
     The array of other read options to be provided to pandoc.
     The default value is @().
@@ -56,12 +64,13 @@
 #>
 param (
     [string]$fromDir = '../md',
-    [string]$fromFormat = 'markdown',
-    [string]$fromExtension = '.md',
+    [string[]]$fromExtensions = @('.md'),
+    [string[]]$fromFormats = @('markdown'),
     [string]$toDir = '../html',
-    [string]$toFormat = 'html',
-    [string]$toExtension = '.html',
-    [string]$filter = "dotnet $(Split-Path -Parent $MyInvocation.MyCommand.Path)/Formatter.dll -R `$fromDir `$fromFileRelPath `$toDir `$toFileRelPath",
+    [string[]]$toExtensions = @('.html'),
+    [string[]]$toFormats = @('html'),
+    [string[]]$metadataFiles = @(),
+    [string]$filter = '',   # the default value is set in the script body
     [bool]$rebaseOtherRelativeLinks = $true,
     [hashtable]$otherExtensionMap = @{},
     [string[]]$otherReadOptions = @(),
@@ -79,7 +88,10 @@ Set-Variable -Name 'Result_Skipped_UpToDate' -Value 2 -Option Constant -Scope Sc
 Set-Variable -Name 'Result_Skipped_NotTarget' -Value 3 -Option Constant -Scope Script
 Set-Variable -Name 'Result_Failed' -Value 4 -Option Constant -Scope Script
 
-# variables
+# the directory where this script is located
+Set-Variable -Name scriptDir -Value (Split-Path -Parent $MyInvocation.MyCommand.Path) -Option ReadOnly -Scope Script
+
+# result statistics
 [int[]]$resultCount = @(0; 0; 0; 0; 0)
 
 
@@ -152,21 +164,38 @@ function EnsureDirectoryExists([string]$filePath) {
     }
 }
 
-function FormatFile([string]$fromFileRelPath) {
-    # preparations
-    $toFileRelPath = [System.IO.Path]::ChangeExtension($fromFileRelPath, $toExtension)
-    $fromFilePath = Join-Path $fromDir $fromFileRelPath
-    $toFilePath = Join-Path $toDir $toFileRelPath
-    $sourceFiles = @($fromFilePath)
-
-    # check existence of the metadata file
-    $metadataFilePath = "$fromFilePath.metadata.yaml"
-    if (Test-Path $metadataFilePath -PathType Leaf) {
-        $sourceFiles += $metadataFilePath
-    } else {
-        $metadataFilePath = ''
+function CreateCombinedMetadataFile([string[]]$metadataFilePaths) {
+    $combinedMetadataFile = New-TemporaryFile -ErrorAction Stop
+    try {
+        Get-Content $metadataFilePaths | Add-Content $combinedMetadataFile
+    } catch {
+        Remive-Item $combinedMetadataFile
+        return metadataFile = ''
     }
 
+    $combinedMetadataFile
+}
+
+function FormatFile([string]$fromFileRelPath, [hashtable]$format) {
+    # preparations
+    $toFileRelPath = [System.IO.Path]::ChangeExtension($fromFileRelPath, $format.toExtension)
+    $fromFilePath = Join-Path $fromDir $fromFileRelPath
+    $toFilePath = Join-Path $toDir $toFileRelPath
+
+    # check existence of the metadata file
+    if (0 -lt $metadataFiles.Count) {
+        $allMetadataFiles = $metadataFiles.Clone()
+    } else {
+        $allMetadataFiles = @()
+    }
+
+    $sourceMetadataFilePath = "$fromFilePath.metadata.yaml"
+    if (Test-Path $sourceMetadataFilePath -PathType Leaf) {
+        $allMetadataFiles += $sourceMetadataFilePath
+    }
+
+    $sourceFiles = $allMetadataFiles.Clone()
+    $sourceFiles += $fromFilePath
     if ((-not $rebuild) -and (IsUpToDate $sourceFiles $toFilePath)) {
         # the to file is up-to-data
         Report $fromFileRelPath $toFileRelPath $Result_Skipped_UpToDate
@@ -179,19 +208,38 @@ function FormatFile([string]$fromFileRelPath) {
             return
         }
 
-        # run pandoc
-        if ([string]::IsNullOrWhiteSpace($filter)) {
-            # with no filter
-            pandoc $otherReadOptions $otherWriteOptions -f $fromFormat -t $toFormat -o $toFilePath $fromFilePath $metadataFilePath
-            $succeeded = ($LastExitCode -eq 0)
-        } else {
-            # with the specified filter
-            # Note that this pipeline must not be run on PowerShell but *normal* shell.
-            # Because pipeline of PowerShell is not designed to connect native programs.
-            $commandLine = "pandoc $otherReadOptions -f $fromFormat -t json $fromFilePath $metadataFilePath | " `
-            + (Invoke-Expression "`"$filter`"") `
-            + " | pandoc $otherWriteOptions -f json -t $toFormat -o $toFilePath"
-            $succeeded = RunOnShell $commandLine
+        $combinedMetadataFile = ''
+        switch ($allMetadataFiles.Length) {
+            0 { $metadataOption = '' }
+            1 { $metadataOption = "--metadata-file=$($allMetadataFiles[0])" }
+            default {
+                $combinedMetadataFile = CreateCombinedMetadataFile($allMetadataFiles)
+                if ([string]::IsNullOrEmpty($combinedMetadataFile)) {
+                    Report $fromFileRelPath $toFileRelPath $Result_Failed
+                    return
+                }
+                $metadataOption = "--metadata-file=$combinedMetadataFile"
+            }
+        }    
+        try {
+            # run pandoc
+            if ([string]::IsNullOrWhiteSpace($filter)) {
+                # with no filter
+                pandoc $otherReadOptions $otherWriteOptions $metadataOption -f $format.fromFormat -t $format.toFormat -o $toFilePath $fromFilePath
+                $succeeded = ($LastExitCode -eq 0)
+            } else {
+                # with the specified filter
+                # Note that this pipeline must not be run on PowerShell but *normal* shell.
+                # Because pipeline of PowerShell is not designed to connect native programs.
+                $commandLine = "pandoc $otherReadOptions $metadataOption -f $($format.fromFormat) -t json $fromFilePath | " `
+                + (Invoke-Expression "`"$filter`"") `
+                + " | pandoc $otherWriteOptions -f json -t $($format.toFormat) -o $toFilePath"
+                $succeeded = RunOnShell $commandLine
+            }
+        } finally {
+            if (-not [string]::IsNullOrEmpty($combinedMetadataFile)) {
+                Remove-Item $combinedMetadataFile
+            }
         }
 
         # reported
@@ -235,20 +283,22 @@ function CopyFile([string]$fromFileRelPath) {
 
 function ProcessFile([string]$fromFileRelPath) {
     $extension = [System.IO.Path]::GetExtension($fromFileRelPath)
-    if ($extension -eq $fromExtension) {
-        # target of this conversion session
-        FormatFile $fromFileRelPath
+
+    $format = $formatMap[$extension]
+    if ($null -ne $format) {
+        # target of this formatting session
+        FormatFile $fromFileRelPath $format
     } elseif ($otherExtensionMap.ContainsKey($extension)) {
-        # target of another conversion session
+        # target of another formatting session
         # Do nothing. The other session will process it.
         Report $fromFileRelPath $toFileRelPath $Result_Skipped_NotTarget
     } else {
         # other files
         # copy the file if you don't want rebasing
-        if (-not $rebaseOtherRelativeLinks) {
-            CopyFile $fromFileRelPath
-        } else {
+        if ($rebaseOtherRelativeLinks) {
             Report $fromFileRelPath $toFileRelPath $Result_Skipped_NotTarget
+        } else {
+            CopyFile $fromFileRelPath
         }
     }
 }
@@ -256,13 +306,58 @@ function ProcessFile([string]$fromFileRelPath) {
 
 # Script Main
 
-# make the paths absolute
-$fromDir = Convert-Path $fromDir -ErrorAction Stop
-$toDir = Convert-Path $toDir -ErrorAction Stop
+# collect formatting information
 
-# process all files in the input directory
-Get-ChildItem $fromDir -File -Name -Recurse `
-  | ForEach-Object { ProcessFile $_ }
+$formatCount = $fromExtensions.Length
+@($fromFormats.Length; $toExtensions.Length; $toFormats.Length) `
+  | ForEach-Object { 
+        if ($_ -ne $formatCount) {
+            Write-Error 'The length of $fromExtensions, $fromFormats, $toExtensions and $toFormats must be same.' -ErrorAction Stop
+        }
+    }
+
+$formatMap = @{}
+$extensionMap = $otherExtensionMap.Clone()
+for ($i = 0; $i -lt $formatCount; ++$i) {
+    # add the info to the format map 
+    $fromExtension = $fromExtensions[$i]
+    $toExtension = $toExtensions[$i]
+    $formatMap[$fromExtension] = @{
+        'fromExtension' = $fromExtension;
+        'fromFormat' = $fromFormats[$i];
+        'toExtension' = $toExtension;
+        'toFormat' = $toFormats[$i]
+    }
+
+    # add the info to the extension map
+    $extensionMap[$fromExtension] = $toExtension
+}
+
+# give the default value for $filter
+if ([string]::IsNullOrEmpty($filter)) {
+    $rOption = ''
+    if ($rebaseOtherRelativeLinks) {
+        $rOption = '-R'
+    }
+    $mapOptions = $extensionMap.GetEnumerator() | ForEach-Object { "-Map:$($_.Name):$($_.Value)" }
+
+    $filter = "dotnet $scriptDir/Formatter.dll $rOption $mapOptions `$fromDir `$fromFileRelPath `$toDir `$toFileRelPath"
+} 
+
+# make the paths absolute
+# Note the working directory of PowerShell may differ from the current directory.
+# That means you can not use [System.IO.Path]::GetFullPath() easily.
+$workingDir = Convert-Path '.'
+$fromDir = Convert-Path $fromDir -ErrorAction Stop  # $fromDir must exist
+$toDir = [System.IO.Path]::Combine($workingDir, $toDir)
+if (-not (Test-Path $toDir -PathType Container)) {
+    New-Item $toDir -ItemType Directory -ErrorAction Stop | Out-Null
+}
+$metadataFiles = $metadataFiles | ForEach-Object { [System.IO.Path]::Combine($workingDir, $_) }
+
+# process all files in the from directory
+Get-ChildItem $fromDir -File -Name -Recurse | ForEach-Object { ProcessFile $_ }
 
 # report the result
+''  # output blank line
 "Formatted: $($resultCount[0]), Copied: $($resultCount[1]), Failed: $($resultCount[4]), Up-To-Date: $($resultCount[2]), Not-Target: $($resultCount[3])"

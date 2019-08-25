@@ -5,28 +5,32 @@
 
 param (
     [string]$fromDir = '../md',
-    [string]$fromFormat = 'markdown',
-    [string]$fromExtension = '.md',
+    [string[]]$fromExtensions = @('.md'),
+    [string[]]$fromFormats = @('markdown'),
     [string]$toDir = '../html',
-    [string]$toFormat = 'html',
-    [string]$toExtension = '.html',
-    [string]$filter = "dotnet $(Split-Path -Parent $MyInvocation.MyCommand.Path)/PandocUtil/Formatter.dll -R `$fromDir `$fromFileRelPath `$toDir `$toFileRelPath",
+    [string[]]$toExtensions = @('.html'),
+    [string[]]$toFormats = @('html'),
+    [string[]]$metadataFiles = @(),
+    [string]$filter = '',
     [bool]$rebaseOtherRelativeLinks = $true,
     [hashtable]$otherExtensionMap = @{},
     [string[]]$otherReadOptions = @(),
     [string[]]$otherWriteOptions = @('--standalone'),
     [switch]
-    [bool]$rebuild = $false
+    [bool]$rebuild = $false,
+    [string]$pandocUtilPath = "$(Split-Path -Parent $MyInvocation.MyCommand.Path)/PandocUtil"
 )
 
-$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-& "$scriptDir/PandocUtil/format_base.ps1" `
+
+# call format_base.ps1
+& "$pandocUtilPath/format_base.ps1" `
     -FromDir $fromDir `
-    -FromFormat $fromFormat `
-    -FromExtension $fromExtension `
+    -FromExtensions $fromExtensions `
+    -FromFormats $fromFormats `
     -ToDir $toDir `
-    -ToFormat $toFormat `
-    -ToExtension $toExtension `
+    -ToExtensions $toExtensions `
+    -ToFormats $toFormats `
+    -MetadataFiles $metadataFiles `
     -Filter $filter `
     -RebaseOtherRelativeLinks $rebaseOtherRelativeLinks `
     -OtherExtensionMap $otherExtensionMap `
