@@ -109,15 +109,19 @@ namespace PandocUtil.PandocFilter.Filters {
 
 		#region overrides
 
-		protected override void ModifyMacro(ModifyingContext context, string name, IReadOnlyDictionary<string, object> macro) {
-			switch (name) {
+		protected override object ExpandMacro<ActualContext>(ActualContext context, string macroName) {
+			// argument checks
+			if (macroName == null) {
+				throw new ArgumentNullException(nameof(macroName));
+			}
+
+			switch (macroName) {
 				case StandardMacros.Names.Rebase:
-					object evaluated = StandardMacros.Rebase(macro, false, this.ToBaseDirUri, this.ToFileUri);
-					context.ReplaceValue(evaluated);
-					return;
+					return StandardMacros.Rebase(context, ExpandMacroParameter<ActualContext>, this.ToBaseDirUri, this.ToFileUri);
+				case StandardMacros.Names.Condition:
+					return StandardMacros.Condition(context, ExpandMacroParameter<ActualContext>, this.FromFileRelPath);
 				default:
-					base.ModifyMacro(context, name, macro);
-					return;
+					return base.ExpandMacro<ActualContext>(context, macroName);
 			}
 		}
 

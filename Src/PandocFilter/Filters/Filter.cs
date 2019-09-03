@@ -8,7 +8,7 @@ namespace PandocUtil.PandocFilter.Filters {
 	public class Filter {
 		#region types
 
-		protected class Context<ActualContext>: WorkingTreeNode<ActualContext> where ActualContext: WorkingTreeNodeBase {
+		protected class ContextBase: WorkingTreeNode {
 			#region data
 
 			private object value = null;
@@ -70,7 +70,7 @@ namespace PandocUtil.PandocFilter.Filters {
 
 			#region creation and destruction
 
-			protected Context() {
+			protected ContextBase() {
 			}
 
 
@@ -95,7 +95,7 @@ namespace PandocUtil.PandocFilter.Filters {
 				return;
 			}
 
-			protected new void Initialize(ActualContext parent) {
+			protected void Initialize(ContextBase parent) {
 				// argument checks
 
 				// initialize this instance
@@ -105,7 +105,7 @@ namespace PandocUtil.PandocFilter.Filters {
 				return;
 			}
 
-			protected void Initialize(ActualContext parent, string name, object value) {
+			protected void Initialize(ContextBase parent, string name, object value) {
 				// argument checks
 				// value can be null
 
@@ -116,7 +116,7 @@ namespace PandocUtil.PandocFilter.Filters {
 				return;
 			}
 
-			protected void Initialize(ActualContext parent, int index, object value) {
+			protected void Initialize(ContextBase parent, int index, object value) {
 				// argument checks
 				// value can be null
 
@@ -150,6 +150,238 @@ namespace PandocUtil.PandocFilter.Filters {
 						this.objValue = null;
 						this.arrayValue = null;
 						break;
+				}
+			}
+
+			#endregion
+
+
+			#region methods
+
+			public FormatException CreateFormatException(string message) {
+				return new FormatException($"{message}{Environment.NewLine}Location: {GetLocation()}");
+			}
+
+			public (bool, T) GetOptionalValue<T>(string key) {
+				return ((IReadOnlyDictionary<string, object>)this.ObjectValue).GetOptionalValue<T>(key);
+			}
+
+			public T GetOptionalValue<T>(string key, T defaultValue) {
+				return ((IReadOnlyDictionary<string, object>)this.ObjectValue).GetOptionalValue<T>(key, defaultValue);
+			}
+
+			public T GetIndispensableValue<T>(string key) {
+				try {
+					return ((IReadOnlyDictionary<string, object>)this.ObjectValue).GetIndispensableValue<T>(key);
+				} catch (KeyNotFoundException) {
+					string message = $"The indispensable key '{key}' is missing in the JSON object.";
+					throw CreateFormatException(message);
+				}
+			}
+
+			public (string type, object contents) IsElement() {
+				return Schema.IsElement((IReadOnlyDictionary<string, object>)this.ObjectValue);
+			}
+
+			public (string macro, object contents) IsMacro() {
+				return Schema.IsValueMacro(this.Value);
+			}
+
+			public virtual Dictionary<string, object> GetEditingBaseObject() {
+				return new Dictionary<string, object>();
+			}
+
+			public virtual List<object> GetEditingBaseArray() {
+				return new List<object>();
+			}
+
+			#endregion
+
+
+			#region methods - metadata
+
+			public string GetMetadataStringValue(string key, string formatName = null) {
+				object value;
+				if (this.ObjectValue.TryGetValue(key, out value)) {
+					return Schema.GetMetadataStringValue(value, formatName);
+				} else {
+					return null;
+				}
+			}
+
+			#endregion
+
+
+			#region methods - adapter for subclasses
+
+			protected static void SetName(ContextBase context, string name) {
+				context.Name = name;
+			}
+
+			protected static void SetIndex(ContextBase context, int index) {
+				context.Index = index;
+			}
+
+			protected static void SetValue(ContextBase context, object value) {
+				context.Value = value;
+			}
+
+			#endregion
+		}
+
+		protected abstract class Context<ActualContext>: ContextBase where ActualContext: ContextBase {
+			#region properties
+
+			public new ActualContext Parent {
+				get {
+					return (ActualContext)base.Parent;
+				}
+			}
+
+			#endregion
+
+
+			#region creation and destruction
+
+			protected Context() {
+			}
+
+
+			protected abstract ActualContext CreateChildContext();
+
+			protected abstract ActualContext CreateChildContext(string childName, object childValue);
+
+			protected abstract ActualContext CreateChildContext(int childIndex, object childValue);
+
+			protected abstract void ReleaseChildContext(ActualContext childContext);
+
+			#endregion
+
+
+			#region methods - context operations
+
+			public void RunInChildContext(string childName, object childValue, Action<ActualContext> action) {
+				// argument checks
+				if (childName == null) {
+					throw new ArgumentNullException(nameof(childName));
+				}
+				// childName can be empty
+				// childValue can be null
+				if (action == null) {
+					throw new ArgumentNullException(nameof(action));
+				}
+
+				// run the action in the context
+				ActualContext childContext = CreateChildContext(childName, childValue);
+				try {
+					action(childContext);
+				} finally {
+					ReleaseChildContext(childContext);
+				}
+			}
+
+			public object RunInChildContext(string childName, object childValue, Func<ActualContext, object> func) {
+				// argument checks
+				if (childName == null) {
+					throw new ArgumentNullException(nameof(childName));
+				}
+				// childName can be empty
+				// childValue can be null
+				if (func == null) {
+					throw new ArgumentNullException(nameof(func));
+				}
+
+				// run the action in the context
+				ActualContext childContext = CreateChildContext(childName, childValue);
+				try {
+					return func(childContext);
+				} finally {
+					ReleaseChildContext(childContext);
+				}
+			}
+
+			public void RunInChildContext(int childIndex, object childValue, Action<ActualContext> action) {
+				// argument checks
+				if (childIndex < 0) {
+					throw new ArgumentOutOfRangeException(nameof(childIndex));
+				}
+				// childValue can be null
+				if (action == null) {
+					throw new ArgumentNullException(nameof(action));
+				}
+
+				// run the action in the context
+				ActualContext childContext = CreateChildContext(childIndex, childValue);
+				try {
+					action(childContext);
+				} finally {
+					ReleaseChildContext(childContext);
+				}
+			}
+
+			public object RunInChildContext(int childIndex, object childValue, Func<ActualContext, object> func) {
+				// argument checks
+				if (childIndex < 0) {
+					throw new ArgumentOutOfRangeException(nameof(childIndex));
+				}
+				// childValue can be null
+				if (func == null) {
+					throw new ArgumentNullException(nameof(func));
+				}
+
+				// run the action in the context
+				ActualContext childContext = CreateChildContext(childIndex, childValue);
+				try {
+					return func(childContext);
+				} finally {
+					ReleaseChildContext(childContext);
+				}
+			}
+
+			public void RunInEachChildContext(IReadOnlyList<object> array, Action<ActualContext> action) {
+				// argument checks
+				if (array == null) {
+					return;
+				}
+				if (action == null) {
+					throw new ArgumentNullException(nameof(action));
+				}
+
+				// run the action in the context
+				ActualContext childContext = CreateChildContext();
+				try {
+					for (int i = 0; i < array.Count; ++i) {
+						SetIndex(childContext, i);
+						SetValue(childContext, array[i]);
+						action(childContext);
+					}
+				} finally {
+					ReleaseChildContext(childContext);
+				}
+			}
+
+			public void RunInEachChildContext(IReadOnlyDictionary<string, object> obj, Action<ActualContext> action) {
+				// argument checks
+				if (obj == null) {
+					return;
+				}
+				if (action == null) {
+					throw new ArgumentNullException(nameof(action));
+				}
+
+				// run the action in the context
+				ActualContext childContext = CreateChildContext();
+				try {
+					// take snapshot of the current key
+					// Note that the contents of the obj may modified during the iteration.
+					string[] keys = obj.Keys.ToArray();
+					foreach (string key in keys) {
+						SetName(childContext, key);
+						SetValue(childContext, obj[key]);
+						action(childContext);
+					}
+				} finally {
+					ReleaseChildContext(childContext);
 				}
 			}
 
@@ -396,13 +628,13 @@ namespace PandocUtil.PandocFilter.Filters {
 
 			#region properties
 
-			public new IDictionary<string, object> ObjectValue {
+			public new Dictionary<string, object> ObjectValue {
 				get {
 					return base.ObjectValue;
 				}
 			}
 
-			// This property returns a read only interface to the array.
+			// This property returns a read only interface to the original array.
 			// An editable interface to the array is provided by ArrayEditor.
 			public new IReadOnlyList<object> ArrayValue {
 				get {
@@ -443,7 +675,7 @@ namespace PandocUtil.PandocFilter.Filters {
 				return;
 			}
 
-			private new void Initialize(ModifyingContext parent) {
+			private void Initialize(ModifyingContext parent) {
 				// argument checks
 
 				// initialize this instance
@@ -454,7 +686,7 @@ namespace PandocUtil.PandocFilter.Filters {
 				return;
 			}
 
-			private new void Initialize(ModifyingContext parent, string name, object value) {
+			private void Initialize(ModifyingContext parent, string name, object value) {
 				// argument checks
 
 				// initialize this instance
@@ -465,7 +697,7 @@ namespace PandocUtil.PandocFilter.Filters {
 				return;
 			}
 
-			private new void Initialize(ModifyingContext parent, int index, object value) {
+			private void Initialize(ModifyingContext parent, int index, object value) {
 				// argument checks
 
 				// initialize this instance
@@ -493,7 +725,7 @@ namespace PandocUtil.PandocFilter.Filters {
 				return instance;
 			}
 
-			private ModifyingContext CreateChildContext() {
+			protected override ModifyingContext CreateChildContext() {
 				// create and setup a child context
 				ModifyingContext childContext = instanceCache.AllocInstance();
 				childContext.Initialize(this);
@@ -501,7 +733,7 @@ namespace PandocUtil.PandocFilter.Filters {
 				return childContext;
 			}
 
-			private ModifyingContext CreateChildContext(string childName, object childValue) {
+			protected override ModifyingContext CreateChildContext(string childName, object childValue) {
 				// create and setup a child context
 				ModifyingContext childContext = instanceCache.AllocInstance();
 				childContext.Initialize(this, childName, childValue);
@@ -509,7 +741,7 @@ namespace PandocUtil.PandocFilter.Filters {
 				return childContext;
 			}
 
-			private ModifyingContext CreateChildContext(int childIndex, object childValue) {
+			protected override ModifyingContext CreateChildContext(int childIndex, object childValue) {
 				// create and setup a child context
 				ModifyingContext childContext = instanceCache.AllocInstance();
 				childContext.Initialize(this, childIndex, childValue);
@@ -537,6 +769,10 @@ namespace PandocUtil.PandocFilter.Filters {
 				return;
 			}
 
+			protected override void ReleaseChildContext(ModifyingContext childContext) {
+				ReleaseContext(childContext);
+			}
+
 			#endregion
 
 
@@ -560,92 +796,6 @@ namespace PandocUtil.PandocFilter.Filters {
 				}
 
 				return;
-			}
-
-			public void RunInChildContext(string childName, object childValue, Action<ModifyingContext> action) {
-				// argument checks
-				if (childName == null) {
-					throw new ArgumentNullException(nameof(childName));
-				}
-				// childName can be empty
-				// childValue can be null
-				if (action == null) {
-					throw new ArgumentNullException(nameof(action));
-				}
-
-				// run the action in the context
-				ModifyingContext childContext = CreateChildContext(childName, childValue);
-				try {
-					action(childContext);
-				} finally {
-					ReleaseContext(childContext);
-				}
-
-				return;
-			}
-
-			public void RunInChildContext(int childIndex, object childValue, Action<ModifyingContext> action) {
-				// argument checks
-				if (childIndex < 0) {
-					throw new ArgumentOutOfRangeException(nameof(childIndex));
-				}
-				// childValue can be null
-				if (action == null) {
-					throw new ArgumentNullException(nameof(action));
-				}
-
-				// run the action in the context
-				ModifyingContext childContext = CreateChildContext(childIndex, childValue);
-				try {
-					action(childContext);
-				} finally {
-					ReleaseContext(childContext);
-				}
-			}
-
-			public void RunInEachChildContext(IReadOnlyList<object> array, Action<ModifyingContext> action) {
-				// argument checks
-				if (array == null) {
-					return;
-				}
-				if (action == null) {
-					throw new ArgumentNullException(nameof(action));
-				}
-
-				// run the action in the context
-				ModifyingContext context = CreateChildContext();
-				try {
-					for (int i = 0; i < array.Count; ++i) {
-						context.Index = i;
-						context.Value = array[i];
-						action(context);
-					}
-				} finally {
-					ReleaseContext(context);
-				}
-			}
-
-			public void RunInEachChildContext(IDictionary<string, object> obj, Action<ModifyingContext> action) {
-				// argument checks
-				if (obj == null) {
-					return;
-				}
-				if (action == null) {
-					throw new ArgumentNullException(nameof(action));
-				}
-
-				// run the action in the context
-				ModifyingContext context = CreateChildContext();
-				try {
-					string[] keys = obj.Keys.ToArray();	// fix the current keys
-					foreach (string key in keys) {
-						context.Name = key;
-						context.Value = obj[key];
-						action(context);
-					}
-				} finally {
-					ReleaseContext(context);
-				}
 			}
 
 			#endregion
@@ -806,6 +956,111 @@ namespace PandocUtil.PandocFilter.Filters {
 			}
 
 			#endregion
+
+
+			#region overrides
+
+			public override Dictionary<string, object> GetEditingBaseObject() {
+				// use the current object as a base in modifying scenario
+				return this.ObjectValue;
+			}
+
+			public override List<object> GetEditingBaseArray() {
+				// use the current array as a base in modifying scenario
+				return base.ArrayValue;
+			}
+
+			#endregion
+		}
+
+		protected static class StandardMacros {
+			#region types
+
+			public static class Names {
+				public const string Rebase = "rebase";
+				public const string Condition = "condition";
+			}
+
+			#endregion
+
+
+			#region constants
+
+			public const string MacroFormatName = "macro";
+
+			#endregion
+
+
+			#region methods
+
+			public static object Rebase<ActualContext>(ActualContext context, Func<ActualContext, string, object> expander, Uri oldBaseUri, Uri newBaseUri) where ActualContext: Context<ActualContext> {
+				// argument checks
+				if (context == null) {
+					throw new ArgumentNullException(nameof(context));
+				}
+				if (expander == null) {
+					throw new ArgumentNullException(nameof(expander));
+				}
+
+				// expand 'target' value
+				object target = expander(context, "target");
+				if (target == null) {
+					return null;
+				}
+				string oldLink = Schema.GetMetadataStringValue(target, MacroFormatName);
+
+				// create a MetaInlines element to be replaced
+				return Schema.CreateSimpleMetaInlinesElement(Util.RebaseRelativeUri(oldBaseUri, oldLink, newBaseUri));
+			}
+
+			public static object Condition<ActualContext>(ActualContext context, Func<ActualContext, string, object> expander, string fromFileRelPath) where ActualContext: Context<ActualContext> {
+				// argument checks
+				if (context == null) {
+					throw new ArgumentNullException(nameof(context));
+				}
+				if (expander == null) {
+					throw new ArgumentNullException(nameof(expander));
+				}
+
+				object getTrueCaseValue() {
+					return expander(context, "true-case");
+				}
+				object getFalseCaseValue() {
+					return expander(context, "false-case");
+				}
+
+				// try to get 'file' value
+				bool isFromFile(object value) {
+					string str = Schema.GetMetadataStringValue(value, MacroFormatName);
+					return string.Compare(str, fromFileRelPath, StringComparison.OrdinalIgnoreCase) == 0;   // TODO: platform consideration
+				}
+
+				string name = "from-file";
+				object fileObj = context.GetOptionalValue<object>(name, null);
+				switch (fileObj) {
+					case IReadOnlyDictionary<string, object> obj:
+						if (isFromFile(obj)) {
+							return getTrueCaseValue();
+						}
+						break;
+					case IReadOnlyList<object> array:
+						foreach (object value in array) {
+							if (isFromFile(value)) {
+								return getTrueCaseValue();
+							}
+						}
+						break;
+					default:
+						if (fileObj != null && isFromFile(fileObj.ToString())) {
+							return getTrueCaseValue();
+						}
+						break;
+				}
+
+				return getFalseCaseValue();
+			}
+
+			#endregion
 		}
 
 		#endregion
@@ -908,7 +1163,7 @@ namespace PandocUtil.PandocFilter.Filters {
 			Debug.Assert(context.IsObject);
 
 			// modify only elements, by default
-			(string type, object contents) = Schema.IsElement(context.ObjectValue);
+			(string type, object contents) = context.IsElement();
 			if (type != null) {
 				// value is an element
 				// Note that content may be null.
@@ -929,10 +1184,16 @@ namespace PandocUtil.PandocFilter.Filters {
 			// process the element
 			switch (type) {
 				case Schema.TypeNames.MetaMap:
-					(string name, IReadOnlyDictionary<string, object> macro) = Schema.IsMacro(contents);
-					if (name != null) {
-						ModifyMacro(context, name, macro);
-						return;
+					string macroName = Schema.IsContentsMacro(contents);
+					if (macroName != null) {
+						// macro
+						object expandedValue = ExpandMacro(context, macroName, contents);
+						if (expandedValue == null) {
+							context.RemoveValue();
+						} else {
+							context.ReplaceValue(expandedValue);
+						}
+						return;	// processed
 					}
 					break;
 			}
@@ -943,14 +1204,89 @@ namespace PandocUtil.PandocFilter.Filters {
 			}
 		}
 
-		protected virtual void ModifyMacro(ModifyingContext context, string name, IReadOnlyDictionary<string, object> macro) {
-			throw new ApplicationException($"Undefined macro: {name}");
-		}
-
 		#endregion
 
 
 		#region overridables - generate
+		#endregion
+
+
+		#region overridables - macro expansion
+
+		protected virtual object ExpandMacro<ActualContext>(ActualContext context) where ActualContext: Context<ActualContext> {
+			// argument checks
+			if (context == null) {
+				throw new ArgumentNullException(nameof(context));
+			}
+
+			object value;
+			if (context.IsObject) {
+				// the current value is an object
+				(string macroName, object macroContents) = context.IsMacro();
+				if (macroName == null) {
+					// normal JSON object
+					Dictionary<string, object> obj = context.GetEditingBaseObject();
+					// Take a snapshot of the keys. The contents of obj may be modified.
+					string[] keys = obj.Keys.ToArray();
+					foreach (string key in keys) {
+						obj[key] = context.RunInChildContext(key, obj[key], ExpandMacro<ActualContext>);
+					}
+					value = obj;
+				} else {
+					// macro
+					// replace the current value with evaluated value
+					value = ExpandMacro(context, macroName, macroContents);
+				}
+			} else if (context.IsArray) {
+				// the current value is an array
+				List<object> array = context.GetEditingBaseArray();
+				for (int i = 0; i < array.Count; ++i) {
+					array[i] = context.RunInChildContext(i, array[i], ExpandMacro<ActualContext>);
+				}
+				value = array;
+			} else {
+				// simple value
+				value = context.Value;
+			}
+
+			return value;
+		}
+
+		protected object ExpandMacro<ActualContext>(ActualContext context, string macroName, object macroContents) where ActualContext: Context<ActualContext> {
+			// argument checks
+			if (context == null) {
+				throw new ArgumentNullException(nameof(context));
+			}
+			if (macroName == null) {
+				throw new ArgumentNullException(nameof(macroName));
+			}
+			Debug.Assert(context.IsObject);
+
+			return context.RunInChildContext(Schema.Names.C, macroContents, (childContext) => ExpandMacro<ActualContext>(childContext, macroName));
+		}
+
+		protected virtual object ExpandMacro<ActualContext>(ActualContext context, string macroName) where ActualContext: Context<ActualContext> {
+			// argument checks
+			if (macroName == null) {
+				throw new ArgumentNullException(nameof(macroName));
+			}
+
+			throw new ApplicationException($"Unrecognized macro: {macroName}");
+		}
+
+		protected virtual object ExpandMacroParameter<ActualContext>(ActualContext context, string key) where ActualContext : Context<ActualContext> {
+			// argument checks
+			if (context == null) {
+				throw new ArgumentNullException(nameof(context));
+			}
+			if (key == null) {
+				throw new ArgumentNullException(nameof(key));
+			}
+
+			object value = context.GetOptionalValue<object>(key, null);
+			return (value == null) ? null : context.RunInChildContext(key, value, ExpandMacro<ActualContext>);
+		}
+
 		#endregion
 	}
 }

@@ -5,7 +5,7 @@ namespace PandocUtil.PandocFilter.Filters {
 	public class ASTEditor {
 		#region types
 
-		protected class Node: WorkingTreeNode<Node> {
+		protected class Node: WorkingTreeNode {
 			#region creation and destruction
 
 			protected Node() {

@@ -4,9 +4,9 @@
     "InputFilePath": "Inputs/macro_rebase.input.json",
     "AnswerFilePath": "Answers/macro_rebase.answer.json",
     "SupposedFromBaseDirUri": "From/",
-    "SupposedFromFileRelPath": "x/y/z/link_nonmapped_rebase.md",
+    "SupposedFromFileRelPath": "x/y/z/macro_rebase.md",
     "SupposedToBaseDirUri": "To/",
-    "SupposedToFileRelPath": "x/y/z/link_nonmapped_rebase.html",
+    "SupposedToFileRelPath": "x/y/z/macro_rebase.html",
     "RebaseOtherRelativeLinks": false,
     "ExtensionMap": {
         ".md": ".html"

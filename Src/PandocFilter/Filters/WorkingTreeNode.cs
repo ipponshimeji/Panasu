@@ -1,11 +1,55 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Text;
 
 namespace PandocUtil.PandocFilter.Filters {
-	public class WorkingTreeNode<ActualNode>: WorkingTreeNodeBase where ActualNode : WorkingTreeNodeBase {
+	public class WorkingTreeNode {
+		#region constants
+
+		public const int UndefinedIndex = -1;
+
+		#endregion
+
+
 		#region data
 
-		public ActualNode Parent { get; private set; } = null;
+		protected WorkingTreeNode Parent { get; private set; } = null;
+
+		public string Name { get; protected set; } = null;
+
+		public int Index { get; protected set; } = UndefinedIndex;
+
+		private Dictionary<string, object> annotation = null;
+
+		#endregion
+
+
+		#region properties
+
+		public IDictionary<string, object> Annotation {
+			get {
+				Dictionary<string, object> value = this.annotation;
+				if (value == null) {
+					value = new Dictionary<string, object>();
+					this.annotation = value;
+				}
+
+				return value;
+			}
+		}
+
+		public bool IsParentObject {
+			get {
+				return this.Name != null;
+			}
+		}
+
+		public bool IsParentArray {
+			get {
+				return this.Index != UndefinedIndex;
+			}
+		}
 
 		#endregion
 
@@ -17,59 +61,122 @@ namespace PandocUtil.PandocFilter.Filters {
 
 
 		// defined formally. actually do nothing.
-		protected new void Initialize() {
+		protected void Initialize() {
 			// argument checks
 
 			// initialize this instance
-			base.Initialize();
 			Debug.Assert(this.Parent == null);
+			Debug.Assert(this.Name == null);
+			Debug.Assert(this.Index == UndefinedIndex);
+			Debug.Assert(this.annotation == null || this.annotation.Count == 0);
 
 			return;
 		}
 
-		protected void Initialize(ActualNode parent) {
+		protected void Initialize(WorkingTreeNode parent) {
 			// argument checks
 			if (parent == null) {
 				throw new ArgumentOutOfRangeException(nameof(parent));
 			}
 
 			// initialize this instance
-			base.Initialize();
 			this.Parent = parent;
+			Debug.Assert(this.Name == null);
+			Debug.Assert(this.Index == UndefinedIndex);
+			Debug.Assert(this.annotation == null || this.annotation.Count == 0);
 
 			return;
 		}
 
-		protected void Initialize(ActualNode parent, string name) {
+		protected void Initialize(WorkingTreeNode parent, string name) {
 			// argument checks
 			if (parent == null) {
 				throw new ArgumentOutOfRangeException(nameof(parent));
 			}
+			if (name == null) {
+				throw new ArgumentOutOfRangeException(nameof(name));
+			}
+			// name can be empty
 
 			// initialize this instance
-			base.Initialize(name);
 			this.Parent = parent;
+			this.Name = name;
+			Debug.Assert(this.Index == UndefinedIndex);
+			Debug.Assert(this.annotation == null || this.annotation.Count == 0);
 
 			return;
 		}
 
-		protected void Initialize(ActualNode parent, int index) {
+		protected void Initialize(WorkingTreeNode parent, int index) {
 			// argument checks
 			if (parent == null) {
 				throw new ArgumentOutOfRangeException(nameof(parent));
 			}
+			if (index < 0) {
+				throw new ArgumentOutOfRangeException(nameof(index));
+			}
 
 			// initialize this instance
-			base.Initialize(index);
 			this.Parent = parent;
+			Debug.Assert(this.Name == null);
+			this.Index = index;
+			Debug.Assert(this.annotation == null || this.annotation.Count == 0);
 
 			return;
 		}
 
-		protected new void Clear() {
+		protected void Clear() {
 			// clear this instance
+			if (this.annotation != null) {
+				this.annotation.Clear();
+			}
+			this.Index = UndefinedIndex;
+			this.Name = null;
 			this.Parent = null;
-			base.Clear();
+
+			return;
+		}
+
+		#endregion
+
+
+		#region methods
+
+		public string GetLocation() {
+			StringBuilder buf = new StringBuilder();
+			AppendLocation(buf);
+			return buf.ToString();
+		}
+
+		#endregion
+
+
+		#region overrides
+
+		public virtual void AppendLocation(StringBuilder buf) {
+			// argument checks
+			if (buf == null) {
+				throw new ArgumentNullException(nameof(buf));
+			}
+
+			// append parent location
+			if (this.Parent != null) {
+				this.Parent.AppendLocation(buf);
+			}
+
+			// append this class level location
+			if (this.IsParentObject) {
+				// "parent.name" format
+				Debug.Assert(this.Name != null);
+				if (0 < buf.Length) {
+					buf.Append('.');
+				}
+				buf.Append(this.Name);
+			} else if (this.IsParentArray) {
+				// "parent[index]" format
+				Debug.Assert(0 <= this.Index);
+				buf.Append($"[{this.Index}]");
+			}
 		}
 
 		#endregion

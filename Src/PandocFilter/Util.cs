@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace PandocUtil.PandocFilter {
 	public static class Util {
@@ -16,14 +17,13 @@ namespace PandocUtil.PandocFilter {
 			}
 		}
 
+
 		private static bool CheckValue<T>(bool keyExist, object originalValue, out T value) {
 			if (keyExist) {
 				if (originalValue == null) {
 					// the key exists, but its value is null
-					if (typeof(T).IsValueType == false) {
-						value = default(T); // actually it is null
-						return true;
-					}
+					value = default(T);				// actually it is null for a reference type
+					return !typeof(T).IsValueType;	// false for a value type
 				} else if (originalValue is T) {
 					value = (T)originalValue;
 					return true;
@@ -39,10 +39,6 @@ namespace PandocUtil.PandocFilter {
 			if (dictionary == null) {
 				throw new ArgumentNullException(nameof(dictionary));
 			}
-			if (key == null) {
-				throw new ArgumentNullException(nameof(key));
-			}
-			// key can be empty
 
 			// try to get value
 			object originalValue;
@@ -54,10 +50,6 @@ namespace PandocUtil.PandocFilter {
 			if (dictionary == null) {
 				throw new ArgumentNullException(nameof(dictionary));
 			}
-			if (key == null) {
-				throw new ArgumentNullException(nameof(key));
-			}
-			// key can be empty
 
 			// try to get value
 			object originalValue;
@@ -86,12 +78,16 @@ namespace PandocUtil.PandocFilter {
 			return TryGetValue(dictionary, key, out value) ? value : defaultValue;
 		}
 
+		public static Exception CreateMissingKeyException(string key) {
+			return new KeyNotFoundException($"The indispensable key '{key}' is missing in the dictionary.");
+		}
+
 		public static T GetIndispensableValue<T>(this IReadOnlyDictionary<string, object> dictionary, string key) {
 			T value;
-			if (TryGetValue(dictionary, key, out value)) {
+			if (TryGetValue<T>(dictionary, key, out value)) {
 				return value;
 			} else {
-				throw new KeyNotFoundException($"The indispensable key '{key}' was not present in the dictionary.");
+				throw CreateMissingKeyException(key);
 			}
 		}
 
@@ -100,7 +96,7 @@ namespace PandocUtil.PandocFilter {
 			if (TryGetValue(dictionary, key, out value)) {
 				return value;
 			} else {
-				throw new KeyNotFoundException($"The indispensable key '{key}' was not present in the dictionary.");
+				throw CreateMissingKeyException(key);
 			}
 		}
 
