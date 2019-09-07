@@ -338,50 +338,45 @@ namespace PandocUtil.PandocFilter.Filters {
 				}
 			}
 
-			public void RunInEachChildContext(IReadOnlyList<object> array, Action<ActualContext> action) {
+			public void RunInEachChildContext(Action<ActualContext> action) {
 				// argument checks
-				if (array == null) {
-					return;
-				}
 				if (action == null) {
 					throw new ArgumentNullException(nameof(action));
 				}
 
-				// run the action in the context
-				ActualContext childContext = CreateChildContext();
-				try {
-					for (int i = 0; i < array.Count; ++i) {
-						SetIndex(childContext, i);
-						SetValue(childContext, array[i]);
-						action(childContext);
-					}
-				} finally {
-					ReleaseChildContext(childContext);
-				}
-			}
+				if (this.IsArray) {
+					List<object> array = this.ArrayValue;
 
-			public void RunInEachChildContext(IReadOnlyDictionary<string, object> obj, Action<ActualContext> action) {
-				// argument checks
-				if (obj == null) {
-					return;
-				}
-				if (action == null) {
-					throw new ArgumentNullException(nameof(action));
-				}
-
-				// run the action in the context
-				ActualContext childContext = CreateChildContext();
-				try {
-					// take snapshot of the current key
-					// Note that the contents of the obj may modified during the iteration.
-					string[] keys = obj.Keys.ToArray();
-					foreach (string key in keys) {
-						SetName(childContext, key);
-						SetValue(childContext, obj[key]);
-						action(childContext);
+					// run the action in the context
+					ActualContext childContext = CreateChildContext();
+					try {
+						for (int i = 0; i < array.Count; ++i) {
+							SetIndex(childContext, i);
+							SetValue(childContext, array[i]);
+							action(childContext);
+						}
+					} finally {
+						ReleaseChildContext(childContext);
 					}
-				} finally {
-					ReleaseChildContext(childContext);
+				} else if (this.IsObject) {
+					Dictionary<string, object> obj = this.ObjectValue;
+
+					// run the action in the context
+					ActualContext childContext = CreateChildContext();
+					try {
+						// take snapshot of the current key
+						// Note that the contents of the obj may modified during the iteration.
+						string[] keys = obj.Keys.ToArray();
+						foreach (string key in keys) {
+							SetName(childContext, key);
+							SetValue(childContext, obj[key]);
+							action(childContext);
+						}
+					} finally {
+						ReleaseChildContext(childContext);
+					}
+				} else {
+					throw new InvalidOperationException("The value is neither a JSON array nor a JSON object.");
 				}
 			}
 
@@ -1022,39 +1017,54 @@ namespace PandocUtil.PandocFilter.Filters {
 					throw new ArgumentNullException(nameof(expander));
 				}
 
+				// local methods
 				object getTrueCaseValue() {
 					return expander(context, "true-case");
 				}
+
 				object getFalseCaseValue() {
 					return expander(context, "false-case");
 				}
 
-				// try to get 'file' value
-				bool isFromFile(object value) {
-					string str = Schema.GetMetadataStringValue(value, MacroFormatName);
-					return string.Compare(str, fromFileRelPath, StringComparison.OrdinalIgnoreCase) == 0;   // TODO: platform consideration
+				bool doesValueMeetCondition(IReadOnlyDictionary<string, object> value, Predicate<string> predicate) {
+					// value can be null
+					Debug.Assert(predicate != null);
+
+					(string type, object contents) = Schema.IsElement(value);
+					switch (type) {
+						case Schema.TypeNames.MetaInlines:
+						case Schema.TypeNames.MetaBlocks:
+							string strValue = Schema.GetMetadataStringValue((IReadOnlyList<object>)contents);
+							if (predicate(strValue)) {
+								return true;
+							}
+							break;
+						case Schema.TypeNames.MetaList:
+							foreach (IReadOnlyDictionary<string, object> item in (IReadOnlyList<object>)contents) {
+								if (doesValueMeetCondition(item, predicate)) {
+									return true;
+								}
+							}
+							break;
+						default:
+							throw new FormatException();	// TODO: message
+					}
+
+					return false;
 				}
 
-				string name = "from-file";
-				object fileObj = context.GetOptionalValue<object>(name, null);
-				switch (fileObj) {
-					case IReadOnlyDictionary<string, object> obj:
-						if (isFromFile(obj)) {
-							return getTrueCaseValue();
-						}
-						break;
-					case IReadOnlyList<object> array:
-						foreach (object value in array) {
-							if (isFromFile(value)) {
-								return getTrueCaseValue();
-							}
-						}
-						break;
-					default:
-						if (fileObj != null && isFromFile(fileObj.ToString())) {
-							return getTrueCaseValue();
-						}
-						break;
+				bool doesParamMeetCondition(string paramName, Predicate<string> predicate) {
+					// paramName can be null
+					Debug.Assert(predicate != null);
+
+					IReadOnlyDictionary<string, object> paramValue = context.GetOptionalValue<IReadOnlyDictionary<string, object>>(paramName, null);
+					return doesValueMeetCondition(paramValue, predicate);
+				}
+
+				// "from-file" parameter
+				// TODO: platform consideration for path comparison (case sensitivity)
+				if (doesParamMeetCondition("from-file", str => string.Compare(str, fromFileRelPath, StringComparison.OrdinalIgnoreCase) == 0)) {
+					return getTrueCaseValue();
 				}
 
 				return getFalseCaseValue();
@@ -1124,7 +1134,7 @@ namespace PandocUtil.PandocFilter.Filters {
 				throw new ArgumentNullException(nameof(context));
 			}
 
-			context.RunInEachChildContext(context.ObjectValue, ModifyValue);
+			context.RunInEachChildContext(ModifyValue);
 		}
 
 		protected virtual void ModifyValue(ModifyingContext context) {
@@ -1152,7 +1162,7 @@ namespace PandocUtil.PandocFilter.Filters {
 			Debug.Assert(context.IsArray);
 
 			// modify each element
-			context.RunInEachChildContext(context.ArrayValue, ModifyValue);
+			context.RunInEachChildContext(ModifyValue);
 		}
 
 		protected virtual void ModifyObject(ModifyingContext context) {
@@ -1168,6 +1178,8 @@ namespace PandocUtil.PandocFilter.Filters {
 				// value is an element
 				// Note that content may be null.
 				ModifyElement(context, type, contents);
+			} else {
+				context.RunInEachChildContext(ModifyValue);
 			}
 		}
 

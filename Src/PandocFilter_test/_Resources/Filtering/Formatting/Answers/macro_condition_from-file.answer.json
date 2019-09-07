@@ -2,13 +2,30 @@
     "blocks":[{"t":"Para","c":[{"t":"Str","c":"dummy"}]}],
     "pandoc-api-version":[1,17,5,4],
     "meta":{
-        "parameters-PandocUtil.PandocFilter.Filters.FormattingFilter":{"t":"MetaMap","c":{"ToBaseDirPath":{"t":"MetaInlines","c":[{"t":"Str","c":"/tmp/To/"}]},"ExtensionMap":{"t":"MetaMap","c":{".md":{"t":"MetaInlines","c":[{"t":"Str","c":".html"}]}}},"ToFileRelPath":{"t":"MetaInlines","c":[{"t":"Str","c":"x/macro_condition_from-file.html"}]},"RebaseOtherRelativeLinks":{"t":"MetaBool","c":false},"FromBaseDirPath":{"t":"MetaInlines","c":[{"t":"Str","c":"/tmp/From/"}]},"FromFileRelPath":{"t":"MetaInlines","c":[{"t":"Str","c":"x/macro_condition_from-file.md"}]}}},
+        "_Param.FromBaseDirPath":{"t":"MetaInlines","c":[{"t":"Str","c":"/tmp/From/"}]},
+        "_Param.FromFileRelPath":{"t":"MetaInlines","c":[{"t":"Str","c":"x/macro_condition_from-file.md"}]},
+        "_Param.ToBaseDirPath":{"t":"MetaInlines","c":[{"t":"Str","c":"/tmp/To/"}]},
+        "_Param.ToFileRelPath":{"t":"MetaInlines","c":[{"t":"Str","c":"x/macro_condition_from-file.html"}]},
+        "_Param.RebaseOtherRelativeLinks":{"t":"MetaBool","c":false},
+        "_Param.ExtensionMap":{"t":"MetaMap","c":{".md":{"t":"MetaInlines","c":[{"t":"Str","c":".html"}]}}},
         "single_true-case":{"t":"MetaInlines","c":[{"t":"Str","c":"OK"}]},
         "single_false-case":{"t":"MetaInlines","c":[{"t":"Str","c":"OK"}]},
         "multiple_true-case":{"t":"MetaInlines","c":[{"t":"Str","c":"OK"}]},
         "multiple_false-case":{"t":"MetaInlines","c":[{"t":"Str","c":"OK"}]},
-        "remove_true-case":{"t":"MetaInlines","c":[{"t":"Str","c":"OK"}]},
-        "remove_false-case":{"t":"MetaInlines","c":[{"t":"Str","c":"OK"}]},
         "nested-macro":{"t":"MetaInlines","c":[{"t":"Str","c":"OK"}]},
+        "in-array":{
+            "t":"MetaList",
+            "c":[
+                {"t":"MetaInlines","c":[{"t":"Str","c":"OK"}]},
+                {"t":"MetaInlines","c":[{"t":"Str","c":"OK"}]}
+            ]
+        },
+        "in-object":{
+            "t":"MetaMap",
+            "c":{
+                "item-1":{"t":"MetaInlines","c":[{"t":"Str","c":"OK"}]},
+                "item-3":{"t":"MetaInlines","c":[{"t":"Str","c":"OK"}]}
+            }
+        }
     }
 }
