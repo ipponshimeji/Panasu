@@ -262,6 +262,10 @@ namespace PandocUtil.PandocFilter.Test {
 			return;
 		}
 
+		public static void EqualJson(string expectedJSONString, object actual) {
+			EqualJson(JsonSerializer.Deserialize<object>(expectedJSONString), actual);
+		}
+
 		#endregion
 	}
 }

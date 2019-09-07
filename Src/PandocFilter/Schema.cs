@@ -21,10 +21,12 @@ namespace PandocUtil.PandocFilter {
 			public const string Header = "Header";
 			public const string Image = "Image";
 			public const string MetaBlocks = "MetaBlocks";
+			public const string MetaBool = "MetaBool";
 			public const string MetaInlines = "MetaInlines";
 			public const string MetaList = "MetaList";
 			public const string MetaMap = "MetaMap";
 			public const string Link = "Link";
+			public const string Para = "Para";
 			public const string RawBlock = "RawBlock";
 			public const string RawInline = "RawInline";
 			public const string Space = "Space";
@@ -33,6 +35,18 @@ namespace PandocUtil.PandocFilter {
 
 		public static class ExtendedNames {
 			public const string Macro = "_macro";
+			public const string Param = "_Param";
+		}
+
+		public static class JSONTypeNames {
+			public const string Array = "array";
+			public const string Boolean = "boolean";
+			public const string Number = "number";
+			public const string Null = "null";
+			public const string Object = "object";
+			public const string String = "string";
+
+			public const string Unknown = "(unknown)";
 		}
 
 		#endregion
@@ -44,35 +58,26 @@ namespace PandocUtil.PandocFilter {
 			return new FormatException($"Invalid contents format as '{typeName}' element.");
 		}
 
-		public static string GetStringValue(object contents, string formatName = null) {
-			switch (contents) {
-				case string str:
-					return str;
-				case IReadOnlyList<object> array:
-					StringBuilder buf = new StringBuilder();
-					foreach (object value in array) {
-						(string t, object c) = IsElement(value);
-						switch (t) {
-							case TypeNames.Space:
-								buf.Append(' ');
-								break;
-							case TypeNames.Str:
-								buf.Append(c.ToString());
-								break;
-							case TypeNames.RawInline:
-								if (formatName != null) {
-									IReadOnlyList<object> l = c as IReadOnlyList<object>;
-									if (l != null && 2 <= l.Count && formatName.Equals(l[0])) {
-										buf.Append(l[1].ToString());
-									}
+		public static FormatException CreateInvalidContentsFormatException(string typeName, string expectedContentsType, object actualContents) {
+			return new FormatException($"Invalid AST format: The contents in a '{typeName}' element is not '{expectedContentsType}' but '{GetJSONTypeName(actualContents)}'.");
+		}
 
-								}
-								break;
-						}
-					}
-					return buf.ToString();
+		public static string GetJSONTypeName(object value) {
+			switch (value) {
+				case bool boolValue:
+					return JSONTypeNames.Boolean;
+				case string strValue:
+					return JSONTypeNames.String;
+				case double numValue:
+					return JSONTypeNames.Number;
+				case IDictionary<string, object> objValue:
+				case IReadOnlyDictionary<string, object> roObjValue:
+					return JSONTypeNames.Object;
+				case IList<object> arrayValue:
+				case IReadOnlyList<object> roArrayValue:
+					return JSONTypeNames.Array;
 				default:
-					return null;
+					return (value == null) ? JSONTypeNames.Null : JSONTypeNames.Unknown;
 			}
 		}
 
@@ -138,6 +143,11 @@ namespace PandocUtil.PandocFilter {
 
 		#region methods - metadata
 
+		public static FormatException CreateInvalidMetadataFormatException(string type, string contentsType) {
+			return new FormatException($"Invalid metadata format: The '{Names.C}' in 'type' ");			
+		}
+
+
 		public static string GetMetadataStringValue(object value, string formatName = null) {
 			// argument checks
 			if (value == null) {
@@ -171,7 +181,7 @@ namespace PandocUtil.PandocFilter {
 				case Schema.TypeNames.MetaBlocks:
 					IReadOnlyList<object> arrayContents = contents as IReadOnlyList<object>;
 					if (arrayContents == null) {
-						throw new FormatException($"The '{Schema.Names.C}' value of a '{type}' element must be an array.");
+						throw CreateInvalidContentsFormatException(type, Schema.JSONTypeNames.Array, contents);
 					}
 					return GetMetadataStringValue(arrayContents, formatName);
 				default:
@@ -204,6 +214,13 @@ namespace PandocUtil.PandocFilter {
 					case Schema.TypeNames.RawBlock:
 						str = GetMetadataRawStringValue(true, contents, formatName);
 						break;
+					case Schema.TypeNames.Para:
+						IReadOnlyList<object> arrayContents = contents as IReadOnlyList<object>;
+						if (arrayContents == null) {
+							throw CreateInvalidContentsFormatException(Schema.TypeNames.Para, Schema.JSONTypeNames.Array, contents);
+						}
+						str = GetMetadataStringValue(arrayContents, formatName) + Environment.NewLine;
+						break;
 					default: // include null
 						str = string.Empty;
 						break;
@@ -235,6 +252,46 @@ namespace PandocUtil.PandocFilter {
 			}
 
 			return value;
+		}
+
+		public static object RestoreMetadata(object value, string formatName = null) {
+			(string type, object contents) = IsElement(value);
+			switch (type) {
+				case TypeNames.MetaInlines:
+				case TypeNames.MetaBlocks:
+					IReadOnlyList<object> array = contents as IReadOnlyList<object>;
+					if (array == null) {
+						throw CreateInvalidContentsFormatException(type, JSONTypeNames.Array, contents);
+					}
+					return GetMetadataStringValue(array, formatName);
+				case TypeNames.MetaBool:
+					if (!(contents is bool)) {
+						throw CreateInvalidContentsFormatException(type, JSONTypeNames.Boolean, contents);
+					}
+					return (bool)contents;
+				case TypeNames.MetaList:
+					IReadOnlyList<object> fromArray = contents as IReadOnlyList<object>;
+					if (fromArray == null) {
+						throw CreateInvalidContentsFormatException(type, JSONTypeNames.Array, contents);
+					}
+					List<object> toArray = new List<object>();
+					foreach (object item in fromArray) {
+						toArray.Add(RestoreMetadata(item, formatName));
+					}
+					return toArray;
+				case TypeNames.MetaMap:
+					IReadOnlyDictionary<string, object> fromObj = contents as IReadOnlyDictionary<string, object>;
+					if (fromObj == null) {
+						throw CreateInvalidContentsFormatException(type, JSONTypeNames.Object, contents);
+					}
+					Dictionary<string, object> toObject = new Dictionary<string, object>();
+					foreach (KeyValuePair<string, object> pair in fromObj) {
+						toObject.Add(pair.Key, RestoreMetadata(pair.Value, formatName));
+					}
+					return toObject;
+				default:
+					throw new FormatException();	// TODO: message
+			}
 		}
 
 		public static Dictionary<string, object> CreateSimpleMetaInlinesElement(string str) {
