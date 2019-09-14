@@ -17,7 +17,7 @@ namespace PandocUtil.PandocFilter.Filters {
 
 		#region creation
 
-		public AST(Dictionary<string, object> jsonValue): base(jsonValue) {
+		public AST(Dictionary<string, object> jsonValue, Parameters parameters): base(jsonValue, parameters) {
 		}
 
 		#endregion

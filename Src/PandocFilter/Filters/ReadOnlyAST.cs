@@ -11,7 +11,7 @@ namespace PandocUtil.PandocFilter.Filters {
 
 		private readonly Version pandocAPIVersion;
 
-		private readonly Dictionary<string, object> parameters;
+		private readonly Parameters parameters;
 
 		#endregion
 
@@ -30,7 +30,7 @@ namespace PandocUtil.PandocFilter.Filters {
 			}
 		}
 
-		public IReadOnlyDictionary<string, object> Parameters {
+		public Parameters Parameters {
 			get {
 				return this.parameters;
 			}
@@ -41,35 +41,19 @@ namespace PandocUtil.PandocFilter.Filters {
 
 		#region creation
 
-		public ReadOnlyAST(Dictionary<string, object> jsonValue) {
+		public ReadOnlyAST(Dictionary<string, object> jsonValue, Parameters parameters) {
 			// argument checks
 			if (jsonValue == null) {
 				throw new ArgumentNullException(nameof(jsonValue));
+			}
+			if (parameters == null) {
+				throw new ArgumentNullException(nameof(parameters));
 			}
 
 			// initialize members
 			this.jsonValue = jsonValue;
 			this.pandocAPIVersion = ReadPandocAPIVersion(jsonValue);
-			this.parameters = GetParameters(jsonValue);
-		}
-
-		private Dictionary<string, object> GetParameters(IReadOnlyDictionary<string, object> ast) {
-			// argument checks
-			Debug.Assert(jsonValue != null);
-
-			// get metadata
-			IReadOnlyDictionary<string, object> metadata = ast.GetOptionalValue<IReadOnlyDictionary<string, object>>(Schema.Names.Meta, null);
-			if (metadata == null) {
-				return new Dictionary<string, object>();
-			}
-
-			// collect parameters
-			// A parameter is a metadata whose name starts with "_Param.".
-			string prefix = $"{Schema.ExtendedNames.Param}.";
-			int prefixLen = prefix.Length;
-			return metadata
-			.Where(pair => pair.Key.StartsWith(prefix))
-			.ToDictionary(pair => pair.Key.Substring(prefix.Length), pair => Schema.RestoreMetadata(pair.Value));
+			this.parameters = parameters;
 		}
 
 		#endregion

@@ -8,6 +8,15 @@ namespace PandocUtil.PandocFilter.Filters {
 	public class Filter {
 		#region types
 
+		protected class Parameters: PandocUtil.PandocFilter.Filters.Parameters {
+			#region creation
+
+			public Parameters(Dictionary<string, object> dictionary, bool ast): base(dictionary, ast) {
+			}
+
+			#endregion
+		}
+
 		protected class ContextBase: WorkingTreeNode {
 			#region data
 
@@ -381,6 +390,13 @@ namespace PandocUtil.PandocFilter.Filters {
 			}
 
 			#endregion
+
+
+			#region methods
+
+			public abstract TParameters GetParameters<TParameters>() where TParameters : Parameters;
+
+			#endregion
 		}
 
 		protected class ModifyingContext: Context<ModifyingContext> {
@@ -389,7 +405,7 @@ namespace PandocUtil.PandocFilter.Filters {
 			private class InstanceCache: InstanceCache<ModifyingContext> {
 				#region creation and disposal
 
-				public InstanceCache(): base(nameof(ModifyingContext)) {
+				public InstanceCache() : base(nameof(ModifyingContext)) {
 				}
 
 				#endregion
@@ -965,6 +981,10 @@ namespace PandocUtil.PandocFilter.Filters {
 				return base.ArrayValue;
 			}
 
+			public override TParameters GetParameters<TParameters>() {
+				return (TParameters)this.AST.Parameters;
+			}
+
 			#endregion
 		}
 
@@ -1093,7 +1113,7 @@ namespace PandocUtil.PandocFilter.Filters {
 			}
 
 			// modify the ast
-			AST ast = new AST(astJsonValue);
+			AST ast = new AST(astJsonValue, CreateParameters(astJsonValue));
 
 			// modify the ast
 			ModifyingContext.RunInContext(ast, (rootContext) => {
@@ -1121,6 +1141,30 @@ namespace PandocUtil.PandocFilter.Filters {
 
 			// TODO: implement
 			throw new NotImplementedException();
+		}
+
+
+		protected Parameters CreateParameters(Dictionary<string, object> ast) {
+			// new a Parameters instance
+			Parameters parameters = NewParameters(ast);
+
+			// setup the instance and freeze it 
+			SetupParameters(parameters);
+			parameters.Freeze();
+
+			return parameters;
+		}
+
+		#endregion
+
+
+		#region overridables - parameters
+
+		protected virtual Parameters NewParameters(Dictionary<string, object> ast) {
+			return new Parameters(ast, ast: true);
+		}
+
+		protected virtual void SetupParameters(Parameters parameters) {
 		}
 
 		#endregion

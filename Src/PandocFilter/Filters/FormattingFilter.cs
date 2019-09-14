@@ -5,58 +5,127 @@ using System.IO;
 
 namespace PandocUtil.PandocFilter.Filters {
 	public class FormattingFilter: ConvertingFilter {
-		#region data
+		#region types
 
-		public readonly bool RebaseOtherRelativeLinks;
+		protected new class Parameters: ConvertingFilter.Parameters {
+			#region types
 
-		private readonly Dictionary<string, string> extensionMap;
+			public new class Names: ConvertingFilter.Parameters.Names {
+				#region constants
+
+				public const string RebaseOtherRelativeLinks = "RebaseOtherRelativeLinks";
+				public const string ExtensionMap = "ExtensionMap";
+
+				#endregion
+
+			}
+
+			#endregion
+
+
+			#region data
+
+			private bool? rebaseOtherRelativeLinks = null;
+
+			private IReadOnlyDictionary<string, string> extensionMap = null;
+
+			#endregion
+
+
+			#region properties
+
+			public bool RebaseOtherRelativeLinks {
+				get {
+					if (this.rebaseOtherRelativeLinks.HasValue == false) {
+						throw CreateNotSetupException(nameof(RebaseOtherRelativeLinks));
+					}
+
+					return this.rebaseOtherRelativeLinks.Value;
+				}
+				set {
+					EnsureNotFreezed();
+					this.rebaseOtherRelativeLinks = value;
+				}
+			}
+
+			public IReadOnlyDictionary<string, string> ExtensionMap {
+				get {
+					IReadOnlyDictionary<string, string> value = this.extensionMap;
+					if (value == null) {
+						throw CreateNotSetupException(nameof(ExtensionMap));
+					}
+
+					return value;
+				}
+				set {
+					EnsureNotFreezed();
+					this.extensionMap = value;
+				}
+			}
+
+			#endregion
+
+
+			#region creation
+
+			public Parameters(Dictionary<string, object> dictionary, bool ast) : base(dictionary, ast) {
+			}
+
+			#endregion
+		}
 
 		#endregion
 
 
-		#region properties
+		#region data
 
-		public IReadOnlyDictionary<string, string> ExtensionMap {
-			get {
-				return this.extensionMap;
-			}
-		}
+		public bool? RebaseOtherRelativeLinks { get; set; } = null;
+
+		public IReadOnlyDictionary<string, string> ExtensionMap { get; set; } = null;
 
 		#endregion
 
 
 		#region constructors
 
-		public FormattingFilter(string fromBaseDirPath, string fromFileRelPath, string toBaseDirPath, string toFileRelPath, bool rebaseOtherRelativeLinks, IReadOnlyDictionary<string, string> extensionMap) :
-		base(fromBaseDirPath, fromFileRelPath, toBaseDirPath, toFileRelPath) {
-			// argument checks
-			// extensionMap can be null
-
-			// initialize membera
-			this.RebaseOtherRelativeLinks = rebaseOtherRelativeLinks;
-			this.extensionMap = (extensionMap == null) ? new Dictionary<string, string>() : new Dictionary<string, string>(extensionMap);
-		}
-
-		public FormattingFilter(string fromBaseDirPath, string fromFileRelPath, string toBaseDirPath, string toFileRelPath, bool rebaseOtherRelativeLinks, string fromExtension, string toExtension) :
-		base(fromBaseDirPath, fromFileRelPath, toBaseDirPath, toFileRelPath) {
-			// argument checks
-			if (fromExtension == null) {
-				fromExtension = string.Empty;
-			}
-			if (toExtension == null) {
-				toExtension = string.Empty;
-			}
-
-			// initialize membera
-			this.RebaseOtherRelativeLinks = rebaseOtherRelativeLinks;
-			this.extensionMap = new Dictionary<string, string>(1);
-			this.extensionMap.Add(fromExtension, toExtension);
+		public FormattingFilter(): base() {
 		}
 
 		#endregion
 
 
 		#region overrides
+
+		protected override Filter.Parameters NewParameters(Dictionary<string, object> ast) {
+			return new Parameters(ast, ast: true);
+		}
+
+		protected override void SetupParameters(Filter.Parameters parameters) {
+			// argument checks
+			Debug.Assert(parameters != null);
+			Parameters actualParams = parameters as Parameters;
+			Debug.Assert(actualParams != null);
+
+			// do the base class level arrange
+			base.SetupParameters(parameters);
+
+			// RebaseOtherRelativeLinks
+			{
+				bool value = actualParams.GetOptionalValueTypeMetadataParameter(Parameters.Names.RebaseOtherRelativeLinks, this.RebaseOtherRelativeLinks, true);
+				actualParams.RebaseOtherRelativeLinks = value;
+			}
+
+			// ExtensionMap
+			{
+				IReadOnlyDictionary<string, string> value = actualParams.GetOptionalReferenceTypeMetadataParameter(Parameters.Names.ExtensionMap, this.ExtensionMap, null);
+				if (value == null) {
+					value = new Dictionary<string, string>() {
+						{ Path.GetExtension(actualParams.FromFileRelPath), Path.GetExtension(actualParams.ToFileRelPath) }
+					};
+				}
+				actualParams.ExtensionMap = value;
+			}
+		}
 
 		protected override void ModifyElement(ModifyingContext context, string type, object contents) {
 			// argument checks
@@ -72,7 +141,7 @@ namespace PandocUtil.PandocFilter.Filters {
 						if (val != null && 0 < val.Count) {
 							string target = val[0] as string;
 							if (target != null) {
-								val[0] = ConvertLink(target);
+								val[0] = ConvertLink(context, target);
 							}
 						}
 					}
@@ -100,7 +169,7 @@ namespace PandocUtil.PandocFilter.Filters {
 
 		#region overridables
 
-		protected virtual string ConvertLink(string target) {
+		protected virtual string ConvertLink(ModifyingContext context, string target) {
 			// argument checks
 			if (string.IsNullOrEmpty(target)) {
 				throw new ArgumentNullException(nameof(target));
@@ -110,10 +179,11 @@ namespace PandocUtil.PandocFilter.Filters {
 				return target;
 			}
 
+			Parameters parameters = context.GetParameters<Parameters>();
 			(string unescapedPath, string fragment) = Util.DecomposeRelativeUri(target);
 			string newTarget;
 			string outputExtension;
-			if (this.extensionMap.TryGetValue(Path.GetExtension(unescapedPath), out outputExtension)) {
+			if (parameters.ExtensionMap.TryGetValue(Path.GetExtension(unescapedPath), out outputExtension)) {
 				// target to change extension
 				newTarget = Path.ChangeExtension(unescapedPath, outputExtension);
 				if (0 < fragment.Length) {
@@ -121,10 +191,10 @@ namespace PandocUtil.PandocFilter.Filters {
 				}
 			} else {
 				// not a target to change extension
-				if (!this.RebaseOtherRelativeLinks) {
+				if (!parameters.RebaseOtherRelativeLinks) {
 					newTarget = target;
 				} else {
-					Uri newUri = this.ToFileUri.MakeRelativeUri(new Uri(this.FromFileUri, unescapedPath));
+					Uri newUri = parameters.ToFileUri.MakeRelativeUri(new Uri(parameters.FromFileUri, unescapedPath));
 					newTarget = newUri.ToString();
 					if (0 < fragment.Length) {
 						newTarget = string.Concat(newTarget, fragment);

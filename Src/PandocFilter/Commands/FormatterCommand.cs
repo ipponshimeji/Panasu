@@ -24,9 +24,9 @@ namespace PandocUtil.PandocFilter.Commands {
 
 		protected string ToFileRelPath { get; set; } = null;
 
-		protected readonly Dictionary<string, string> ExtensionMap = new Dictionary<string, string>();
+		protected Dictionary<string, string> ExtensionMap = null;
 
-		protected bool RebaseOtherRelativeLinks { get; private set; } = false;
+		protected bool? RebaseOtherRelativeLinks { get; private set; } = false;
 
 		#endregion
 
@@ -82,6 +82,9 @@ namespace PandocUtil.PandocFilter.Commands {
 				}
 
 				(string from, string to) = SplitExtensions(arg.Value);
+				if (this.ExtensionMap == null) {
+					this.ExtensionMap = new Dictionary<string, string>();
+				}
 				this.ExtensionMap.Add(from, to);
 			} else if (OptionNameStartsWith("RebaseOtherRelativeLinks", name)) {
 				this.RebaseOtherRelativeLinks = true;
@@ -157,7 +160,25 @@ namespace PandocUtil.PandocFilter.Commands {
 		}
 
 		protected override void Filter(string taskKind, Stream inputStream, Stream outputStream) {
-			FormattingFilter filter = new FormattingFilter(this.FromBaseDirPath, this.FromFileRelPath, this.ToBaseDirPath, this.ToFileRelPath, this.RebaseOtherRelativeLinks, this.ExtensionMap);
+			FormattingFilter filter = new FormattingFilter();
+			if (this.FromBaseDirPath != null) {
+				filter.FromBaseDirPath = this.FromBaseDirPath;
+			}
+			if (this.FromFileRelPath != null) {
+				filter.FromFileRelPath = this.FromFileRelPath;
+			}
+			if (this.ToBaseDirPath != null) {
+				filter.ToBaseDirPath = this.ToBaseDirPath;
+			}
+			if (this.ToFileRelPath != null) {
+				filter.ToFileRelPath = this.ToFileRelPath;
+			}
+			if (this.RebaseOtherRelativeLinks.HasValue) {
+				filter.RebaseOtherRelativeLinks = this.RebaseOtherRelativeLinks;
+			}
+			if (this.ExtensionMap != null) {
+				filter.ExtensionMap = this.ExtensionMap;
+			}
 
 			// read input AST
 			Dictionary<string, object> ast = JsonSerializer.Deserialize<Dictionary<string, object>>(inputStream);
