@@ -7,10 +7,132 @@ namespace PandocUtil.PandocFilter.Filters {
 	public class FormattingFilter: ConvertingFilter {
 		#region types
 
-		protected new class Parameters: ConvertingFilter.Parameters {
+		public new class Parameters: ConvertingFilter.Parameters {
 			#region types
 
 			public new class Names: ConvertingFilter.Parameters.Names {
+				#region constants
+
+				public const string RebaseOtherRelativeLinks = "RebaseOtherRelativeLinks";
+				public const string ExtensionMap = "ExtensionMap";
+
+				#endregion
+			}
+
+			#endregion
+
+
+			#region data
+
+			private bool? rebaseOtherRelativeLinks = null;
+
+			private IReadOnlyDictionary<string, string> extensionMap = null;
+
+			#endregion
+
+
+			#region properties
+
+			public bool? RebaseOtherRelativeLinks {
+				get {
+					return this.rebaseOtherRelativeLinks;
+				}
+				set {
+					EnsureNotFreezed();
+					this.rebaseOtherRelativeLinks = value;
+				}
+			}
+
+			public IReadOnlyDictionary<string, string> ExtensionMap {
+				get {
+					return this.extensionMap;
+				}
+				set {
+					EnsureNotFreezed();
+					this.extensionMap = value;
+				}
+			}
+
+			#endregion
+
+
+			#region creation
+
+			public Parameters(): base() {
+			}
+
+			public Parameters(IReadOnlyDictionary<string, object> metadataParams, Parameters overwriteParams) : base(metadataParams, overwriteParams) {
+				// argument checks
+				// arguments are checked by the base class at this point
+				Debug.Assert(metadataParams != null);
+				Debug.Assert(overwriteParams != null);
+
+				// state checks
+				Debug.Assert(this.IsFreezed == false);
+
+				// initialize members
+				this.rebaseOtherRelativeLinks = GetOptionalValueTypeParameter<bool>(metadataParams, Names.RebaseOtherRelativeLinks, overwriteParams.RebaseOtherRelativeLinks, false);
+				this.extensionMap = GetOptionalReferenceTypeParameter(metadataParams, Names.ExtensionMap, overwriteParams.ExtensionMap, null);
+				if (this.extensionMap == null) {
+					this.extensionMap = new Dictionary<string, string>() {
+						{ Path.GetExtension(this.FromFileRelPath), Path.GetExtension(this.ToFileRelPath) }
+					};
+				}
+			}
+
+			#endregion
+
+
+			#region overrides
+
+			protected override void ReportInvalidParameters(Action<string, string> report) {
+				// argument checks
+				Debug.Assert(report != null);
+
+				// check the base class lelvel
+				base.ReportInvalidParameters(report);
+
+				// check this class lelvel
+				if (this.extensionMap == null) {
+					report(Names.ExtensionMap, null);
+				}
+				if (this.extensionMap == null) {
+					report(Names.ExtensionMap, null);
+				}
+			}
+
+			#endregion
+		}
+
+		public new class Config: ConvertingFilter.Config {
+			#region properties
+
+			public new Parameters Parameters {
+				get {
+					return GetParameters<Parameters>();
+				}
+			}
+
+			#endregion
+
+
+			#region creation
+
+			protected Config(Parameters parameters) : base(parameters) {
+			}
+
+			public Config() : this(new Parameters()) {
+			}
+
+			#endregion
+		}
+
+
+
+		protected new class Old_Parameters: ConvertingFilter.Old_Parameters {
+			#region types
+
+			public new class Names: ConvertingFilter.Old_Parameters.Names {
 				#region constants
 
 				public const string RebaseOtherRelativeLinks = "RebaseOtherRelativeLinks";
@@ -68,7 +190,7 @@ namespace PandocUtil.PandocFilter.Filters {
 
 			#region creation
 
-			public Parameters(Dictionary<string, object> dictionary, bool ast) : base(dictionary, ast) {
+			public Old_Parameters(Dictionary<string, object> dictionary, bool ast) : base(dictionary, ast) {
 			}
 
 			#endregion
@@ -96,14 +218,14 @@ namespace PandocUtil.PandocFilter.Filters {
 
 		#region overrides
 
-		protected override Filter.Parameters NewParameters(Dictionary<string, object> ast) {
-			return new Parameters(ast, ast: true);
+		protected override Filter.Old_Parameters NewParameters(Dictionary<string, object> ast) {
+			return new Old_Parameters(ast, ast: true);
 		}
 
-		protected override void SetupParameters(Filter.Parameters parameters) {
+		protected override void SetupParameters(Filter.Old_Parameters parameters) {
 			// argument checks
 			Debug.Assert(parameters != null);
-			Parameters actualParams = parameters as Parameters;
+			Old_Parameters actualParams = parameters as Old_Parameters;
 			Debug.Assert(actualParams != null);
 
 			// do the base class level arrange
@@ -111,13 +233,13 @@ namespace PandocUtil.PandocFilter.Filters {
 
 			// RebaseOtherRelativeLinks
 			{
-				bool value = actualParams.GetOptionalValueTypeMetadataParameter(Parameters.Names.RebaseOtherRelativeLinks, this.RebaseOtherRelativeLinks, true);
+				bool value = actualParams.GetOptionalValueTypeMetadataParameter(Old_Parameters.Names.RebaseOtherRelativeLinks, this.RebaseOtherRelativeLinks, true);
 				actualParams.RebaseOtherRelativeLinks = value;
 			}
 
 			// ExtensionMap
 			{
-				IReadOnlyDictionary<string, string> value = actualParams.GetOptionalReferenceTypeMetadataParameter(Parameters.Names.ExtensionMap, this.ExtensionMap, null);
+				IReadOnlyDictionary<string, string> value = actualParams.GetOptionalReferenceTypeMetadataParameter(Old_Parameters.Names.ExtensionMap, this.ExtensionMap, null);
 				if (value == null) {
 					value = new Dictionary<string, string>() {
 						{ Path.GetExtension(actualParams.FromFileRelPath), Path.GetExtension(actualParams.ToFileRelPath) }
@@ -179,7 +301,7 @@ namespace PandocUtil.PandocFilter.Filters {
 				return target;
 			}
 
-			Parameters parameters = context.GetParameters<Parameters>();
+			Old_Parameters parameters = context.GetParameters<Old_Parameters>();
 			(string unescapedPath, string fragment) = Util.DecomposeRelativeUri(target);
 			string newTarget;
 			string outputExtension;
