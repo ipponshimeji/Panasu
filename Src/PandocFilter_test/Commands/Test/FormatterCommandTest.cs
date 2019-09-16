@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using Xunit;
+using PandocUtil.PandocFilter.Filters;
 using PandocUtil.PandocFilter.Test;
 
 namespace PandocUtil.PandocFilter.Commands.Test {
@@ -16,16 +17,19 @@ namespace PandocUtil.PandocFilter.Commands.Test {
 			public void TestFiltering(FormattingSample sample) {
 				// Arrange
 				List<string> args = new List<string>();
-				if (sample.RebaseOtherRelativeLinks) {
+				FormattingFilter.Parameters parameters = sample.Config.Parameters;
+				if (parameters.RebaseOtherRelativeLinks.HasValue && parameters.RebaseOtherRelativeLinks.Value) {
 					args.Add("-RebaseOtherRelativeLinks");
 				}
-				foreach (KeyValuePair<string, string> pair in sample.ExtensionMap) {
-					args.Add($"-Map:{pair.Key}:{pair.Value}");
+				if (parameters.ExtensionMap != null) {
+					foreach (KeyValuePair<string, string> pair in parameters.ExtensionMap) {
+						args.Add($"-Map:{pair.Key}:{pair.Value}");
+					}
 				}
-				args.Add(sample.SupposedFromBaseDirUri);
-				args.Add(sample.SupposedFromFileRelPath);
-				args.Add(sample.SupposedToBaseDirUri);
-				args.Add(sample.SupposedToFileRelPath);
+				args.Add(parameters.FromBaseDirPath);
+				args.Add(parameters.FromFileRelPath);
+				args.Add(parameters.ToBaseDirPath);
+				args.Add(parameters.ToFileRelPath);
 
 				void filter(Stream inputStream, Stream outputStream) {
 					FormatterCommand command = new FormatterCommand("unit test");

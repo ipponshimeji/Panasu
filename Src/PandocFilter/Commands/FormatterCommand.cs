@@ -14,26 +14,29 @@ namespace PandocUtil.PandocFilter.Commands {
 		#endregion
 
 
-		#region data
+		#region properties
 
-		protected string FromBaseDirPath { get; set; } = null;
+		public new FormattingFilter.Configuration Config {
+			get {
+				return GetConfiguration<FormattingFilter.Configuration>();
+			}
+		}
 
-		protected string FromFileRelPath { get; set; } = null;
-
-		protected string ToBaseDirPath { get; set; } = null;
-
-		protected string ToFileRelPath { get; set; } = null;
-
-		protected Dictionary<string, string> ExtensionMap = null;
-
-		protected bool? RebaseOtherRelativeLinks { get; private set; } = false;
+		public FormattingFilter.Parameters Parameters {
+			get {
+				return this.Config.Parameters;
+			}
+		}
 
 		#endregion
 
 
 		#region constructors
 
-		public FormatterCommand(string commandName, string invocation = null) : base(commandName, invocation) {
+		protected FormatterCommand(FormattingFilter.Configuration config, string commandName, string invocation = null) : base(config, commandName, invocation) {
+		}
+
+		public FormatterCommand(string commandName, string invocation = null) : base(new FormattingFilter.Configuration(), commandName, invocation) {
 		}
 
 		#endregion
@@ -47,16 +50,16 @@ namespace PandocUtil.PandocFilter.Commands {
 
 			switch (arg.Index) {
 				case 0:
-					this.FromBaseDirPath = arg.Value;
+					this.Parameters.FromBaseDirPath = arg.Value;
 					break;
 				case 1:
-					this.FromFileRelPath = arg.Value;
+					this.Parameters.FromFileRelPath = arg.Value;
 					break;
 				case 2:
-					this.ToBaseDirPath = arg.Value;
+					this.Parameters.ToBaseDirPath = arg.Value;
 					break;
 				case 3:
-					this.ToFileRelPath = arg.Value;
+					this.Parameters.ToFileRelPath = arg.Value;
 					break;
 				default:
 					base.ProcessNormalArgument(arg);
@@ -82,12 +85,9 @@ namespace PandocUtil.PandocFilter.Commands {
 				}
 
 				(string from, string to) = SplitExtensions(arg.Value);
-				if (this.ExtensionMap == null) {
-					this.ExtensionMap = new Dictionary<string, string>();
-				}
-				this.ExtensionMap.Add(from, to);
+				this.Parameters.AddExtensionMap(from, to);
 			} else if (OptionNameStartsWith("RebaseOtherRelativeLinks", name)) {
-				this.RebaseOtherRelativeLinks = true;
+				this.Parameters.RebaseOtherRelativeLinks = true;
 			} else {
 				base.ProcessOption(arg);
 			}
@@ -101,23 +101,6 @@ namespace PandocUtil.PandocFilter.Commands {
 			}
 
 			// state checks
-			if (string.IsNullOrEmpty(this.FromBaseDirPath)) {
-				throw CreateMissingIndispensableArgumentException(nameof(FromBaseDirPath));
-			}
-			if (string.IsNullOrEmpty(this.FromFileRelPath)) {
-				throw CreateMissingIndispensableArgumentException(nameof(FromFileRelPath));
-			}
-			if (string.IsNullOrEmpty(this.ToBaseDirPath)) {
-				throw CreateMissingIndispensableArgumentException(nameof(ToBaseDirPath));
-			}
-			if (string.IsNullOrEmpty(this.ToFileRelPath)) {
-				throw CreateMissingIndispensableArgumentException(nameof(ToFileRelPath));
-			}
-
-			string fromExtension = Path.GetExtension(this.FromFileRelPath);
-			if (!this.ExtensionMap.ContainsKey(fromExtension)) {
-				this.ExtensionMap.Add(fromExtension, Path.GetExtension(this.ToFileRelPath));
-			}
 
 			return FormatTaskKind;
 		}
@@ -160,25 +143,8 @@ namespace PandocUtil.PandocFilter.Commands {
 		}
 
 		protected override void Filter(string taskKind, Stream inputStream, Stream outputStream) {
-			FormattingFilter filter = new FormattingFilter();
-			if (this.FromBaseDirPath != null) {
-				filter.FromBaseDirPath = this.FromBaseDirPath;
-			}
-			if (this.FromFileRelPath != null) {
-				filter.FromFileRelPath = this.FromFileRelPath;
-			}
-			if (this.ToBaseDirPath != null) {
-				filter.ToBaseDirPath = this.ToBaseDirPath;
-			}
-			if (this.ToFileRelPath != null) {
-				filter.ToFileRelPath = this.ToFileRelPath;
-			}
-			if (this.RebaseOtherRelativeLinks.HasValue) {
-				filter.RebaseOtherRelativeLinks = this.RebaseOtherRelativeLinks;
-			}
-			if (this.ExtensionMap != null) {
-				filter.ExtensionMap = this.ExtensionMap;
-			}
+			FormattingFilter.Configuration clonedConfig = new FormattingFilter.Configuration(this.Config);
+			FormattingFilter filter = new FormattingFilter(clonedConfig);
 
 			// read input AST
 			Dictionary<string, object> ast = JsonSerializer.Deserialize<Dictionary<string, object>>(inputStream);

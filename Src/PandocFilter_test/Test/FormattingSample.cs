@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using PandocUtil.PandocFilter.Filters;
 
 namespace PandocUtil.PandocFilter.Test {
 	public class FormattingSample: ConvertingSample {
@@ -66,20 +67,11 @@ namespace PandocUtil.PandocFilter.Test {
 		#endregion
 
 
-		#region data
-
-		public readonly bool RebaseOtherRelativeLinks;
-
-		private readonly Dictionary<string, string> extensionMap;
-
-		#endregion
-
-
 		#region properties
 
-		public IReadOnlyDictionary<string, string> ExtensionMap {
+		public new FormattingFilter.Configuration Config {
 			get {
-				return this.extensionMap;
+				return GetConfig<FormattingFilter.Configuration>();
 			}
 		}
 
@@ -88,52 +80,27 @@ namespace PandocUtil.PandocFilter.Test {
 
 		#region creation
 
-		public FormattingSample(string description, string inputFilePath, string answerFilePath, string supposedFromBaseDirUri, string supposedFromFileRelPath, string supposedToBaseDirUri, string supposedToFileRelPath, bool rebaseOtherRelativeLinks, Dictionary<string, string> extensionMap) :
-		base(description, inputFilePath, answerFilePath, supposedFromBaseDirUri, supposedFromFileRelPath, supposedToBaseDirUri, supposedToFileRelPath) {
-			// argument checks
-			// extension can be null
-
-			// initialize members
-			this.RebaseOtherRelativeLinks = rebaseOtherRelativeLinks;
-			this.extensionMap = extensionMap;
+		public FormattingSample(string description, string inputFilePath, string answerFilePath, FormattingFilter.Configuration config): base(description, inputFilePath, answerFilePath, config) {
 		}
 
-		protected FormattingSample(IReadOnlyDictionary<string, object> config, string basePath) : base(config, basePath) {
-			// argument checks
-			Debug.Assert(config != null);
-
-			// initialize members
-			Dictionary<string, string> adapt(Dictionary<string, object> from) {
-				if (from == null) {
-					return null;
-				} else {
-					Dictionary<string, string> to = new Dictionary<string, string>(from.Count);
-					foreach (KeyValuePair<string, object> pair in from) {
-						string value = pair.Value as string;
-						if (value == null) {
-							string message = $"The value of '{pair.Key}' in 'ExtensionMap' must be a non-null string.";
-							throw new ArgumentException(message, nameof(config));
-						}
-						to.Add(pair.Key, value);
-					}
-					return to;
-				}
-			}
-
-			this.RebaseOtherRelativeLinks = config.GetOptionalValue<bool>("RebaseOtherRelativeLinks", false);
-			this.extensionMap = adapt(config.GetOptionalValue<Dictionary<string, object>>("ExtensionMap", null));
+		protected FormattingSample(IReadOnlyDictionary<string, object> jsonObj, string basePath, Func<IReadOnlyDictionary<string, object>, FormattingFilter.Configuration> configCreator): base(jsonObj, basePath, configCreator) {
 		}
 
-		public static FormattingSample GetSample(string configFilePath) {
+		protected static FormattingFilter.Configuration CreateConfiguration(IReadOnlyDictionary<string, object> jsonObj) {
+			return new FormattingFilter.Configuration(jsonObj);
+		}
+
+
+		public static FormattingSample GetSample(string defFilePath) {
 			// argument checks
-			if (string.IsNullOrEmpty(configFilePath)) {
-				throw new ArgumentNullException(nameof(configFilePath));
+			if (string.IsNullOrEmpty(defFilePath)) {
+				throw new ArgumentNullException(nameof(defFilePath));
 			}
 
 			// read a JSON object from the config file
-			string basePath = Path.GetDirectoryName(configFilePath);
-			Dictionary<string, object> config = LoadConfigFile(configFilePath);
-			return new FormattingSample(config, basePath);
+			string basePath = Path.GetDirectoryName(defFilePath);
+			Dictionary<string, object> jsonObj = LoadDefinitionFile(defFilePath);
+			return new FormattingSample(jsonObj, basePath, CreateConfiguration);
 		}
 
 		public static FormattingSample GetSample(string group, string name) {
@@ -147,8 +114,8 @@ namespace PandocUtil.PandocFilter.Test {
 
 			// create a instance
 			string resourceDirPath = TestUtil.GetFilteringResourceDir(group);
-			string configFilePath = Path.Combine(resourceDirPath, $"{name}.config.json");
-			return GetSample(configFilePath);
+			string defFilePath = Path.Combine(resourceDirPath, $"{name}.def.json");
+			return GetSample(defFilePath);
 		}
 
 		#endregion

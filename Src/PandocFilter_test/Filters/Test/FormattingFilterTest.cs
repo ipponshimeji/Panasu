@@ -17,13 +17,7 @@ namespace PandocUtil.PandocFilter.Filters.Test {
 				Debug.Assert(sample != null);
 
 				// create the test target
-				FormattingFilter target = new FormattingFilter();
-				target.FromBaseDirPath = sample.SupposedFromBaseDirUri;
-				target.FromFileRelPath = sample.SupposedFromFileRelPath;
-				target.ToBaseDirPath = sample.SupposedToBaseDirUri;
-				target.ToFileRelPath = sample.SupposedToFileRelPath;
-				target.RebaseOtherRelativeLinks = sample.RebaseOtherRelativeLinks;
-				target.ExtensionMap = sample.ExtensionMap;
+				FormattingFilter target = new FormattingFilter(sample.Config);
 
 				// test each pattern
 				TestUtil.TestFiltering(target, false, sample);   // modify

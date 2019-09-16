@@ -1,0 +1,18 @@
+{
+    "Description": "header_title_h1",
+    "Spec": "The filter should remove level-1 header if both level-1 header and title metadata exist. (i.e. the title metadata is prefered)",
+    "InputFilePath": "Inputs/header_title_h1.input.json",
+    "AnswerFilePath": "Answers/header_title_h1.answer.json",
+    "Config": {
+        "Parameters": {
+            "FromBaseDirPath": "From/",
+            "FromFileRelPath": "header_title_h1.md",
+            "ToBaseDirPath": "To/",
+            "ToFileRelPath": "header_title_h1.html",
+            "RebaseOtherRelativeLinks": false,
+            "ExtensionMap": {
+                ".md": ".html"
+            }
+        }
+    }
+}

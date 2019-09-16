@@ -2,10 +2,13 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using PandocUtil.PandocFilter.Filters;
 
 namespace PandocUtil.PandocFilter.Commands {
 	public class FilterCommand: Command {
-		#region properties
+		#region data
+
+		private Filter.Configuration config = null;
 
 		protected Stream InputStream { get; private set; } = null;
 
@@ -14,9 +17,27 @@ namespace PandocUtil.PandocFilter.Commands {
 		#endregion
 
 
+		#region properties
+
+		public Filter.Configuration Config {
+			get {
+				return this.config;
+			}
+		}
+
+		#endregion
+
+
 		#region constructors
 
-		public FilterCommand(string commandName, string invocation = null) : base(commandName, invocation) {
+		protected FilterCommand(Filter.Configuration config, string commandName, string invocation = null) : base(commandName, invocation) {
+			// argument checks
+			if (config == null) {
+				throw new ArgumentNullException(nameof(config));
+			}
+
+			// initialize members 
+			this.config = config;
 		}
 
 		#endregion
@@ -46,6 +67,10 @@ namespace PandocUtil.PandocFilter.Commands {
 				this.OutputStream = null;
 				this.InputStream = null;
 			}
+		}
+
+		protected TConfiguration GetConfiguration<TConfiguration>() where TConfiguration: Filter.Configuration {
+			return (TConfiguration)this.config;
 		}
 
 		#endregion

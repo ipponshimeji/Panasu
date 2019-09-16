@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
 using System.Collections;
@@ -8,18 +9,11 @@ namespace PandocUtil.PandocFilter.Filters {
 	public class Filter {
 		#region types
 
-		public class Parameters {
+		public class Parameters: FreezableObject {
 			#region types
 
 			public class Names {
 			}
-
-			#endregion
-
-
-			#region data
-
-			public bool IsFreezed { get; private set; } = false;
 
 			#endregion
 
@@ -29,16 +23,31 @@ namespace PandocUtil.PandocFilter.Filters {
 			public Parameters() {
 			}
 
-			public Parameters(IReadOnlyDictionary<string, object> metadataParams, Parameters overwriteParams) {
+			// copy the contents of src except the freeze state.
+			public Parameters(Parameters src) {
 				// argument checks
-				if (metadataParams == null) {
-					throw new ArgumentNullException(nameof(metadataParams));
+				if (src == null) {
+					throw new ArgumentNullException(nameof(src));
+				}
+
+				// no contents to be copied at this class level
+			}
+
+			public Parameters(IReadOnlyDictionary<string, object> jsonObj, Parameters overwriteParams, bool complete = false) {
+				// argument checks
+				if (jsonObj == null) {
+					throw new ArgumentNullException(nameof(jsonObj));
 				}
 				if (overwriteParams == null) {
 					throw new ArgumentNullException(nameof(overwriteParams));
 				}
 
 				// no param to be initialized
+			}
+
+
+			public virtual Parameters Clone() {
+				return new Parameters(this);
 			}
 
 			#endregion
@@ -67,16 +76,6 @@ namespace PandocUtil.PandocFilter.Filters {
 				return new InvalidOperationException($"The parameter '{paramName}' is invalid: {reason}");
 			}
 
-
-			public void Freeze() {
-				this.IsFreezed = true;
-			}
-
-			public void EnsureNotFreezed() {
-				if (this.IsFreezed) {
-					throw new InvalidOperationException("It cannot be modified because it is freezed.");
-				}
-			}
 
 			public void EnsureComplete() {
 				List<(string paramName, string reason)> reports = null;
@@ -166,7 +165,7 @@ namespace PandocUtil.PandocFilter.Filters {
 			#endregion
 		}
 
-		public class Config {
+		public class Configuration: FreezableObject {
 			#region data
 
 			private readonly Parameters parameters;
@@ -187,7 +186,7 @@ namespace PandocUtil.PandocFilter.Filters {
 
 			#region creation
 
-			protected Config(Parameters parameters) {
+			protected Configuration(Parameters parameters, IReadOnlyDictionary<string, object> jsonObj = null) {
 				// argument checks
 				if (parameters == null) {
 					throw new ArgumentNullException(nameof(parameters));
@@ -197,7 +196,27 @@ namespace PandocUtil.PandocFilter.Filters {
 				this.parameters = parameters;
 			}
 
-			public Config(): this(new Parameters()) {
+			public Configuration(IReadOnlyDictionary<string, object> jsonObj = null): this(CreateParameters(jsonObj), jsonObj) {
+			}
+
+			private static Parameters CreateParameters(IReadOnlyDictionary<string, object> jsonObj) {
+				return (jsonObj == null)? new Parameters(): new Parameters(GetParametersObj(jsonObj), new Parameters(), false);
+			}
+
+			// copy the contents of src except the freeze state.
+			public Configuration(Configuration src) {
+				// argument checks
+				if (src == null) {
+					throw new ArgumentNullException(nameof(src));
+				}
+
+				Debug.Assert(src.parameters != null);
+				this.parameters = src.parameters.Clone();
+			}
+
+
+			public virtual Configuration Clone() {
+				return new Configuration(this);
 			}
 
 			#endregion
@@ -205,27 +224,41 @@ namespace PandocUtil.PandocFilter.Filters {
 
 			#region methods
 
+			protected static IReadOnlyDictionary<string, object> GetParametersObj(IReadOnlyDictionary<string, object> jsonObj) {
+				// argument checks
+				if (jsonObj == null) {
+					throw new ArgumentNullException(nameof(jsonObj));
+				}
+
+				IReadOnlyDictionary<string, object> paramsJsonObj = jsonObj.GetOptionalValue<IReadOnlyDictionary<string, object>>("Parameters", null);
+				if (paramsJsonObj == null) {
+					paramsJsonObj = ImmutableDictionary<string, object>.Empty;
+				}
+				return paramsJsonObj;
+			}
+
 			protected TParameters GetParameters<TParameters>() where TParameters: Parameters {
 				return (TParameters)this.parameters;
 			}
 
 			#endregion
-		}
 
 
+			#region overrides
 
-
-		protected class Old_Parameters: PandocUtil.PandocFilter.Filters.Parameters {
-			#region creation
-
-			public Old_Parameters(Dictionary<string, object> dictionary, bool ast): base(dictionary, ast) {
+			protected override void OnFreezed() {
+				base.OnFreezed();
+				this.Parameters.Freeze();
 			}
 
 			#endregion
 		}
 
+
 		protected class ContextBase: WorkingTreeNode {
 			#region data
+
+			public Parameters Parameters { get; private set; } = null;
 
 			private object value = null;
 
@@ -290,23 +323,28 @@ namespace PandocUtil.PandocFilter.Filters {
 			}
 
 
-			private void InitializeThisClassLevel(object value) {
+			private void InitializeThisClassLevel(Parameters parameters, object value) {
 				// argument checks
+				Debug.Assert(parameters != null);
 				// value can be null
 
 				// initialize this class level
+				this.Parameters = parameters;
 				SetValue(value);
 
 				return;
 			}
 
-			protected void Initialize(object value) {
+			protected void Initialize(Parameters parameters, object value) {
 				// argument checks
+				if (parameters == null) {
+					throw new ArgumentNullException(nameof(parameters));
+				}
 				// value can be null
 
 				// initialize this instance
 				base.Initialize();
-				InitializeThisClassLevel(value);
+				InitializeThisClassLevel(parameters, value);
 
 				return;
 			}
@@ -316,7 +354,7 @@ namespace PandocUtil.PandocFilter.Filters {
 
 				// initialize this instance
 				base.Initialize(parent);
-				InitializeThisClassLevel(null);
+				InitializeThisClassLevel(parent.Parameters, null);
 
 				return;
 			}
@@ -327,7 +365,7 @@ namespace PandocUtil.PandocFilter.Filters {
 
 				// initialize this instance
 				base.Initialize(parent, name);
-				InitializeThisClassLevel(value);
+				InitializeThisClassLevel(parent.Parameters, value);
 
 				return;
 			}
@@ -338,7 +376,7 @@ namespace PandocUtil.PandocFilter.Filters {
 
 				// initialize this instance
 				base.Initialize(parent, index);
-				InitializeThisClassLevel(value);
+				InitializeThisClassLevel(parent.Parameters, value);
 
 				return;
 			}
@@ -346,6 +384,7 @@ namespace PandocUtil.PandocFilter.Filters {
 			protected new void Clear() {
 				// clear this instance
 				SetValue(null);
+				this.Parameters = null;
 				base.Clear();
 			}
 
@@ -376,6 +415,10 @@ namespace PandocUtil.PandocFilter.Filters {
 
 			public FormatException CreateFormatException(string message) {
 				return new FormatException($"{message}{Environment.NewLine}Location: {GetLocation()}");
+			}
+
+			public TParameters GetParameters<TParameters>() where TParameters: Parameters {
+				return (TParameters)this.Parameters;
 			}
 
 			public (bool, T) GetOptionalValue<T>(string key) {
@@ -595,13 +638,6 @@ namespace PandocUtil.PandocFilter.Filters {
 					throw new InvalidOperationException("The value is neither a JSON array nor a JSON object.");
 				}
 			}
-
-			#endregion
-
-
-			#region methods
-
-			public abstract TParameters GetParameters<TParameters>() where TParameters : Old_Parameters;
 
 			#endregion
 		}
@@ -880,14 +916,17 @@ namespace PandocUtil.PandocFilter.Filters {
 				Debug.Assert(this.arrayEditor == null);
 			}
 
-			private void Initialize(AST ast) {
+			private void Initialize(AST ast, Parameters parameters) {
 				// argument checks
 				if (ast == null) {
 					throw new ArgumentNullException(nameof(ast));
 				}
+				if (parameters == null) {
+					throw new ArgumentNullException(nameof(parameters));
+				}
 
 				// initialize this instance
-				base.Initialize(ast.JsonValue);
+				base.Initialize(parameters, ast.JsonValue);
 				InitializeThisClassLevel(this, ast);
 
 				return;
@@ -935,10 +974,10 @@ namespace PandocUtil.PandocFilter.Filters {
 			}
 
 
-			private static ModifyingContext CreateContext(AST ast) {
+			private static ModifyingContext CreateContext(AST ast, Parameters parameters) {
 				// create and setup an instance
 				ModifyingContext instance = instanceCache.AllocInstance();
-				instance.Initialize(ast);
+				instance.Initialize(ast, parameters);
 
 				return instance;
 			}
@@ -996,7 +1035,7 @@ namespace PandocUtil.PandocFilter.Filters {
 
 			#region methods - context operations
 
-			public static void RunInContext(AST ast, Action<ModifyingContext> action) {
+			public static void RunInContext(AST ast, Parameters parameters, Action<ModifyingContext> action) {
 				// argument checks
 				if (ast == null) {
 					throw new ArgumentNullException(nameof(ast));
@@ -1006,7 +1045,7 @@ namespace PandocUtil.PandocFilter.Filters {
 				}
 
 				// run the action in the context
-				ModifyingContext context = CreateContext(ast);
+				ModifyingContext context = CreateContext(ast, parameters);
 				try {
 					action(context);
 				} finally {
@@ -1188,10 +1227,6 @@ namespace PandocUtil.PandocFilter.Filters {
 				return base.ArrayValue;
 			}
 
-			public override TParameters GetParameters<TParameters>() {
-				return (TParameters)this.AST.Parameters;
-			}
-
 			#endregion
 		}
 
@@ -1303,9 +1338,35 @@ namespace PandocUtil.PandocFilter.Filters {
 		#endregion
 
 
+		#region data
+
+		private readonly Configuration config;
+
+		#endregion
+
+
+		#region properties
+
+		public Configuration Config {
+			get {
+				return this.config;
+			}
+		}
+
+		#endregion
+
+
 		#region creation
 
-		protected Filter() {
+		protected Filter(Configuration config) {
+			// argument checks
+			if (config == null) {
+				throw new ArgumentNullException(nameof(config));
+			}
+			config.Freeze();
+
+			// initialize members
+			this.config = config;
 		}
 
 		#endregion
@@ -1320,10 +1381,15 @@ namespace PandocUtil.PandocFilter.Filters {
 			}
 
 			// modify the ast
-			AST ast = new AST(astJsonValue, CreateParameters(astJsonValue));
+			AST ast = new AST(astJsonValue);
+			Parameters parameters = CreateParameters(
+				jsonObj: ast.MetadataParameters,
+				overwiteParams: this.config.Parameters,
+				complete: true
+			);
 
 			// modify the ast
-			ModifyingContext.RunInContext(ast, (rootContext) => {
+			ModifyingContext.RunInContext(ast, parameters, (rootContext) => {
 				object value;
 
 				// Metadata
@@ -1351,15 +1417,8 @@ namespace PandocUtil.PandocFilter.Filters {
 		}
 
 
-		protected Old_Parameters CreateParameters(Dictionary<string, object> ast) {
-			// new a Parameters instance
-			Old_Parameters parameters = NewParameters(ast);
-
-			// setup the instance and freeze it 
-			SetupParameters(parameters);
-			parameters.Freeze();
-
-			return parameters;
+		protected TConfiguration GetConfiguration<TConfiguration>() where TConfiguration: Configuration {
+			return (TConfiguration)this.config;
 		}
 
 		#endregion
@@ -1367,11 +1426,8 @@ namespace PandocUtil.PandocFilter.Filters {
 
 		#region overridables - parameters
 
-		protected virtual Old_Parameters NewParameters(Dictionary<string, object> ast) {
-			return new Old_Parameters(ast, ast: true);
-		}
-
-		protected virtual void SetupParameters(Old_Parameters parameters) {
+		protected virtual Parameters CreateParameters(IReadOnlyDictionary<string, object> jsonObj, Parameters overwiteParams, bool complete) {
+			return new Parameters(jsonObj, overwiteParams, complete);
 		}
 
 		#endregion
