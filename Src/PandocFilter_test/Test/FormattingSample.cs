@@ -69,9 +69,9 @@ namespace PandocUtil.PandocFilter.Test {
 
 		#region properties
 
-		public new FormattingFilter.Configuration Config {
+		public new FormattingFilter.Configurations Config {
 			get {
-				return GetConfig<FormattingFilter.Configuration>();
+				return GetConfig<FormattingFilter.Configurations>();
 			}
 		}
 
@@ -80,14 +80,17 @@ namespace PandocUtil.PandocFilter.Test {
 
 		#region creation
 
-		public FormattingSample(string description, string inputFilePath, string answerFilePath, FormattingFilter.Configuration config): base(description, inputFilePath, answerFilePath, config) {
+		public FormattingSample(string description, string inputFilePath, string answerFilePath, FormattingFilter.Configurations config): base(description, inputFilePath, answerFilePath, config) {
 		}
 
-		protected FormattingSample(IReadOnlyDictionary<string, object> jsonObj, string basePath, Func<IReadOnlyDictionary<string, object>, FormattingFilter.Configuration> configCreator): base(jsonObj, basePath, configCreator) {
+		protected FormattingSample(IReadOnlyDictionary<string, object> jsonObj, string basePath, Func<IReadOnlyDictionary<string, object>, FormattingFilter.Configurations> createConfigurations): base(jsonObj, basePath, createConfigurations) {
 		}
 
-		protected static FormattingFilter.Configuration CreateConfiguration(IReadOnlyDictionary<string, object> jsonObj) {
-			return new FormattingFilter.Configuration(jsonObj);
+		public FormattingSample(IReadOnlyDictionary<string, object> jsonObj, string basePath) : base(jsonObj, basePath, CreateConfigurations) {
+		}
+
+		protected static FormattingFilter.Configurations CreateConfigurations(IReadOnlyDictionary<string, object> jsonObj) {
+			return new FormattingFilter.Configurations(jsonObj);
 		}
 
 
@@ -100,7 +103,7 @@ namespace PandocUtil.PandocFilter.Test {
 			// read a JSON object from the config file
 			string basePath = Path.GetDirectoryName(defFilePath);
 			Dictionary<string, object> jsonObj = LoadDefinitionFile(defFilePath);
-			return new FormattingSample(jsonObj, basePath, CreateConfiguration);
+			return new FormattingSample(jsonObj, basePath);
 		}
 
 		public static FormattingSample GetSample(string group, string name) {

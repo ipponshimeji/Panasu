@@ -59,57 +59,32 @@ namespace PandocUtil.PandocFilter.Filters {
 			public Parameters(): base() {
 			}
 
-			public Parameters(Parameters src) : base(src) {
-				// copy the src's contents
-				this.rebaseOtherRelativeLinks = src.rebaseOtherRelativeLinks;
-				this.extensionMap = (src.extensionMap == null)? null: new Dictionary<string, string>(src.extensionMap);
-			}
-
-			public Parameters(IReadOnlyDictionary<string, object> jsonObj, Parameters overwriteParams, bool complete = false): base(jsonObj, overwriteParams, complete) {
+			public Parameters(IReadOnlyDictionary<string, object> jsonObj, Parameters overwriteParams): base(jsonObj, overwriteParams) {
 				// argument checks
-				// arguments are checked by the base class at this point
+				// arguments were checked by the base class at this point
 				Debug.Assert(jsonObj != null);
 				Debug.Assert(overwriteParams != null);
 
-				// state checks
-				Debug.Assert(this.IsFreezed == false);
-
 				// initialize members
-				this.rebaseOtherRelativeLinks = GetOptionalValueTypeParameter<bool>(jsonObj, Names.RebaseOtherRelativeLinks, overwriteParams.RebaseOtherRelativeLinks, null);
-				if (overwriteParams.ExtensionMap != null) {
-					this.extensionMap = new Dictionary<string, string>(overwriteParams.ExtensionMap);
-				} else {
-					IReadOnlyDictionary<string, object> extensionMap = jsonObj.GetOptionalValue<IReadOnlyDictionary<string, object>>(Names.ExtensionMap, null);
-					if (extensionMap == null) {
-						this.extensionMap = null;
-					} else {
-						this.extensionMap = extensionMap.ToDictionary(pair => pair.Key, pair => pair.Value.ToString());
-					}
-				}
-
-				if (complete) {
-					// set default value if the value is not set
-					if (this.rebaseOtherRelativeLinks.HasValue == false) {
-						this.rebaseOtherRelativeLinks = false;
-					}
-					Dictionary<string, string> extensionMap = this.extensionMap;
-					if (extensionMap == null) {
-						extensionMap = new Dictionary<string, string>();
-						this.extensionMap = extensionMap;
-					}
-					string fromExt = Path.GetExtension(this.FromFileRelPath);
-					string toExt;
-					if (extensionMap.TryGetValue(fromExt, out toExt) == false) {
-						extensionMap[fromExt] = Path.GetExtension(this.ToFileRelPath);
-					}
-				}
+				this.rebaseOtherRelativeLinks = ReadValueFrom(jsonObj, Names.RebaseOtherRelativeLinks, overwriteParams.RebaseOtherRelativeLinks);
+				this.extensionMap = ReadObjectFrom<string>(jsonObj, Names.ExtensionMap, overwriteParams.ExtensionMap);
 			}
 
 			public Parameters(IReadOnlyDictionary<string, object> jsonObj): this(jsonObj, new Parameters()) {
 			}
 
+			public Parameters(Parameters src) : base(src) {
+				// argument checks
+				// arguments were checked by the base class at this point
+				Debug.Assert(src != null);
 
-			public override Filter.Parameters Clone() {
+				// copy the src's contents
+				this.rebaseOtherRelativeLinks = src.rebaseOtherRelativeLinks;
+				this.extensionMap = (src.extensionMap == null) ? null : new Dictionary<string, string>(src.extensionMap);
+			}
+
+
+			public override ConfigurationsBase Clone() {
 				return new Parameters(this);
 			}
 
@@ -153,26 +128,35 @@ namespace PandocUtil.PandocFilter.Filters {
 
 			#region overrides
 
-			protected override void ReportInvalidParameters(Action<string, string> report) {
-				// argument checks
-				Debug.Assert(report != null);
+			public override void CompleteContents() {
+				// complete the base class level contents
+				base.CompleteContents();
 
-				// check the base class lelvel
-				base.ReportInvalidParameters(report);
+				// complete this class level contents
 
-				// check this class lelvel
-				if (this.extensionMap == null) {
-					report(Names.ExtensionMap, null);
+				// RebaseOtherRelativeLinks
+				if (this.rebaseOtherRelativeLinks.HasValue == false) {
+					// set default value
+					this.rebaseOtherRelativeLinks = false;
 				}
-				if (this.extensionMap == null) {
-					report(Names.ExtensionMap, null);
+
+				// ExtensionMap
+				Dictionary<string, string> extensionMap = this.extensionMap;
+				if (extensionMap == null) {
+					extensionMap = new Dictionary<string, string>();
+					this.extensionMap = extensionMap;
+				}
+				string fromExt = Path.GetExtension(this.FromFileRelPath);
+				string toExt;
+				if (extensionMap.TryGetValue(fromExt, out toExt) == false) {
+					extensionMap[fromExt] = Path.GetExtension(this.ToFileRelPath);
 				}
 			}
 
 			#endregion
 		}
 
-		public new class Configuration: ConvertingFilter.Configuration {
+		public new class Configurations: ConvertingFilter.Configurations {
 			#region properties
 
 			public new Parameters Parameters {
@@ -186,22 +170,29 @@ namespace PandocUtil.PandocFilter.Filters {
 
 			#region creation
 
-			protected Configuration(Parameters parameters, IReadOnlyDictionary<string, object> jsonObj = null): base(parameters, jsonObj) {
+			protected Configurations(Func<IReadOnlyDictionary<string, object>, Parameters> createParams): base(createParams) {
 			}
 
-			public Configuration(IReadOnlyDictionary<string, object> jsonObj = null): this(CreateParameters(jsonObj), jsonObj) {
+			protected Configurations(Func<IReadOnlyDictionary<string, object>, Parameters> createParams, IReadOnlyDictionary<string, object> jsonObj): base(createParams, jsonObj) {
+			}
+
+			public Configurations(): this(CreateParameters) {
+			}
+
+			public Configurations(IReadOnlyDictionary<string, object> jsonObj) : this(CreateParameters, jsonObj) {
 			}
 
 			private static Parameters CreateParameters(IReadOnlyDictionary<string, object> jsonObj) {
-				return (jsonObj == null) ? new Parameters() : new Parameters(GetParametersObj(jsonObj), new Parameters(), false);
+				Debug.Assert(jsonObj != null);
+				return new Parameters(jsonObj);
 			}
 
-			public Configuration(Configuration src): base(src) {
+			public Configurations(Configurations src): base(src) {
 			}
 
 
-			public override Filter.Configuration Clone() {
-				return new Configuration(this);
+			public override ConfigurationsBase Clone() {
+				return new Configurations(this);
 			}
 
 			#endregion
@@ -212,9 +203,9 @@ namespace PandocUtil.PandocFilter.Filters {
 
 		#region properties
 
-		public new Configuration Config {
+		public new Configurations Config {
 			get {
-				return GetConfiguration<Configuration>();
+				return GetConfiguration<Configurations>();
 			}
 		}
 
@@ -223,10 +214,10 @@ namespace PandocUtil.PandocFilter.Filters {
 
 		#region constructors
 
-		public FormattingFilter(Configuration config): base(config) {
+		public FormattingFilter(Configurations config): base(config) {
 		}
 
-		public FormattingFilter(): base(new Configuration()) {
+		public FormattingFilter(): base(new Configurations()) {
 		}
 
 		#endregion
@@ -234,8 +225,8 @@ namespace PandocUtil.PandocFilter.Filters {
 
 		#region overrides
 
-		protected override Filter.Parameters CreateParameters(IReadOnlyDictionary<string, object> jsonObj, Filter.Parameters overwiteParams, bool complete) {
-			return new Parameters(jsonObj, (Parameters)overwiteParams, complete);
+		protected override Filter.Parameters CreateParameters(IReadOnlyDictionary<string, object> jsonObj, Filter.Parameters overwiteParams) {
+			return new Parameters(jsonObj, (Parameters)overwiteParams);
 		}
 
 		protected override void ModifyElement(ModifyingContext context, string type, object contents) {

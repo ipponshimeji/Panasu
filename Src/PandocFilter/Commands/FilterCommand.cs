@@ -8,7 +8,7 @@ namespace PandocUtil.PandocFilter.Commands {
 	public class FilterCommand: Command {
 		#region data
 
-		private Filter.Configuration config = null;
+		private Filter.Configurations config = null;
 
 		protected Stream InputStream { get; private set; } = null;
 
@@ -19,7 +19,7 @@ namespace PandocUtil.PandocFilter.Commands {
 
 		#region properties
 
-		public Filter.Configuration Config {
+		public Filter.Configurations Config {
 			get {
 				return this.config;
 			}
@@ -30,7 +30,7 @@ namespace PandocUtil.PandocFilter.Commands {
 
 		#region constructors
 
-		protected FilterCommand(Filter.Configuration config, string commandName, string invocation = null) : base(commandName, invocation) {
+		protected FilterCommand(Filter.Configurations config, string commandName, string invocation = null) : base(commandName, invocation) {
 			// argument checks
 			if (config == null) {
 				throw new ArgumentNullException(nameof(config));
@@ -69,7 +69,7 @@ namespace PandocUtil.PandocFilter.Commands {
 			}
 		}
 
-		protected TConfiguration GetConfiguration<TConfiguration>() where TConfiguration: Filter.Configuration {
+		protected TConfiguration GetConfiguration<TConfiguration>() where TConfiguration: Filter.Configurations {
 			return (TConfiguration)this.config;
 		}
 

@@ -16,9 +16,9 @@ namespace PandocUtil.PandocFilter.Commands {
 
 		#region properties
 
-		public new FormattingFilter.Configuration Config {
+		public new FormattingFilter.Configurations Config {
 			get {
-				return GetConfiguration<FormattingFilter.Configuration>();
+				return GetConfiguration<FormattingFilter.Configurations>();
 			}
 		}
 
@@ -33,10 +33,10 @@ namespace PandocUtil.PandocFilter.Commands {
 
 		#region constructors
 
-		protected FormatterCommand(FormattingFilter.Configuration config, string commandName, string invocation = null) : base(config, commandName, invocation) {
+		protected FormatterCommand(FormattingFilter.Configurations config, string commandName, string invocation = null) : base(config, commandName, invocation) {
 		}
 
-		public FormatterCommand(string commandName, string invocation = null) : base(new FormattingFilter.Configuration(), commandName, invocation) {
+		public FormatterCommand(string commandName, string invocation = null) : base(new FormattingFilter.Configurations(), commandName, invocation) {
 		}
 
 		#endregion
@@ -143,7 +143,7 @@ namespace PandocUtil.PandocFilter.Commands {
 		}
 
 		protected override void Filter(string taskKind, Stream inputStream, Stream outputStream) {
-			FormattingFilter.Configuration clonedConfig = new FormattingFilter.Configuration(this.Config);
+			FormattingFilter.Configurations clonedConfig = new FormattingFilter.Configurations(this.Config);
 			FormattingFilter filter = new FormattingFilter(clonedConfig);
 
 			// read input AST

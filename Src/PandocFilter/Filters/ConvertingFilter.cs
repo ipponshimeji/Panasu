@@ -7,7 +7,7 @@ namespace PandocUtil.PandocFilter.Filters {
 	public abstract class ConvertingFilter: Filter {
 		#region types
 
-		public new class Parameters: Filter.Parameters {
+		public new abstract class Parameters: Filter.Parameters {
 			#region types
 
 			public new class Names: Filter.Parameters.Names {
@@ -158,10 +158,28 @@ namespace PandocUtil.PandocFilter.Filters {
 
 			#region creation
 
-			public Parameters(): base() {
+			protected Parameters(): base() {
 			}
 
-			public Parameters(Parameters src): base(src) {
+			protected Parameters(IReadOnlyDictionary<string, object> jsonObj, Parameters overwriteParams): base(jsonObj, overwriteParams) {
+				// argument checks
+				// arguments were checked by the base class at this point
+				Debug.Assert(jsonObj != null);
+				Debug.Assert(overwriteParams != null);
+
+				// initialize members
+				this.FromBaseDirPath = ReadValueFrom(jsonObj, Names.FromBaseDirPath, overwriteParams.FromBaseDirPath);
+				this.FromFileRelPath = ReadValueFrom(jsonObj, Names.FromFileRelPath, overwriteParams.FromFileRelPath);
+
+				this.ToBaseDirPath = ReadValueFrom(jsonObj, Names.ToBaseDirPath, overwriteParams.ToBaseDirPath);
+				this.ToFileRelPath = ReadValueFrom(jsonObj, Names.ToFileRelPath, overwriteParams.ToFileRelPath);
+			}
+
+			protected Parameters(Parameters src) : base(src) {
+				// argument checks
+				// arguments were checked by the base class at this point
+				Debug.Assert(src != null);
+
 				// copy the src's contents
 				this.fromBaseDirPath = src.fromBaseDirPath;
 				this.fromBaseDirUri = src.fromBaseDirUri;
@@ -171,44 +189,6 @@ namespace PandocUtil.PandocFilter.Filters {
 				this.toBaseDirUri = src.toBaseDirUri;
 				this.toFileRelPath = src.toFileRelPath;
 				this.toFileUri = src.toBaseDirUri;
-			}
-
-			public Parameters(IReadOnlyDictionary<string, object> jsonObj, Parameters overwriteParams, bool complete = false): base(jsonObj, overwriteParams, complete) {
-				// argument checks
-				// arguments are checked by the base class at this point
-				Debug.Assert(jsonObj != null);
-				Debug.Assert(overwriteParams != null);
-
-				// initialize members
-				this.FromBaseDirPath = GetOptionalReferenceTypeParameter(jsonObj, Names.FromBaseDirPath, overwriteParams.FromBaseDirPath, null);
-				this.FromFileRelPath = GetOptionalReferenceTypeParameter(jsonObj, Names.FromFileRelPath, overwriteParams.FromFileRelPath, null);
-
-				this.ToBaseDirPath = GetOptionalReferenceTypeParameter(jsonObj, Names.ToBaseDirPath, overwriteParams.ToBaseDirPath, null);
-				this.ToFileRelPath = GetOptionalReferenceTypeParameter(jsonObj, Names.ToFileRelPath, overwriteParams.ToFileRelPath, null);
-
-				if (complete) {
-					// check whether the indispensable parameters are set or not
-					if (this.FromBaseDirPath == null) {
-						throw CreateMissingParameterException(Names.FromBaseDirPath);
-					}
-					if (this.FromFileRelPath == null) {
-						throw CreateMissingParameterException(Names.FromFileRelPath);
-					}
-					if (this.ToBaseDirPath == null) {
-						throw CreateMissingParameterException(Names.ToBaseDirPath);
-					}
-					if (this.ToFileRelPath == null) {
-						throw CreateMissingParameterException(Names.ToFileRelPath);
-					}
-					Debug.Assert(this.FromBaseDirUri != null);
-					Debug.Assert(this.FromFileUri != null);
-					Debug.Assert(this.ToBaseDirUri != null);
-					Debug.Assert(this.ToFileUri != null);
-				}
-			}
-
-			public override Filter.Parameters Clone() {
-				return new Parameters(this);
 			}
 
 			#endregion
@@ -280,32 +260,33 @@ namespace PandocUtil.PandocFilter.Filters {
 
 			#region overrides
 
-			protected override void ReportInvalidParameters(Action<string, string> report) {
-				// argument checks
-				Debug.Assert(report != null);
+			public override void CompleteContents() {
+				// complete the base class level contents
+				base.CompleteContents();
 
-				// check the base class lelvel
-				base.ReportInvalidParameters(report);
-
-				// check this class lelvel
-				if (this.fromBaseDirPath == null) {
-					report(Names.FromBaseDirPath, null);
+				// complete this class level contents
+				if (this.FromBaseDirPath == null) {
+					throw CreateMissingConfigurationException(Names.FromBaseDirPath);
 				}
-				if (this.fromFileRelPath == null) {
-					report(Names.FromFileRelPath, null);
+				if (this.FromFileRelPath == null) {
+					throw CreateMissingConfigurationException(Names.FromFileRelPath);
 				}
-				if (this.toBaseDirPath == null) {
-					report(Names.ToBaseDirPath, null);
+				if (this.ToBaseDirPath == null) {
+					throw CreateMissingConfigurationException(Names.ToBaseDirPath);
 				}
-				if (this.toFileRelPath == null) {
-					report(Names.ToFileRelPath, null);
+				if (this.ToFileRelPath == null) {
+					throw CreateMissingConfigurationException(Names.ToFileRelPath);
 				}
+				Debug.Assert(this.FromBaseDirUri != null);
+				Debug.Assert(this.FromFileUri != null);
+				Debug.Assert(this.ToBaseDirUri != null);
+				Debug.Assert(this.ToFileUri != null);
 			}
 
 			#endregion
 		}
 
-		public new class Configuration: Filter.Configuration {
+		public abstract new class Configurations: Filter.Configurations {
 			#region properties
 
 			public new Parameters Parameters {
@@ -319,21 +300,13 @@ namespace PandocUtil.PandocFilter.Filters {
 
 			#region creation
 
-			protected Configuration(Parameters parameters, IReadOnlyDictionary<string, object> jsonObj = null): base(parameters, jsonObj) {
+			protected Configurations(Func<IReadOnlyDictionary<string, object>, Parameters> createParams): base(createParams) {
 			}
 
-			public Configuration(IReadOnlyDictionary<string, object> jsonObj = null): this(CreateParameters(jsonObj), jsonObj) {
+			protected Configurations(Func<IReadOnlyDictionary<string, object>, Parameters> createParams, IReadOnlyDictionary<string, object> jsonObj): base(createParams, jsonObj) {
 			}
 
-			private static Parameters CreateParameters(IReadOnlyDictionary<string, object> jsonObj) {
-				return (jsonObj == null) ? new Parameters() : new Parameters(GetParametersObj(jsonObj), new Parameters(), false);
-			}
-
-			public Configuration(Configuration src): base(src) {
-			}
-
-			public override Filter.Configuration Clone() {
-				return new Configuration(this);
+			protected Configurations(Configurations src): base(src) {
 			}
 
 			#endregion
@@ -344,9 +317,9 @@ namespace PandocUtil.PandocFilter.Filters {
 
 		#region properties
 
-		public new Configuration Config {
+		public new Configurations Config {
 			get {
-				return GetConfiguration<Configuration>();
+				return GetConfiguration<Configurations>();
 			}
 		}
 
@@ -355,17 +328,13 @@ namespace PandocUtil.PandocFilter.Filters {
 
 		#region constructors
 
-		protected ConvertingFilter(Configuration config): base(config) {
+		protected ConvertingFilter(Configurations config): base(config) {
 		}
 
 		#endregion
 
 
 		#region overrides
-
-		protected override Filter.Parameters CreateParameters(IReadOnlyDictionary<string, object> jsonObj, Filter.Parameters overwiteParams, bool complete) {
-			return new Parameters(jsonObj, (Parameters)overwiteParams, complete);
-		}
 
 		protected override object ExpandMacro<ActualContext>(ActualContext context, string macroName) {
 			// argument checks

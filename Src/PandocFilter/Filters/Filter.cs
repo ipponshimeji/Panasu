@@ -6,10 +6,10 @@ using System.Linq;
 using System.Collections;
 
 namespace PandocUtil.PandocFilter.Filters {
-	public class Filter {
+	public abstract class Filter {
 		#region types
 
-		public class Parameters: FreezableObject {
+		public abstract class Parameters: PandocUtil.PandocFilter.Parameters {
 			#region types
 
 			public class Names {
@@ -20,164 +20,24 @@ namespace PandocUtil.PandocFilter.Filters {
 
 			#region creation
 
-			public Parameters() {
+			protected Parameters(): base() {
 			}
 
-			// copy the contents of src except the freeze state.
-			public Parameters(Parameters src) {
-				// argument checks
-				if (src == null) {
-					throw new ArgumentNullException(nameof(src));
-				}
-
-				// no contents to be copied at this class level
+			protected Parameters(IReadOnlyDictionary<string, object> jsonObj, Parameters overwriteParams): base(jsonObj, overwriteParams) {
 			}
 
-			public Parameters(IReadOnlyDictionary<string, object> jsonObj, Parameters overwriteParams, bool complete = false) {
-				// argument checks
-				if (jsonObj == null) {
-					throw new ArgumentNullException(nameof(jsonObj));
-				}
-				if (overwriteParams == null) {
-					throw new ArgumentNullException(nameof(overwriteParams));
-				}
-
-				// no param to be initialized
-			}
-
-
-			public virtual Parameters Clone() {
-				return new Parameters(this);
-			}
-
-			#endregion
-
-
-			#region methods
-
-			public static InvalidOperationException CreateMissingParameterException(string paramName) {
-				// argument checks
-				if (paramName == null) {
-					throw new ArgumentNullException(nameof(paramName));
-				}
-
-				return new InvalidOperationException($"The parameter '{paramName}' is missing.");
-			}
-
-			public static InvalidOperationException CreateInvalidParameterException(string paramName, string reason) {
-				// argument checks
-				if (paramName == null) {
-					throw new ArgumentNullException(nameof(paramName));
-				}
-				if (reason == null) {
-					reason = "(unknown)";
-				}
-
-				return new InvalidOperationException($"The parameter '{paramName}' is invalid: {reason}");
-			}
-
-
-			public void EnsureComplete() {
-				List<(string paramName, string reason)> reports = null;
-				void report(string paramName, string reason) {
-					if (reports == null) {
-						reports = new List<(string paramName, string reason)>();
-					}
-					reports.Add((paramName, reason));
-				}
-
-				ReportInvalidParameters(report);
-				if (reports != null) {
-					// TODO: message
-					string paramList = string.Join(',', reports.Select(r => r.paramName).ToArray());
-					new InvalidOperationException($"The following parameters are missing or invalid: {paramList}");
-				}
-			}
-
-			#endregion
-
-
-			#region methods - parameter arbitration
-
-			public static T GetOptionalParameter<T>(IReadOnlyDictionary<string, object> metadataParams, string name, T overwriteValue, bool overwrite, T defaultValue) {
-				// argument checks
-				if (metadataParams == null) {
-					throw new ArgumentNullException(nameof(metadataParams));
-				}
-				if (name == null) {
-					throw new ArgumentNullException(nameof(name));
-				}
-				if (overwrite) {
-					return overwriteValue;
-				}
-
-				// get optional value from the metadata parameters
-				return metadataParams.GetOptionalValue(name, defaultValue);
-			}
-
-			public static T GetIndispensableParameter<T>(IReadOnlyDictionary<string, object> metadataParams, string name, T overwriteValue, bool overwrite) {
-				// argument checks
-				if (metadataParams == null) {
-					throw new ArgumentNullException(nameof(metadataParams));
-				}
-				if (name == null) {
-					throw new ArgumentNullException(nameof(name));
-				}
-				if (overwrite) {
-					return overwriteValue;
-				}
-
-				// get indispensable value from the metadata parameters
-				T value;
-				if (metadataParams.TryGetValue(name, out value)) {
-					return value;
-				} else {
-					throw CreateInvalidParameterException(name, "missing or invalid type");
-				}
-			}
-
-			public static T GetOptionalReferenceTypeParameter<T>(IReadOnlyDictionary<string, object> metadataParams, string name, T overwriteValue, T defaultValue) where T : class {
-				return GetOptionalParameter(metadataParams, name, overwriteValue, overwriteValue != null, defaultValue);
-			}
-
-			public static T GetIndispensableReferenceTypeParameter<T>(IReadOnlyDictionary<string, object> metadataParams, string name, T overwriteValue) where T : class {
-				return GetIndispensableParameter(metadataParams, name, overwriteValue, overwriteValue != null);
-			}
-
-			public static T? GetOptionalValueTypeParameter<T>(IReadOnlyDictionary<string, object> metadataParams, string name, T? overwriteValue, T? defaultValue) where T : struct {
-				return GetOptionalParameter(metadataParams, name, overwriteValue ?? default(T), overwriteValue.HasValue, defaultValue);
-			}
-
-			public static T GetIndispensableValueTypeParameter<T>(IReadOnlyDictionary<string, object> metadataParams, string name, T? overwriteValue) where T : struct {
-				return GetIndispensableParameter(metadataParams, name, overwriteValue ?? default(T), overwriteValue.HasValue);
-			}
-
-			#endregion
-
-
-			#region overridables
-
-			protected virtual void ReportInvalidParameters(Action<string, string> report) {
-				// argument checks
-				Debug.Assert(report != null);
+			protected Parameters(Parameters src) : base(src) {
 			}
 
 			#endregion
 		}
 
-		public class Configuration: FreezableObject {
-			#region data
-
-			private readonly Parameters parameters;
-
-			#endregion
-
-
+		public abstract class Configurations: PandocUtil.PandocFilter.Configurations {
 			#region properties
 
-			public Parameters Parameters {
+			public new Parameters Parameters {
 				get {
-					return this.parameters;
+					return GetParameters<Parameters>();
 				}
 			}
 
@@ -186,69 +46,13 @@ namespace PandocUtil.PandocFilter.Filters {
 
 			#region creation
 
-			protected Configuration(Parameters parameters, IReadOnlyDictionary<string, object> jsonObj = null) {
-				// argument checks
-				if (parameters == null) {
-					throw new ArgumentNullException(nameof(parameters));
-				}
-
-				// initialize members
-				this.parameters = parameters;
+			protected Configurations(Func<IReadOnlyDictionary<string, object>, Parameters> createParams): base(createParams) {
 			}
 
-			public Configuration(IReadOnlyDictionary<string, object> jsonObj = null): this(CreateParameters(jsonObj), jsonObj) {
+			protected Configurations(Func<IReadOnlyDictionary<string, object>, Parameters> createParams, IReadOnlyDictionary<string, object> jsonObj): base(createParams, jsonObj) {
 			}
 
-			private static Parameters CreateParameters(IReadOnlyDictionary<string, object> jsonObj) {
-				return (jsonObj == null)? new Parameters(): new Parameters(GetParametersObj(jsonObj), new Parameters(), false);
-			}
-
-			// copy the contents of src except the freeze state.
-			public Configuration(Configuration src) {
-				// argument checks
-				if (src == null) {
-					throw new ArgumentNullException(nameof(src));
-				}
-
-				Debug.Assert(src.parameters != null);
-				this.parameters = src.parameters.Clone();
-			}
-
-
-			public virtual Configuration Clone() {
-				return new Configuration(this);
-			}
-
-			#endregion
-
-
-			#region methods
-
-			protected static IReadOnlyDictionary<string, object> GetParametersObj(IReadOnlyDictionary<string, object> jsonObj) {
-				// argument checks
-				if (jsonObj == null) {
-					throw new ArgumentNullException(nameof(jsonObj));
-				}
-
-				IReadOnlyDictionary<string, object> paramsJsonObj = jsonObj.GetOptionalValue<IReadOnlyDictionary<string, object>>("Parameters", null);
-				if (paramsJsonObj == null) {
-					paramsJsonObj = ImmutableDictionary<string, object>.Empty;
-				}
-				return paramsJsonObj;
-			}
-
-			protected TParameters GetParameters<TParameters>() where TParameters: Parameters {
-				return (TParameters)this.parameters;
-			}
-
-			#endregion
-
-
-			#region overrides
-
-			protected override void OnFreezed() {
-				base.OnFreezed();
-				this.Parameters.Freeze();
+			protected Configurations(Configurations src): base(src) {
 			}
 
 			#endregion
@@ -1340,14 +1144,14 @@ namespace PandocUtil.PandocFilter.Filters {
 
 		#region data
 
-		private readonly Configuration config;
+		private readonly Configurations config;
 
 		#endregion
 
 
 		#region properties
 
-		public Configuration Config {
+		public Configurations Config {
 			get {
 				return this.config;
 			}
@@ -1358,7 +1162,7 @@ namespace PandocUtil.PandocFilter.Filters {
 
 		#region creation
 
-		protected Filter(Configuration config) {
+		protected Filter(Configurations config) {
 			// argument checks
 			if (config == null) {
 				throw new ArgumentNullException(nameof(config));
@@ -1384,9 +1188,10 @@ namespace PandocUtil.PandocFilter.Filters {
 			AST ast = new AST(astJsonValue);
 			Parameters parameters = CreateParameters(
 				jsonObj: ast.MetadataParameters,
-				overwiteParams: this.config.Parameters,
-				complete: true
+				overwiteParams: this.config.Parameters
 			);
+			parameters.CompleteContents();
+			parameters.Freeze();
 
 			// modify the ast
 			ModifyingContext.RunInContext(ast, parameters, (rootContext) => {
@@ -1417,7 +1222,7 @@ namespace PandocUtil.PandocFilter.Filters {
 		}
 
 
-		protected TConfiguration GetConfiguration<TConfiguration>() where TConfiguration: Configuration {
+		protected TConfiguration GetConfiguration<TConfiguration>() where TConfiguration: Configurations {
 			return (TConfiguration)this.config;
 		}
 
@@ -1426,9 +1231,7 @@ namespace PandocUtil.PandocFilter.Filters {
 
 		#region overridables - parameters
 
-		protected virtual Parameters CreateParameters(IReadOnlyDictionary<string, object> jsonObj, Parameters overwiteParams, bool complete) {
-			return new Parameters(jsonObj, overwiteParams, complete);
-		}
+		protected abstract Parameters CreateParameters(IReadOnlyDictionary<string, object> jsonObj, Parameters overwiteParams);
 
 		#endregion
 

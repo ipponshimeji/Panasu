@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
 using Utf8Json;
@@ -15,14 +16,14 @@ namespace PandocUtil.PandocFilter.Test {
 
 		public readonly string AnswerFilePath;
 
-		private readonly Filter.Configuration config;
+		private readonly Filter.Configurations config;
 
 		#endregion
 
 
 		#region properties
 
-		public Filter.Configuration Config {
+		public Filter.Configurations Config {
 			get {
 				return this.config;
 			}
@@ -33,7 +34,7 @@ namespace PandocUtil.PandocFilter.Test {
 
 		#region creation
 
-		public FilteringSample(string description, string inputFilePath, string answerFilePath, Filter.Configuration config) {
+		public FilteringSample(string description, string inputFilePath, string answerFilePath, Filter.Configurations config) {
 			// argument checks
 			if (description == null) {
 				description = string.Empty;
@@ -55,7 +56,7 @@ namespace PandocUtil.PandocFilter.Test {
 			this.config = config;
 		}
 
-		protected FilteringSample(IReadOnlyDictionary<string, object> jsonObj, string basePath, Func<IReadOnlyDictionary<string, object>, Filter.Configuration> configCreator) {
+		protected FilteringSample(IReadOnlyDictionary<string, object> jsonObj, string basePath, Func<IReadOnlyDictionary<string, object>, Filter.Configurations> createConfigurations) {
 			// argument checks
 			if (jsonObj == null) {
 				throw new ArgumentNullException(nameof(jsonObj));
@@ -63,7 +64,7 @@ namespace PandocUtil.PandocFilter.Test {
 			if (string.IsNullOrEmpty(basePath)) {
 				throw new ArgumentNullException(nameof(basePath));
 			}
-			if (configCreator == null) {
+			if (createConfigurations == null) {
 				throw new ArgumentNullException(nameof(jsonObj));
 			}
 
@@ -76,7 +77,12 @@ namespace PandocUtil.PandocFilter.Test {
 				this.Description = jsonObj.GetOptionalValue<string>("Description", string.Empty);
 				this.InputFilePath = getFullPath(jsonObj.GetIndispensableValue<string>("InputFilePath"));
 				this.AnswerFilePath = getFullPath(jsonObj.GetIndispensableValue<string>("AnswerFilePath"));
-				this.config = configCreator(jsonObj.GetOptionalValue<IReadOnlyDictionary<string, object>>("Config", null));
+
+				IReadOnlyDictionary<string, object> configJsonObj = jsonObj.GetOptionalValue<IReadOnlyDictionary<string, object>>("Config", null);
+				if (configJsonObj == null) {
+					configJsonObj = ImmutableDictionary<string, object>.Empty;
+				}
+				this.config = createConfigurations(configJsonObj);
 			} catch (KeyNotFoundException exception) {
 				throw new ArgumentException(exception.Message, nameof(jsonObj));
 			}
@@ -113,7 +119,7 @@ namespace PandocUtil.PandocFilter.Test {
 			TestUtil.EqualJson(GetExpected(), actual);
 		}
 
-		protected TConfiguration GetConfig<TConfiguration>() where TConfiguration: Filter.Configuration {
+		protected TConfiguration GetConfig<TConfiguration>() where TConfiguration: Filter.Configurations {
 			return (TConfiguration)this.config;
 		}	
 
