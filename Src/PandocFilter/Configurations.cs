@@ -86,6 +86,11 @@ namespace PandocUtil.PandocFilter {
 			this.Parameters.Freeze();
 		}
 
+		public override void CompleteContents() {
+			base.CompleteContents();
+			// Note that this.Parameters should not be completed at this point.
+		}
+
 		#endregion
 	}
 }

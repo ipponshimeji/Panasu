@@ -1211,7 +1211,7 @@ namespace PandocUtil.PandocFilter.Filters {
 			return;
 		}
 
-		public IDictionary<string, object> Generate(IDictionary<string, object> ast) {
+		public Dictionary<string, object> Generate(Dictionary<string, object> ast) {
 			// argument checks
 			if (ast == null) {
 				throw new ArgumentNullException(nameof(ast));

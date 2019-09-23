@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using Utf8Json;
 using PandocUtil.PandocFilter.Filters;
 
 namespace PandocUtil.PandocFilter.Commands {
-	public class FilterCommand: Command {
+	public abstract class FilterCommand: Command {
 		#region data
 
 		private Filter.Configurations config = null;
@@ -30,7 +31,7 @@ namespace PandocUtil.PandocFilter.Commands {
 
 		#region constructors
 
-		protected FilterCommand(Filter.Configurations config, string commandName, string invocation = null) : base(commandName, invocation) {
+		protected FilterCommand(Filter.Configurations config, string commandName, string invoker): base(commandName, invoker) {
 			// argument checks
 			if (config == null) {
 				throw new ArgumentNullException(nameof(config));
@@ -56,9 +57,11 @@ namespace PandocUtil.PandocFilter.Commands {
 
 			// state checks
 			if (this.InputStream != null || this.OutputStream != null) {
+				// already running
 				throw new InvalidOperationException();
 			}
 
+			// call Run(string[]) in the state that I/O stream is set
 			this.InputStream = inputStream;
 			this.OutputStream = outputStream;
 			try {
@@ -78,22 +81,47 @@ namespace PandocUtil.PandocFilter.Commands {
 
 		#region overridables
 
-		protected virtual void Filter(string taskKind) {
+		protected virtual void Filter() {
 			if (this.InputStream != null) {
+				// filter using given i/o streams
 				Debug.Assert(this.OutputStream != null);
-				Filter(taskKind, this.InputStream, this.OutputStream);
+				Filter(this.InputStream, this.OutputStream);
 			} else {
+				// filter using standard io
 				Debug.Assert(this.OutputStream == null);
 				using (Stream inputStream = Console.OpenStandardInput()) {
 					using (Stream outputStream = Console.OpenStandardOutput()) {
-						Filter(taskKind, inputStream, outputStream);
+						Filter(inputStream, outputStream);
 					}
 				}
 			}
 		}
 
-		protected virtual void Filter(string taskKind, Stream inputStream, Stream outputStream) {
+		protected virtual void Filter(Stream inputStream, Stream outputStream) {
+			// argument checks
+			Debug.Assert(inputStream != null);
+			Debug.Assert(outputStream != null);
+
+			// create a filter
+			(Filter filter, bool useGenerate) = CreateFilter();
+
+			// read input AST
+			Dictionary<string, object> inputAST = JsonSerializer.Deserialize<Dictionary<string, object>>(inputStream);
+
+			// filter the AST
+			Dictionary<string, object> outputAST;
+			if (useGenerate) {
+				outputAST = filter.Generate(inputAST);
+			} else {
+				filter.Modify(inputAST);
+				outputAST = inputAST;
+			}
+
+			// write output AST
+			JsonSerializer.Serialize(outputStream, outputAST);
 		}
+
+		protected abstract (Filter filter, bool useGenerate) CreateFilter();
 
 		#endregion
 	}
