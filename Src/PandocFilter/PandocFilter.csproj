@@ -3,7 +3,7 @@
   <Import Project="..\_Configuring\Properties.props" />
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
     <RootNamespace>PandocUtil.PandocFilter</RootNamespace>
     <AssemblyName>PandocUtil.PandocFilter</AssemblyName>
   </PropertyGroup>
