@@ -4,7 +4,7 @@ using System.Collections.Immutable;
 using System.Diagnostics;
 
 
-namespace PandocUtil.PandocFilter {
+namespace Panasu {
 	public abstract class Configurations: ConfigurationsBase {
 		#region data
 

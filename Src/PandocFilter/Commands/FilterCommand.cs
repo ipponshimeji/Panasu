@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using Utf8Json;
-using PandocUtil.PandocFilter.Filters;
+using Panasu.Filters;
 
-namespace PandocUtil.PandocFilter.Commands {
+namespace Panasu.Commands {
 	public abstract class FilterCommand: Command {
 		#region data
 

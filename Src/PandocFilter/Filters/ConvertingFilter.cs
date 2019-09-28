@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 
-namespace PandocUtil.PandocFilter.Filters {
+namespace Panasu.Filters {
 	public abstract class ConvertingFilter: Filter {
 		#region types
 

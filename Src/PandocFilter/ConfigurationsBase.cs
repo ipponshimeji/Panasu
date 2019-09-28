@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 
 
-namespace PandocUtil.PandocFilter {
+namespace Panasu {
 	public abstract class ConfigurationsBase: FreezableObject {
 		#region constants
 

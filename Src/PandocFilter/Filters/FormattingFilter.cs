@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
-namespace PandocUtil.PandocFilter.Filters {
+namespace Panasu.Filters {
 	public class FormattingFilter: ConvertingFilter {
 		#region types
 

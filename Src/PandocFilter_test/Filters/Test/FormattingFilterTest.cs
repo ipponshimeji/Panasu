@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Diagnostics;
 using Xunit;
-using PandocUtil.PandocFilter.Test;
+using Panasu.Test;
 
-namespace PandocUtil.PandocFilter.Filters.Test {
+namespace Panasu.Filters.Test {
 	public class FormattingFilterTest {
 		#region test classes
 

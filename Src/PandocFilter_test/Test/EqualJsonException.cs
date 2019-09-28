@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using Xunit.Sdk;
 
-namespace PandocUtil.PandocFilter.Test {
+namespace Panasu.Test {
 	public class EqualJsonException: AssertActualExpectedException {
 		#region constants
 

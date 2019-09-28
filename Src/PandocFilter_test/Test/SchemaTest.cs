@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using PandocUtil.PandocFilter;
+using Panasu;
 using Xunit;
 using Utf8Json;
 
-namespace PandocUtil.PandocFilter.Test {
+namespace Panasu.Test {
 	public class SchemaTest {
 		#region utilities
 

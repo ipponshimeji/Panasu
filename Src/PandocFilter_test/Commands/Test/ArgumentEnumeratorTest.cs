@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Xunit;
 
-namespace PandocUtil.PandocFilter.Commands.Test {
+namespace Panasu.Commands.Test {
 	public class ArgumentEnumeratorTest {
 		public class Foo {
 			[Fact]

@@ -4,9 +4,9 @@ using System.Diagnostics;
 using System.Linq;
 using System.IO;
 using Utf8Json;
-using PandocUtil.PandocFilter.Filters;
+using Panasu.Filters;
 
-namespace PandocUtil.PandocFilter.Test {
+namespace Panasu.Test {
 	public static class TestUtil {
 		#region types
 

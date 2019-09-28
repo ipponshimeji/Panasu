@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using PandocUtil.PandocFilter.Filters;
+using Panasu.Filters;
 
-namespace PandocUtil.PandocFilter.Commands {
+namespace Panasu.Commands {
 	public abstract class ConvertCommand: FilterCommand {
 		#region properties
 

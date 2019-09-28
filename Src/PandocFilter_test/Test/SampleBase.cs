@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace PandocUtil.PandocFilter.Test {
+namespace Panasu.Test {
 	public class SampleBase {
 		#region data
 

@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading;
 
-namespace PandocUtil.PandocFilter.Test {
+namespace Panasu.Test {
 	public class TempDirFixture: IDisposable {
 		#region data
 

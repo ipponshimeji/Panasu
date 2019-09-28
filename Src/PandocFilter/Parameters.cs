@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 
 
-namespace PandocUtil.PandocFilter {
+namespace Panasu {
 	public class Parameters: ConfigurationsBase {
 		#region constants
 

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 
 
-namespace PandocUtil.PandocFilter {
+namespace Panasu {
 	public class FreezableObject {
 		#region data
 

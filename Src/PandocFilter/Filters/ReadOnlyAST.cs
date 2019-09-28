@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
-namespace PandocUtil.PandocFilter.Filters {
+namespace Panasu.Filters {
 	public class ReadOnlyAST {
 		#region data
 

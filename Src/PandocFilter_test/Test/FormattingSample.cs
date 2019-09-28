@@ -3,9 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using PandocUtil.PandocFilter.Filters;
+using Panasu.Filters;
 
-namespace PandocUtil.PandocFilter.Test {
+namespace Panasu.Test {
 	public class FormattingSample: ConvertingSample {
 		#region types
 

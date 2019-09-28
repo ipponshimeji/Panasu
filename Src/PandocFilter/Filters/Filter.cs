@@ -5,11 +5,11 @@ using System.Diagnostics;
 using System.Linq;
 using System.Collections;
 
-namespace PandocUtil.PandocFilter.Filters {
+namespace Panasu.Filters {
 	public abstract class Filter {
 		#region types
 
-		public abstract class Parameters: PandocUtil.PandocFilter.Parameters {
+		public abstract class Parameters: Panasu.Parameters {
 			#region types
 
 			public class Names {
@@ -32,7 +32,7 @@ namespace PandocUtil.PandocFilter.Filters {
 			#endregion
 		}
 
-		public abstract class Configurations: PandocUtil.PandocFilter.Configurations {
+		public abstract class Configurations: Panasu.Configurations {
 			#region properties
 
 			public new Parameters Parameters {

@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using PandocUtil.PandocFilter;
+using Panasu;
 using Xunit;
 
-namespace PandocUtil.PandocFilter.Test {
+namespace Panasu.Test {
 	public class UtilTest {
 		#region tests
 

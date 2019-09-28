@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace PandocUtil.PandocFilter {
+namespace Panasu {
 	public static class Util {
 		#region methods
 

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 
-namespace PandocUtil.PandocFilter.Filters {
+namespace Panasu.Filters {
 	public class WorkingTreeNode {
 		#region constants
 

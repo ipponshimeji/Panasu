@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using PandocUtil.PandocFilter.Filters;
+using Panasu.Filters;
 
-namespace PandocUtil.PandocFilter.Commands {
+namespace Panasu.Commands {
 	public class FormatCommand: ConvertCommand {
 		#region constants
 

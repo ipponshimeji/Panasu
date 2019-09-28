@@ -1,12 +1,12 @@
 ﻿using System;
-using PandocUtil.PandocFilter.Commands;
+using Panasu.Commands;
 
-namespace PandocUtil.Formatter {
+namespace Panasu.Format {
 	class Program {
 		static void Main(string[] args) {
 			new FormatCommand(
-				commandName: "Formatter",
-				invoker: "dotnet Formatter.dll"
+				commandName: "Format",
+				invoker: "dotnet Format.dll"
 			).Run(args);
 		}
 	}

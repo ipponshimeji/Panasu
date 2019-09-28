@@ -1,7 +1,7 @@
 ﻿using System;
 using Xunit;
 
-namespace PandocUtil.PandocFilter.Test {
+namespace Panasu.Test {
 	public class TestWithSharedTempDir: IClassFixture<TempDirFixture> {
 		#region data
 

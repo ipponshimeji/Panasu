@@ -4,7 +4,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Text;
 
-namespace PandocUtil.PandocFilter {
+namespace Panasu {
 	public static class Schema {
 		#region types
 

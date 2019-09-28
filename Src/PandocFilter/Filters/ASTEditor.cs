@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace PandocUtil.PandocFilter.Filters {
+namespace Panasu.Filters {
 	public class ASTEditor {
 		#region types
 

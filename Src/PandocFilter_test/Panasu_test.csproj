@@ -5,9 +5,9 @@
 
     <IsPackable>false</IsPackable>
 
-    <AssemblyName>PandocUtil.PandocFilter.Test</AssemblyName>
+    <AssemblyName>Panasu.Test</AssemblyName>
 
-    <RootNamespace>PandocUtil.PandocFilter</RootNamespace>
+    <RootNamespace>Panasu</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\PandocFilter\PandocFilter.csproj" />
+    <ProjectReference Include="..\PandocFilter\Panasu.csproj" />
   </ItemGroup>
 
 </Project>

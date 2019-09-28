@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.IO;
 using Xunit;
-using PandocUtil.PandocFilter.Filters;
-using PandocUtil.PandocFilter.Test;
+using Panasu.Filters;
+using Panasu.Test;
 
-namespace PandocUtil.PandocFilter.Commands.Test {
-	public class FormatterCommandTest {
+namespace Panasu.Commands.Test {
+	public class FormatCommandTest {
 		#region test classes
 
 		public class Filtering {

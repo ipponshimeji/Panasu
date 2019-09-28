@@ -3,13 +3,14 @@
   <Import Project="..\_Configuring\Properties.props" />
 
   <PropertyGroup>
+    <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.0</TargetFramework>
-    <RootNamespace>PandocUtil.PandocFilter</RootNamespace>
-    <AssemblyName>PandocUtil.PandocFilter</AssemblyName>
+    <AssemblyName>Format</AssemblyName>
+    <RootNamespace>Panasu.Format</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Utf8Json" Version="1.3.7" />
+    <ProjectReference Include="..\PandocFilter\Panasu.csproj" />
   </ItemGroup>
 
 </Project>
