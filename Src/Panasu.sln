@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29102.190
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Panasu", "PandocFilter\Panasu.csproj", "{8EA5E603-CD0B-41BA-8966-FA345A49CC21}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Panasu", "Panasu\Panasu.csproj", "{8EA5E603-CD0B-41BA-8966-FA345A49CC21}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Panasu_test", "PandocFilter_test\Panasu_test.csproj", "{1918D9DD-42E8-4861-A76E-8FDA581A4FA3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Panasu_test", "Panasu_test\Panasu_test.csproj", "{1918D9DD-42E8-4861-A76E-8FDA581A4FA3}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Format", "Formatter\Format.csproj", "{52BBB964-8172-4676-B92E-592AD4247FD3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Format", "Format\Format.csproj", "{52BBB964-8172-4676-B92E-592AD4247FD3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

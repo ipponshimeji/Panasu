@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\PandocFilter\Panasu.csproj" />
+    <ProjectReference Include="..\Panasu\Panasu.csproj" />
   </ItemGroup>
 
 </Project>
