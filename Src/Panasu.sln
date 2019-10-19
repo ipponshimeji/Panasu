@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Panasu", "Panasu\Panasu.csp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Panasu_test", "Panasu_test\Panasu_test.csproj", "{1918D9DD-42E8-4861-A76E-8FDA581A4FA3}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Format", "Format\Format.csproj", "{52BBB964-8172-4676-B92E-592AD4247FD3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FormatAST", "FormatAST\FormatAST.csproj", "{52BBB964-8172-4676-B92E-592AD4247FD3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
