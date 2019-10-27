@@ -72,7 +72,7 @@ param (
     [string[]]$metadataFiles = @(),
     [string]$filter = '',   # the default value is set in the script body
     [bool]$rebaseOtherRelativeLinks = $true,
-    [hashtable]$otherExtensionMap = @{},
+    [hashtable]$otherExtensionMap = @{'.yaml'='.yaml'},
     [string[]]$otherReadOptions = @(),
     [string[]]$otherWriteOptions = @('--standalone'),
     [bool]$rebuild = $false
@@ -164,13 +164,43 @@ function EnsureDirectoryExists([string]$filePath) {
     }
 }
 
-function CreateCombinedMetadataFile([string[]]$metadataFilePaths) {
+function EscapeForYamlSingleQuotedString([string]$str) {
+    $str.Replace("'", "''")
+}
+
+function CreateCombinedMetadataFile([string[]]$metadataFilePaths, [string]$fromFileRelPath, [string]$toFileRelPath) {
     $combinedMetadataFile = New-TemporaryFile -ErrorAction Stop
     try {
-        Get-Content $metadataFilePaths | Add-Content $combinedMetadataFile
+        # append the contents of the given metadata files
+        if (0 -lt $metadataFilePaths.Count) {
+            Get-Content $metadataFilePaths | Add-Content $combinedMetadataFile
+        }
+
+        # append the parameters
+        if ($rebaseOtherRelativeLinks) {
+            $rebase = "true"
+        } else {
+            $rebase = "false"
+        }
+        $params = @"
+_Param.FromBaseDirPath: '$(EscapeForYamlSingleQuotedString $fromDir)'
+_Param.FromFileRelPath: '$(EscapeForYamlSingleQuotedString $fromFileRelPath)'
+_Param.ToBaseDirPath: '$(EscapeForYamlSingleQuotedString $toDir)'
+_Param.ToFileRelPath: '$(EscapeForYamlSingleQuotedString $toFileRelPath)'
+_Param.RebaseOtherRelativeLinks: $rebase
+
+"@
+        if (0 -lt $extensionMap.Count) {
+            $params += "_Param.ExtensionMap:`n"
+            foreach ($key in $extensionMap.Keys) {
+                $value = $extensionMap[$key]
+                $params += "  ${key}: '$(EscapeForYamlSingleQuotedString $value)'`n"
+            }
+        }
+        Add-Content $combinedMetadataFile -Value $params
     } catch {
-        Remive-Item $combinedMetadataFile
-        return metadataFile = ''
+        Remove-Item $combinedMetadataFile
+        $combinedMetadataFile = ''
     }
 
     $combinedMetadataFile
@@ -208,19 +238,12 @@ function FormatFile([string]$fromFileRelPath, [hashtable]$format) {
             return
         }
 
-        $combinedMetadataFile = ''
-        switch ($allMetadataFiles.Length) {
-            0 { $metadataOption = '' }
-            1 { $metadataOption = "--metadata-file=$($allMetadataFiles[0])" }
-            default {
-                $combinedMetadataFile = CreateCombinedMetadataFile($allMetadataFiles)
-                if ([string]::IsNullOrEmpty($combinedMetadataFile)) {
-                    Report $fromFileRelPath $toFileRelPath $Result_Failed
-                    return
-                }
-                $metadataOption = "--metadata-file=$combinedMetadataFile"
-            }
-        }    
+        $combinedMetadataFile = CreateCombinedMetadataFile $allMetadataFiles $fromFileRelPath $toFileRelPath
+        if ([string]::IsNullOrEmpty($combinedMetadataFile)) {
+            Report $fromFileRelPath $toFileRelPath $Result_Failed
+            return
+        }
+        $metadataOption = "--metadata-file=$combinedMetadataFile"
         try {
             # run pandoc
             if ([string]::IsNullOrWhiteSpace($filter)) {
@@ -335,13 +358,7 @@ for ($i = 0; $i -lt $formatCount; ++$i) {
 
 # give the default value for $filter
 if ([string]::IsNullOrEmpty($filter)) {
-    $rOption = ''
-    if ($rebaseOtherRelativeLinks) {
-        $rOption = '-R'
-    }
-    $mapOptions = $extensionMap.GetEnumerator() | ForEach-Object { "-Map:$($_.Name):$($_.Value)" }
-
-    $filter = "dotnet $scriptDir/Formatter.dll $rOption $mapOptions `$fromDir `$fromFileRelPath `$toDir `$toFileRelPath"
+    $filter = "dotnet $scriptDir/FormatASP.dll"
 } 
 
 # make the paths absolute

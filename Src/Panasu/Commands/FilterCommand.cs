@@ -11,6 +11,8 @@ namespace Panasu.Commands {
 
 		private Filter.Configurations config = null;
 
+		protected string InputFile { get; private set; } = null;
+
 		protected Stream InputStream { get; private set; } = null;
 
 		protected Stream OutputStream { get; private set; } = null;
@@ -79,6 +81,23 @@ namespace Panasu.Commands {
 		#endregion
 
 
+		#region overrides
+
+		protected override void ProcessOption(IEnumerator<string> args, string shortName, string longName, string value) {
+			// argument checks
+			Debug.Assert(args != null);
+			Debug.Assert(value == null);    // using value-separated option 
+
+			if (AreSameOptionNames(shortName, "i") || AreSameOptionNames(longName, "input")) {
+				this.InputFile = GetSeparatedOptionValue(args, shortName, longName);
+			} else {
+				base.ProcessOption(args, shortName, longName, value);
+			}
+		}
+
+		#endregion
+
+
 		#region overridables
 
 		protected virtual void Filter() {
@@ -89,11 +108,20 @@ namespace Panasu.Commands {
 			} else {
 				// filter using standard io
 				Debug.Assert(this.OutputStream == null);
-				using (Stream inputStream = Console.OpenStandardInput()) {
+				using (Stream inputStream = OpenInput()) {
 					using (Stream outputStream = Console.OpenStandardOutput()) {
 						Filter(inputStream, outputStream);
 					}
 				}
+			}
+		}
+
+		private Stream OpenInput() {
+			string inputFile = this.InputFile;
+			if (string.IsNullOrEmpty(inputFile)) {
+				return Console.OpenStandardInput();
+			} else {
+				return File.OpenRead(inputFile);
 			}
 		}
 
