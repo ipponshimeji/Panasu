@@ -60,7 +60,7 @@ namespace Panasu.Filters {
 			int prefixLen = ParamPrefix.Length;
 			return metadata
 			.Where(pair => pair.Key.StartsWith(ParamPrefix))
-			.ToDictionary(pair => pair.Key.Substring(prefixLen), pair => Schema.RestoreMetadata(pair.Value));
+			.ToDictionary(pair => pair.Key.Substring(prefixLen), pair => Schema.RestoreMetadata(pair.Value, Schema.ExtendedNames.Param));
 		}
 
 		#endregion

@@ -1,5 +1,5 @@
 param (
-    [string]$outputDirBase = 'E:\Temp\Test',
+    [string]$outputDirBase = '',
     [string]$config = '',
     [string]$runtime = ''
 )
@@ -8,4 +8,4 @@ param (
 ./simple.ps1 $outputDirBase $config $runtime
 ./link_basic.ps1 $outputDirBase $config $runtime
 ./link_norebase.ps1 $outputDirBase $config $runtime
-# ./link_rebase.ps1 $outputDirBase $config $runtime
+./link_rebase.ps1 $outputDirBase $config $runtime

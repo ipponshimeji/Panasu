@@ -182,11 +182,12 @@ function CreateCombinedMetadataFile([string[]]$metadataFilePaths, [string]$fromF
         } else {
             $rebase = "false"
         }
+        $rawAttribute = '{=_Param}'
         $params = @"
-_Param.FromBaseDirPath: '$(EscapeForYamlSingleQuotedString $fromDir)'
-_Param.FromFileRelPath: '$(EscapeForYamlSingleQuotedString $fromFileRelPath)'
-_Param.ToBaseDirPath: '$(EscapeForYamlSingleQuotedString $toDir)'
-_Param.ToFileRelPath: '$(EscapeForYamlSingleQuotedString $toFileRelPath)'
+_Param.FromBaseDirPath: '``$(EscapeForYamlSingleQuotedString $fromDir)``$rawAttribute'
+_Param.FromFileRelPath: '``$(EscapeForYamlSingleQuotedString $fromFileRelPath)``$rawAttribute'
+_Param.ToBaseDirPath: '``$(EscapeForYamlSingleQuotedString $toDir)``$rawAttribute'
+_Param.ToFileRelPath: '``$(EscapeForYamlSingleQuotedString $toFileRelPath)``$rawAttribute'
 _Param.RebaseOtherRelativeLinks: $rebase
 
 "@
@@ -194,7 +195,7 @@ _Param.RebaseOtherRelativeLinks: $rebase
             $params += "_Param.ExtensionMap:`n"
             foreach ($key in $extensionMap.Keys) {
                 $value = $extensionMap[$key]
-                $params += "  ${key}: '$(EscapeForYamlSingleQuotedString $value)'`n"
+                $params += "  ${key}: '``$(EscapeForYamlSingleQuotedString $value)``$rawAttribute'`n"
             }
         }
         Add-Content $combinedMetadataFile -Value $params
