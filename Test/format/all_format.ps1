@@ -11,3 +11,4 @@ param (
 ./link_rebase.ps1 $outputDirBase $config $runtime
 ./title.ps1 $outputDirBase $config $runtime
 ./macro_rebase.ps1 $outputDirBase $config $runtime
+./otheroptions.ps1 $outputDirBase $config $runtime
