@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <title>Sub Page</title>
+  <link rel="stylesheet" href="../styles/test.css" />
+</head>
+<body>
+<h1 class="title">Sub Page</h1>
+<p>The metadata mentioned below is written in the common metadata file, which is specified in the command line of the format_base.ps1.</p>
+<h2 id="rebase-macro">“rebase” macro</h2>
+<h4 id="point-of-view">point of view</h4>
+<p>A “rebase” macro changes a given path from relative from output base dir to relative from this document. In this test case, the “rebase” macro is used to specify a css path in “css” metadata.</p>
+<h4 id="assertions">assertions</h4>
+<pre><code>The background of this block must be magenta.</code></pre>
+<h2 id="condition-macro">“condition” macro</h2>
+<h4 id="point-of-view-1">point of view</h4>
+<p>A “condition” macro selects a value of metadata based on the given condition. In this test case, the “condition” macro is used to define contents “include-after” metadata.</p>
+<h4 id="assertions-1">assertions</h4>
+<p>The following block must be:</p>
+<ul>
+<li>“from-file” condition: true</li>
+</ul>
+<p>“from-file” condition: true</p>
+</body>
+</html>

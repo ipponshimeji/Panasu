@@ -1,0 +1,15 @@
+css:
+  _macro: "rebase"
+  target: "`styles/test.css`{=macro}"
+include-after:
+  - _macro: "condition"
+    from-file: "sub/sub.md"
+    true-case: |
+
+      "from-file" condition: true 
+    
+    false-case: |
+
+      "from-file" condition: false
+
+
