@@ -348,5 +348,7 @@ healthchecksdb
 # Backup folder for Package Reference Convert tool in Visual Studio 2017
 MigrationBackup/
 
+.vscode
+**/Properties/launchSettings.json
 Bak/
 _Private/
