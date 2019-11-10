@@ -1,7 +1,9 @@
 ## Script Globals
 
+Set-Variable -Name minPesterVer -Value (New-Object 'System.Version' @(4,0,5)) -Option ReadOnly -Scope Script
+Set-Variable -Name pathSeparator -Value ([System.IO.Path]::DirectorySeparatorChar) -Option ReadOnly -Scope Script
 Set-Variable -Name testDir -Value (Split-Path -Parent $MyInvocation.MyCommand.Path) -Option ReadOnly -Scope Script
-Set-Variable -Name resourcesBaseDir -Value "$testDir/../_Resources" -Option ReadOnly -Scope Script
+Set-Variable -Name resourcesDirBase -Value "$testDir/../_Resources" -Option ReadOnly -Scope Script
 Set-Variable -Name repositoryDir -Value "$testDir/../.." -Option ReadOnly -Scope Script
 Set-Variable -Name defaultConfig -Value 'Debug' -Option ReadOnly -Scope Script
 Set-Variable -Name defaultRuntime -Value 'netcoreapp3.0' -Option ReadOnly -Scope Script
@@ -60,6 +62,13 @@ function DirHaveSameContentsTo([string]$actualValue, [string]$expectedValue, [sw
 
 ## Utilities
 
+function CheckPesterVersion() {
+    if ((Get-Module Pester).Version -lt $minPesterVer) {
+        Write-Error "Pester version $minPesterVer or later is required."
+        exit 1
+    } 
+}
+
 function CreateTempDir() {
     # create a temporary file
     $path = [System.IO.Path]::GetTempFileName()
@@ -83,7 +92,7 @@ function CreateOutputDir([string]$baseDirPath, [string]$dirName) {
     if (Test-Path $outputDirPath -PathType Container) {
         # The directory exists.
         # remove all its contents
-        Remove-Item "$outputDirPath/*" -Recurse | Out-Null
+        Remove-Item "$outputDirPath/*" -Recurse -ErrorAction Stop | Out-Null
     } else {
         # The directory does not exist.
         # create it
@@ -94,7 +103,7 @@ function CreateOutputDir([string]$baseDirPath, [string]$dirName) {
     $outputDirPath
 }
 
-function GetFilterPath([string]$project, [string]$fileName, [string]$config, [string]$runtime) {
+function GetFilterModulePath([string]$project, [string]$fileName, [string]$config, [string]$runtime) {
     # adjust the parameters
     if ([string]::IsNullOrEmpty($config)) {
         $config = $defaultConfig
@@ -103,21 +112,18 @@ function GetFilterPath([string]$project, [string]$fileName, [string]$config, [st
         $runtime = $defaultRuntime
     }
 
-    # create the path of the filter
-    $filterPath = "$repositoryDir/Src/$project/bin/$config/$runtime/$fileName"
-    if (-not (Test-Path $filterPath -PathType Leaf)) {
-        Write-Error "The filter module '$filterPath' is not found."
+    # create the path of the module
+    $modulePath = "$repositoryDir/Src/$project/bin/$config/$runtime/$fileName"
+    if (-not (Test-Path $modulePath -PathType Leaf)) {
+        Write-Error "The filter module '$modulePath' is not found."
         exit 1
     }
 
-    # return the path of the filter
-    $filterPath
+    # return the path of the module
+    $modulePath
 }
 
-function GetFilterCommandLine([string]$project, [string]$fileName, [string]$config, [string]$runtime) {
-    # get the path of the filter
-    $filterPath = GetFilterPath $project $fileName $config $runtime
-
+function GetFilter([string]$project, [string]$fileName, [string]$config, [string]$runtime) {
     # return the command line
-    "dotnet $filterPath"
+    "dotnet $(GetFilterModulePath $project $fileName $config $runtime)"
 }

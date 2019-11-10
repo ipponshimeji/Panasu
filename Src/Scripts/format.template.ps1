@@ -18,12 +18,13 @@ param (
     [string[]]$otherWriteOptions = @('--standalone'),
     [switch]
     [bool]$rebuild = $false,
+    [bool]$silent = $false,
     [string]$pandocUtilPath = "$(Split-Path -Parent $MyInvocation.MyCommand.Path)/PandocUtil"
 )
 
 
 # call format_base.ps1
-& "$pandocUtilPath/format_base.ps1" `
+& "$pandocUtilPath/Format-Documents.ps1" `
     -FromDir $fromDir `
     -FromExtensions $fromExtensions `
     -FromFormats $fromFormats `
@@ -36,4 +37,5 @@ param (
     -OtherExtensionMap $otherExtensionMap `
     -OtherReadOptions $otherReadOptions `
     -OtherWriteOptions $otherWriteOptions `
-    -Rebuild $rebuild
+    -Rebuild $rebuild `
+    -Silent $silent

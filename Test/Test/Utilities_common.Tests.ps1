@@ -2,13 +2,13 @@
 $sut = 'Utilities_common.ps1'
 . "$here\$sut"
 
-Describe "DirHaveSameContentsTo" {
+Describe 'DirHaveSameContentsTo' {
     $pathSeparator = [System.IO.Path]::DirectorySeparatorChar
-    $resourcesDir = "$resourcesBaseDir/Utilities/DirHaveSameContentsTo"
+    $resourcesDir = "$resourcesDirBase/Utilities/DirHaveSameContentsTo"
     $expectedDir = "$resourcesDir/expected"
 
-    Context "positive" {
-        It "returns successful result for the dir which has the same contents" {
+    Context 'positive' {
+        It 'returns successful result for the dir which has the same contents' {
             $actualDir = "$resourcesDir/same"
 
             $result = DirHaveSameContentsTo -ActualValue $actualDir -ExpectedValue $expectedDir
@@ -17,7 +17,7 @@ Describe "DirHaveSameContentsTo" {
             $result.FailureMessage | Should -Be ''
         }
 
-        It "returns failed result for the dir which has a missing file" {
+        It 'returns failed result for the dir which has a missing file' {
             $actualDir = "$resourcesDir/missing"
 
             $result = DirHaveSameContentsTo -ActualValue $actualDir -ExpectedValue $expectedDir
@@ -26,7 +26,7 @@ Describe "DirHaveSameContentsTo" {
             $result.FailureMessage | Should -Be "An expected file is not found: sub${pathSeparator}b.txt"
         }
 
-        It "returns failed result for the dir which has an unexpected file" {
+        It 'returns failed result for the dir which has an unexpected file' {
             $actualDir = "$resourcesDir/unexpected"
 
             $result = DirHaveSameContentsTo -ActualValue $actualDir -ExpectedValue $expectedDir
@@ -35,7 +35,7 @@ Describe "DirHaveSameContentsTo" {
             $result.FailureMessage | Should -Be 'An unexpected file is found: c.txt'
         }
 
-        It "returns failed result for the dir which has a file of different contents" {
+        It 'returns failed result for the dir which has a file of different contents' {
             $actualDir = "$resourcesDir/different"
 
             $result = DirHaveSameContentsTo -ActualValue $actualDir -ExpectedValue $expectedDir
@@ -44,7 +44,7 @@ Describe "DirHaveSameContentsTo" {
             $result.FailureMessage | Should -Be "The actual file has different contents from expected: sub${pathSeparator}b.txt"
         }
 
-        It "returns failed result for the dir which has mixed type of difference" {
+        It 'returns failed result for the dir which has mixed type of difference' {
             $actualDir = "$resourcesDir/mixed"
 
             $result = DirHaveSameContentsTo -ActualValue $actualDir -ExpectedValue $expectedDir
@@ -58,8 +58,8 @@ Describe "DirHaveSameContentsTo" {
         }
     }
 
-    Context "negative" {
-        It "returns successful result for the dir which has different contents" {
+    Context 'negative' {
+        It 'returns successful result for the dir which has different contents' {
             $actualDir = "$resourcesDir/missing"
 
             $result = DirHaveSameContentsTo -ActualValue $actualDir -ExpectedValue $expectedDir -Negate
@@ -68,7 +68,7 @@ Describe "DirHaveSameContentsTo" {
             $result.FailureMessage | Should -Be ''
         }
 
-        It "returns failed result for the dir which has the same contents" {
+        It 'returns failed result for the dir which has the same contents' {
             $actualDir = "$resourcesDir/same"
 
             $result = DirHaveSameContentsTo -ActualValue $actualDir -ExpectedValue $expectedDir -Negate
