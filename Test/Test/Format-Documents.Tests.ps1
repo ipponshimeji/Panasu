@@ -548,6 +548,36 @@ try {
                 $toDir | Should -DirHaveSameContentsTo "$answersDir/$caseName"
             }
         }
+
+        It '[failure] reports the list of files which it fails to format' {
+            # arrange
+            $caseName = 'failure'
+            $fromDir = "$inputsDir/$caseName"
+            $toDir = CreateOutputDir $outputDir $caseName
+
+            # act
+            Write-Host '!! Some errors are expected below. Now testing the case to fail in formatting.'
+            $result = & $scriptPath `
+                -FromDir $fromDir `
+                -FromExtensions @('.md', '.json') `
+                -FromFormats @('markdown', 'json') `
+                -ToDir $toDir `
+                -ToExtensions @('.html', '.txt') `
+                -ToFormats @('html', 'plain') `
+                -Filter $filter `
+                -RebaseOtherRelativeLinks $false `
+                -OtherWriteOptions @('--standalone', "--template=$commonTemplatePath") `
+                -Rebuild $true `
+                -Silent $true
+
+            # assert
+            $result.Formatted | Sort-Object | Should -BeExactly @('index.md')
+            $result.Copied | Should -HaveCount 0
+            $result.UpToDate | Should -HaveCount 0
+            $result.NotTarget | Should -HaveCount 0
+            $result.Failed | Sort-Object | Should -BeExactly @('invalid.json')
+            $toDir | Should -DirHaveSameContentsTo "$answersDir/$caseName"
+        }
     }
 } finally {
     if (-not [string]::IsNullOrEmpty($tempDir)) {
