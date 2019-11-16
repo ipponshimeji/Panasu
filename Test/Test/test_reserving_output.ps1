@@ -1,15 +1,13 @@
 param (
     [parameter(mandatory=$true)]
     [string]$outputDir,
-    [string]$testScript = '*.Tests.ps1',
+    [string]$testScript = '',
     [string]$formatDocumentsScript = '',
     [string]$formatDocumentsFilter = '',
     [string]$config = '',
     [string]$runtime = ''
 )
 
-
-## check argument
 
 # prepare the output dir
 if (Test-Path $outputDir -PathType Container) {
@@ -22,15 +20,12 @@ if (Test-Path $outputDir -PathType Container) {
     New-Item $outputDir -ItemType Directory -ErrorAction Stop | Out-Null
 }
 
-## test
 
-Invoke-Pester -Script @{
-    Path = $testScript;
-    Parameters = @{
-        OutputDirBase = $outputDir;
-        FormatDocumentsScript = $formatDocumentsScript;
-        FormatDocumentsFilter = $formatDocumentsFilter;
-        Config = $config;
-        Runtime = $runtime
-    }
-}
+# test
+./test.ps1 `
+    -TestScript $testScript `
+    -OutputDir $outputDir `
+    -FormatDocumentsScript $formatDocumentsScript `
+    -FormatDocumentsFilter $formatDocumentsFilter `
+    -Config $config `
+    -Runtime $runtime
