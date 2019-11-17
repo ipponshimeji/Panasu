@@ -20,6 +20,8 @@ test.ps1
   [-FormatDocumentsFilter <String>]
   [-Config <String>]
   [-Runtime <String>]
+  [-OtherOptions <String>]
+  [<CommonParameters>]
 ```
 
 
@@ -76,7 +78,7 @@ This command tests Panasu located in `C:\Panasu`.
 PS C:\Panasu\Test\Test> ./test.ps1 -OutputDir 'C:\Temp\Test'
 ```
 
-This command test the build output of Panasu.sln.
+This command tests the build output of Panasu.sln.
 The output directories of formatting test cases are created under `C:\Temp\Test` and they are not deleted after the testing.
 
 ### Example 5: Run the specific Test 
@@ -85,7 +87,19 @@ The output directories of formatting test cases are created under `C:\Temp\Test`
 PS C:\Panasu\Test\Test> ./test.ps1 -testScriptPath 'Format-Documents.Tests.ps1'
 ```
 
-This command test only test cases written in Format-Documents.Tests.ps1.
+This command tests only test cases written in Format-Documents.Tests.ps1.
+
+### Example 6: Return the result object for the test
+
+```powershell
+PS C:\Panasu\Test\Test> ./test.ps1 -OtherOptions '-PassThru'
+```
+
+This command test the build output of Panasu.sln,
+and returns the object which describes the result of the test.
+
+See `-PassThru` parameter of `Invoke-Pester` commandlet for details.
+
 
 ## Parameters
 
@@ -168,6 +182,19 @@ That is, the script uses the developing script in the working copy.
 | Accept pipeline input: | False |
 | Accept wildcard characters: | False |
 
+### -OtherOptions
+
+Specifies the options which are passed to `Invoke-Pester` commandlet,
+such as `-PassThru` or `-OutputFile`.
+
+|||
+|:--|:--| 
+| Type: | String |
+| Position: | 0 |
+| Default value: | '' |
+| Accept pipeline input: | False |
+| Accept wildcard characters: | False |
+
 ### -OutputDir
 
 Specifies the path of the output directory.
@@ -245,13 +272,21 @@ the script uses the following path:
 
 You cannot pipe input to this script.
 
+
 ## Outputs
 
-### None
+### None or PSCustomObject
 
-This scripts does not generate any output.
+This script returns the output of `Invoke-Pester` commandlet which this script calls internally.
+
+By default, `Invoke-Pester` does not generate any output.
+But if you specify `-PassThru` parameter to `Invoke-Pester` through `-OtherOptions` parameter of this script,
+`Invoke-Pester` returns the object which describes the result of the test.
+
+See the `-PassThru` parameter of `Invoke-Pester` commandlet for details. 
 
 
 ## Related Links
 
+* [Invoke-Pester](https://github.com/pester/Pester/wiki/Invoke‐Pester)
 * [test_reserving_output.ps1](test_reserving_output.md)

@@ -16,11 +16,12 @@ This is a specialized version of [test.ps1](test.md).
 ```
 test_reserving_output.ps1
   [-OutputDir] <String>
-  [-TestScriptPath <String>]
+  [-TestScript <String>]
   [-FormatDocumentsScript <String>]
   [-FormatDocumentsFilter <String>]
   [-Config <String>]
   [-Runtime <String>]
+  [<CommonParameters>]
 ```
 
 
@@ -28,7 +29,7 @@ test_reserving_output.ps1
 
 The **test_reserving_output.ps1** script is the same to [test.ps1](test.md) except:
 
-* `-OutputDir` parameter is mandatory and it can be specified as a positioned parameter of index 0.
+* `-OutputDir` parameter is mandatory and it can be specified as the first positioned parameter.
 
 
 ## Examples
