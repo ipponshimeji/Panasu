@@ -29,7 +29,7 @@ Ubuntu 18.04上でもやってみたら動きました。
 なお、手元でUbuntu 18.04でふつうに`apt-get install pandoc`してみたところ、
 1.19がインストールされました。
 
-### .NET Core 2.1以降
+### .NET Core 3.0以降
 
 [インストール方法のページ](https://dotnet.microsoft.com/download)
 
@@ -43,7 +43,7 @@ Ubuntu 18.04上でもやってみたら動きました。
 ## インストール
 
 インストーラーはありません。
-[Releases](https://github.com/ipponshimeji/PandocUtil/releases/)ページからzipファイルをダウンロードして、
+[Releases](https://github.com/ipponshimeji/Panasu/releases/)ページからzipファイルをダウンロードして、
 適当なフォルダに展開します。
 
 具体的な使い方は、[チュートリアル](Tutorial.ja.md)を参照してください。

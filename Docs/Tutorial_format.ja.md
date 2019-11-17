@@ -120,7 +120,7 @@ pandocは以下のように動作します。
 * そのファイルへの相対リンクは変更されません。
 
 このモードで変換を行うには、
-`format`スクリプトの`RebaseOtherRelativeLinks`オプションを`false`に設定します。
+`format`スクリプトの`RebaseOtherRelativeLinks`オプションを`$false`に設定します。
 
 ```
 PS C:\Work\_scripts> ./format.ps1 -RebaseOtherRelativeLinks $false
@@ -133,18 +133,11 @@ PS C:\Work\_scripts> ./format.ps1 -RebaseOtherRelativeLinks $false
 ...
 param (
     ...
-    [bool]$rebaseOtherRelativeLinks = $false, # ここをfalseにする
+    [bool]$RebaseOtherRelativeLinks = $false, # ここをfalseにする
     ...
 )
 
 ```
-
-PowerShellでは、変数名やオプション名の大文字小文字を区別しません。
-スクリプト中では変数は基本的にCamel Caseで記述しています。
-しかし、上のコマンドラインの例のように、
-オプション名として表記する場合は、
-コマンドレットのドキュメントの慣習に従って、
-Pascal Caseで記述することにします。
 
 
 ## フォーマッティングのためのパラメータを設定する（ソース毎編）
@@ -197,7 +190,7 @@ PS C:\Work\_scripts> ./format.ps1 -MetadataFiles 'html.metadata.yaml'
 ...
 param (
     ...
-    [string[]]$metadataFiles = @('html.metadata.yaml'), # メタデータを指定
+    [string[]]$MetadataFiles = @('html.metadata.yaml'), # メタデータを指定
     ...
 )
 
