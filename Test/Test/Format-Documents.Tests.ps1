@@ -85,8 +85,8 @@ try {
                 -Filter $filter `
                 -RebaseOtherRelativeLinks $true `
                 -OtherWriteOptions @('--standalone', "--template=$commonTemplatePath") `
-                -Rebuild $true `
-                -Silent $true
+                -Rebuild `
+                -Silent
 
             # assert
             $result.Formatted | Sort-Object | Should -BeExactly @(
@@ -142,8 +142,8 @@ try {
                 -RebaseOtherRelativeLinks $false `
                 -OtherExtensionMap @{'.yaml'='.yaml'; '.text'='.txt'; '.gif'='.png'} `
                 -OtherWriteOptions @('--standalone', "--template=$commonTemplatePath") `
-                -Rebuild $true `
-                -Silent $true
+                -Rebuild `
+                -Silent
 
             # assert
             $result.Formatted | Sort-Object | Should -BeExactly @(
@@ -185,8 +185,8 @@ try {
                 -RebaseOtherRelativeLinks $false `
                 -OtherExtensionMap @{'.yaml'='.yaml'} `
                 -OtherWriteOptions @('--standalone', "--template=$commonTemplatePath") `
-                -Rebuild $true `
-                -Silent $true
+                -Rebuild `
+                -Silent
 
             # assert
             $result.Formatted | Sort-Object | Should -BeExactly @(
@@ -232,8 +232,8 @@ try {
                 -RebaseOtherRelativeLinks $true `
                 -OtherExtensionMap @{'.yaml'='.yaml'} `
                 -OtherWriteOptions @('--standalone', "--template=$commonTemplatePath") `
-                -Rebuild $true `
-                -Silent $true
+                -Rebuild `
+                -Silent
 
             # assert
             $result.Formatted | Sort-Object | Should -BeExactly @(
@@ -274,8 +274,8 @@ try {
                 -Filter $filter `
                 -RebaseOtherRelativeLinks $true `
                 -OtherWriteOptions @('--standalone', "--template=$commonTemplatePath") `
-                -Rebuild $true `
-                -Silent $true
+                -Rebuild `
+                -Silent
 
             # assert
             $result.Formatted | Sort-Object | Should -BeExactly @(
@@ -315,8 +315,8 @@ try {
                 -Filter $filter `
                 -RebaseOtherRelativeLinks $false `
                 -OtherWriteOptions @('--standalone', "--template=$commonTemplatePath") `
-                -Rebuild $true `
-                -Silent $true
+                -Rebuild `
+                -Silent
 
             # assert
             $result.Formatted | Sort-Object | Should -BeExactly @(
@@ -360,8 +360,8 @@ try {
                 -RebaseOtherRelativeLinks $true `
                 -OtherReadOptions @('--metadata=testparam:Hello') `
                 -OtherWriteOptions @('--standalone', "--template=$inputsDir/$caseName.template.html") `
-                -Rebuild $true `
-                -Silent $true
+                -Rebuild `
+                -Silent
 
             # assert
             $result.Formatted | Sort-Object | Should -BeExactly @('index.md')
@@ -424,8 +424,7 @@ try {
                 -Filter $filter `
                 -RebaseOtherRelativeLinks $false `
                 -OtherWriteOptions @('--standalone', "--template=$commonTemplatePath") `
-                -Rebuild $false `
-                -Silent $true
+                -Silent
 
             ## assert
             $result.Formatted | Sort-Object | Should -BeExactly @(
@@ -486,8 +485,7 @@ try {
                 -MetadataFiles @("$fromDir/commonmetadata1.yaml"; "$fromDir/commonmetadata2.yaml") `
                 -RebaseOtherRelativeLinks $false `
                 -OtherWriteOptions @('--standalone', "--template=$commonTemplatePath") `
-                -Rebuild $false `
-                -Silent $true
+                -Silent
 
             ## assert
             $result.Formatted | Sort-Object | Should -BeExactly @(
@@ -538,8 +536,8 @@ try {
                 -Filter $filter `
                 -RebaseOtherRelativeLinks $false `
                 -OtherWriteOptions @('--standalone', "--template=$commonTemplatePath") `
-                -Rebuild $true `
-                -Silent $true
+                -Rebuild `
+                -Silent
 
             ## assert
             $result.Formatted | Sort-Object | Should -BeExactly @(
@@ -574,8 +572,8 @@ try {
                 -Filter $filter `
                 -RebaseOtherRelativeLinks $false `
                 -OtherWriteOptions @('--standalone', "--template=$commonTemplatePath") `
-                -Rebuild $true `
-                -Silent $true
+                -Rebuild `
+                -Silent
 
             # assert
             $result.Formatted | Sort-Object | Should -BeExactly @('index.md')

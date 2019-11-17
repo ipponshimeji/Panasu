@@ -77,7 +77,9 @@ param (
     [hashtable]$otherExtensionMap = @{'.yaml'='.yaml'},
     [string[]]$otherReadOptions = @(),
     [string[]]$otherWriteOptions = @('--standalone'),
+    [switch]
     [bool]$rebuild = $false,
+    [switch]
     [bool]$silent = $false
 )
 

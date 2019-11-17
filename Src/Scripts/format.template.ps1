@@ -1,41 +1,51 @@
 #!/usr/bin/env pwsh
 
-# The template of wrapper script to format_base.ps1.  
+# The template of wrapper script to call Format-Documents.ps1.  
 # Copy this script as 'format.ps1' and set your default settings.
 
 param (
-    [string]$fromDir = '../md',
-    [string[]]$fromExtensions = @('.md'),
-    [string[]]$fromFormats = @('markdown'),
-    [string]$toDir = '../html',
-    [string[]]$toExtensions = @('.html'),
-    [string[]]$toFormats = @('html'),
-    [string[]]$metadataFiles = @(),
-    [string]$filter = '',
-    [bool]$rebaseOtherRelativeLinks = $true,
-    [hashtable]$otherExtensionMap = @{},
-    [string[]]$otherReadOptions = @(),
-    [string[]]$otherWriteOptions = @('--standalone'),
+    [string]$FromDir = '../md',
+    [string[]]$FromExtensions = @('.md'),
+    [string[]]$FromFormats = @('markdown'),
+    [string]$ToDir = '../html',
+    [string[]]$ToExtensions = @('.html'),
+    [string[]]$ToFormats = @('html'),
+    [string[]]$MetadataFiles = @(),
+    [string]$Filter = '',   # the default value is set in the script body
+    [bool]$RebaseOtherRelativeLinks = $true,
+    [hashtable]$OtherExtensionMap = @{'.yaml'='.yaml'},
+    [string[]]$OtherReadOptions = @(),
+    [string[]]$OtherWriteOptions = @('--standalone'),
     [switch]
-    [bool]$rebuild = $false,
-    [bool]$silent = $false,
-    [string]$pandocUtilPath = "$(Split-Path -Parent $MyInvocation.MyCommand.Path)/PandocUtil"
+    [bool]$Rebuild = $false,
+    [switch]
+    [bool]$Silent = $false,
+    [string]$PanasuPath = "$(Split-Path -Parent $MyInvocation.MyCommand.Path)/Panasu"
 )
 
+# call Format-Documents.ps1
+# Format-Documents.ps1 is called by evaluating commandline string
+# to handle switch options such as -Rebuild or -Silent.
+$commandLine = @"
+$PanasuPath/Format-Documents.ps1" `
+    -FromDir '$FromDir' `
+    -FromExtensions '$FromExtensions' `
+    -FromFormats '$FromFormats' `
+    -ToDir '$ToDir' `
+    -ToExtensions '$ToExtensions' `
+    -ToFormats '$ToFormats' `
+    -MetadataFiles '$MetadataFiles' `
+    -Filter '$Filter' `
+    -RebaseOtherRelativeLinks '$RebaseOtherRelativeLinks' `
+    -OtherExtensionMap '$OtherExtensionMap' `
+    -OtherReadOptions '$OtherReadOptions' `
+    -OtherWriteOptions '$OtherWriteOptions'
+"@
+if ($Rebuild) {
+    $commandLine += ' -Rebuild'
+}
+if ($Silent) {
+    $commandLine += ' -Silent'
+}
 
-# call format_base.ps1
-& "$pandocUtilPath/Format-Documents.ps1" `
-    -FromDir $fromDir `
-    -FromExtensions $fromExtensions `
-    -FromFormats $fromFormats `
-    -ToDir $toDir `
-    -ToExtensions $toExtensions `
-    -ToFormats $toFormats `
-    -MetadataFiles $metadataFiles `
-    -Filter $filter `
-    -RebaseOtherRelativeLinks $rebaseOtherRelativeLinks `
-    -OtherExtensionMap $otherExtensionMap `
-    -OtherReadOptions $otherReadOptions `
-    -OtherWriteOptions $otherWriteOptions `
-    -Rebuild $rebuild `
-    -Silent $silent
+Invoke-Expression $commandLine
