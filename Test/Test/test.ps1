@@ -1,3 +1,5 @@
+#!/usr/bin/env pwsh
+
 <#
 .SYNOPSIS
 
@@ -157,6 +159,7 @@ See -PassThru parameter of Invoke-Pester commandlet for details.
 
 Invoke-Pester
 test_reserving_output.ps1
+test_release.ps1
 #>
 param (
     [Parameter(position=0)]

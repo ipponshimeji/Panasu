@@ -290,3 +290,4 @@ See the `-PassThru` parameter of `Invoke-Pester` commandlet for details.
 
 * [Invoke-Pester](https://github.com/pester/Pester/wiki/Invoke‐Pester)
 * [test_reserving_output.ps1](test_reserving_output.md)
+* [test_release.ps1](test_release.md)

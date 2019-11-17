@@ -40,7 +40,7 @@ The **test_reserving_output.ps1** script is the same to [test.ps1](test.md) exce
 PS C:\Panasu\Test\Test> ./test_reserving_output.ps1 'C:\Temp\Test'
 ```
 
-This command test the build output of Panasu.sln.
+This command tests the build output of Panasu.sln.
 The output directories of formatting test cases are created under `C:\Temp\Test` and they are not deleted after the test.
 
 

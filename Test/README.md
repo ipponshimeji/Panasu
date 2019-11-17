@@ -27,10 +27,11 @@ See the [Examples section of test.ps1 reference](test.md#Examples) for the actua
 There are specialized version of test.ps1 to ease to test some cases.
 
 * [test_reserving_output.ps1](test_reserving_output.md): Runs test reserving the formatting samples. 
-* test_release.ps1 (not implemented yet): Tests modules located in the `__Release` directory.
+* [test_release.ps1](test_release.md): Tests files collected in the `Src/__Release/Panasu` directory.
 
 
 ## References
 
 * [test.ps1](test.md)
 * [test_reserving_output.ps1](test_reserving_output.md)
+* [test_release.ps1](test_release.md)
