@@ -365,7 +365,7 @@ for ($i = 0; $i -lt $formatCount; ++$i) {
 
 # give the default value for $filter
 if ([string]::IsNullOrEmpty($filter)) {
-    $filter = "dotnet $scriptDir/FormatASP.dll"
+    $filter = "dotnet $scriptDir/FormatAST.dll"
 } 
 
 # make the paths absolute

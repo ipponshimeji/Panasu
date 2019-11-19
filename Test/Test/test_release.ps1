@@ -55,7 +55,7 @@ $panasuDir = Join-Path $releaseDir 'Panasu'
     -TestScript $TestScript `
     -OutputDir $OutputDir `
     -FormatDocumentsScript "$panasuDir/Format-Documents.ps1" `
-    -FormatDocumentsFilter "dotnet $panasuDir/FormatAST.dll" `
+    -FormatDocumentsFilter '' `
     -Config $Config `
     -Runtime $Runtime `
     -OtherOptions $OtherOptions
