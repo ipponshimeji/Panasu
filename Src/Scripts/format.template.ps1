@@ -24,28 +24,18 @@ param (
 )
 
 # call Format-Documents.ps1
-# Format-Documents.ps1 is called by evaluating commandline string
-# to handle switch options such as -Rebuild or -Silent.
-$commandLine = @"
-$PanasuPath/Format-Documents.ps1" `
-    -FromDir '$FromDir' `
-    -FromExtensions '$FromExtensions' `
-    -FromFormats '$FromFormats' `
-    -ToDir '$ToDir' `
-    -ToExtensions '$ToExtensions' `
-    -ToFormats '$ToFormats' `
-    -MetadataFiles '$MetadataFiles' `
-    -Filter '$Filter' `
-    -RebaseOtherRelativeLinks '$RebaseOtherRelativeLinks' `
-    -OtherExtensionMap '$OtherExtensionMap' `
-    -OtherReadOptions '$OtherReadOptions' `
-    -OtherWriteOptions '$OtherWriteOptions'
-"@
-if ($Rebuild) {
-    $commandLine += ' -Rebuild'
-}
-if ($Silent) {
-    $commandLine += ' -Silent'
-}
-
-Invoke-Expression $commandLine
+& "$PanasuPath/Format-Documents.ps1" `
+    -FromDir $FromDir `
+    -FromExtensions $FromExtensions `
+    -FromFormats $FromFormats `
+    -ToDir $ToDir `
+    -ToExtensions $ToExtensions `
+    -ToFormats $ToFormats `
+    -MetadataFiles $MetadataFiles `
+    -Filter $Filter `
+    -RebaseOtherRelativeLinks $RebaseOtherRelativeLinks `
+    -OtherExtensionMap $OtherExtensionMap `
+    -OtherReadOptions $OtherReadOptions `
+    -OtherWriteOptions $OtherWriteOptions `
+    -Rebuild $Rebuild `
+    -Silent $Silent

@@ -33,7 +33,7 @@ Set-Variable -Name scriptPath -Value $formatDocumentsScript -Option ReadOnly -Sc
 
 # The filter command line to be specified Filter option of Format-Documents script.
 # It may contain developing module in build output path.
-#   ex. 'dotnet E:/Panas/Src/FormatAST/bin/Debug/netcoreapp3.0/FormatAST.dll'
+#   ex. 'dotnet E:/Panasu/Src/FormatAST/bin/Debug/netcoreapp3.0/FormatAST.dll'
 Set-Variable -Name filter -Value $formatDocumentsFilter -Option ReadOnly -Scope Script
 
 # The path of the directory where the resources for this test are stored.
@@ -85,8 +85,8 @@ try {
                 -Filter $filter `
                 -RebaseOtherRelativeLinks $true `
                 -OtherWriteOptions @('--standalone', "--template=$commonTemplatePath") `
-                -Rebuild `
-                -Silent
+                -Rebuild $true `
+                -Silent $true
 
             # assert
             $result.Formatted | Sort-Object | Should -BeExactly @(
@@ -142,8 +142,8 @@ try {
                 -RebaseOtherRelativeLinks $false `
                 -OtherExtensionMap @{'.yaml'='.yaml'; '.text'='.txt'; '.gif'='.png'} `
                 -OtherWriteOptions @('--standalone', "--template=$commonTemplatePath") `
-                -Rebuild `
-                -Silent
+                -Rebuild $true `
+                -Silent $true
 
             # assert
             $result.Formatted | Sort-Object | Should -BeExactly @(
@@ -185,8 +185,8 @@ try {
                 -RebaseOtherRelativeLinks $false `
                 -OtherExtensionMap @{'.yaml'='.yaml'} `
                 -OtherWriteOptions @('--standalone', "--template=$commonTemplatePath") `
-                -Rebuild `
-                -Silent
+                -Rebuild $true `
+                -Silent $true
 
             # assert
             $result.Formatted | Sort-Object | Should -BeExactly @(
@@ -232,8 +232,8 @@ try {
                 -RebaseOtherRelativeLinks $true `
                 -OtherExtensionMap @{'.yaml'='.yaml'} `
                 -OtherWriteOptions @('--standalone', "--template=$commonTemplatePath") `
-                -Rebuild `
-                -Silent
+                -Rebuild $true `
+                -Silent $true
 
             # assert
             $result.Formatted | Sort-Object | Should -BeExactly @(
@@ -274,8 +274,8 @@ try {
                 -Filter $filter `
                 -RebaseOtherRelativeLinks $true `
                 -OtherWriteOptions @('--standalone', "--template=$commonTemplatePath") `
-                -Rebuild `
-                -Silent
+                -Rebuild $true `
+                -Silent $true
 
             # assert
             $result.Formatted | Sort-Object | Should -BeExactly @(
@@ -315,8 +315,8 @@ try {
                 -Filter $filter `
                 -RebaseOtherRelativeLinks $false `
                 -OtherWriteOptions @('--standalone', "--template=$commonTemplatePath") `
-                -Rebuild `
-                -Silent
+                -Rebuild $true `
+                -Silent $true
 
             # assert
             $result.Formatted | Sort-Object | Should -BeExactly @(
@@ -360,8 +360,8 @@ try {
                 -RebaseOtherRelativeLinks $true `
                 -OtherReadOptions @('--metadata=testparam:Hello') `
                 -OtherWriteOptions @('--standalone', "--template=$inputsDir/$caseName.template.html") `
-                -Rebuild `
-                -Silent
+                -Rebuild $true `
+                -Silent $true
 
             # assert
             $result.Formatted | Sort-Object | Should -BeExactly @('index.md')
@@ -424,7 +424,8 @@ try {
                 -Filter $filter `
                 -RebaseOtherRelativeLinks $false `
                 -OtherWriteOptions @('--standalone', "--template=$commonTemplatePath") `
-                -Silent
+                -Rebuild $false `
+                -Silent $true
 
             ## assert
             $result.Formatted | Sort-Object | Should -BeExactly @(
@@ -485,7 +486,8 @@ try {
                 -MetadataFiles @("$fromDir/commonmetadata1.yaml"; "$fromDir/commonmetadata2.yaml") `
                 -RebaseOtherRelativeLinks $false `
                 -OtherWriteOptions @('--standalone', "--template=$commonTemplatePath") `
-                -Silent
+                -Rebuild $false `
+                -Silent $true
 
             ## assert
             $result.Formatted | Sort-Object | Should -BeExactly @(
@@ -536,8 +538,8 @@ try {
                 -Filter $filter `
                 -RebaseOtherRelativeLinks $false `
                 -OtherWriteOptions @('--standalone', "--template=$commonTemplatePath") `
-                -Rebuild `
-                -Silent
+                -Rebuild $true `
+                -Silent $true
 
             ## assert
             $result.Formatted | Sort-Object | Should -BeExactly @(
@@ -572,8 +574,8 @@ try {
                 -Filter $filter `
                 -RebaseOtherRelativeLinks $false `
                 -OtherWriteOptions @('--standalone', "--template=$commonTemplatePath") `
-                -Rebuild `
-                -Silent
+                -Rebuild $true `
+                -Silent $true
 
             # assert
             $result.Formatted | Sort-Object | Should -BeExactly @('index.md')
