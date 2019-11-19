@@ -43,6 +43,22 @@ PS C:\Work\_scripts> ./format.ps1
 （生成後のhtmlマークアップ例は説明のために単純化しています。
 以下の例でも同様です。）
 
+`format`スクリプトは変換結果を表すオブジェクトを返します。
+上の実行例だと、実行結果は例えば以下のようになります。
+
+```
+PS C:\Work\_scripts> ./format.ps1
+a.md: Formatted to 'a.html'.
+sub\b.md: Formatted to 'sub\b.html'.
+
+
+Formatted : {a.md, sub\b.md}
+NotTarget : {}
+UpToDate  : {}
+Failed    : {}
+Copied    : {}
+```
+
 通常、`format`スクリプトは更新されたソースファイルのみ変換します。
 更新されているかどうかにかかわらず、
 すべてのソースファイルを変換する場合は、`Rebuild`オプションを指定してスクリプトを実行します。
