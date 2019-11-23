@@ -6,6 +6,7 @@ This is a specialized version of [test.ps1](test.md).
 * [Syntax](#Syntax)
 * [Description](#Description)
 * [Examples](#Examples)
+* [Parameters](#Parameters)
 * [Inputs](#Inputs)
 * [Outputs](#Outputs)
 * [Related Links](#Related-Links)

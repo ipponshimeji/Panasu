@@ -5,6 +5,7 @@ Tests Panasu features.
 * [Syntax](#Syntax)
 * [Description](#Description)
 * [Examples](#Examples)
+* [Parameters](#Parameters)
 * [Inputs](#Inputs)
 * [Outputs](#Outputs)
 * [Related Links](#Related-Links)

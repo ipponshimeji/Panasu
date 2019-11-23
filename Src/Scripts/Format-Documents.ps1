@@ -2,83 +2,159 @@
 
 <# 
 .SYNOPSIS 
-    Formats documents using pandoc.
+
+Formats the documents under the specified directory using pandoc.
+
 .DESCRIPTION 
-    This script formats a group of source documents using pandoc.
+
+The Format-Documents.ps1 script formats source document files under the input directory specified by FromDir parameter.
+The formatted document files are output in the output directory specified by ToDir parameter.
+
+pandoc is used to format source document files.
+pandoc 2.3 or later must be installed to run this script.
+Formatting of each file is performed as follows:
+
+1. pandoc reads a source document file and converts it into AST (Abstract Syntax Tree). 
+2. The filter specified by Filter parameter modify the AST.
+3. pandoc reads the filtered AST and writes it into the output directory in the target format. 
+
+The relation of the extension of source document file, the format name of source document,
+the extension of formatted document file and the format name of formatted document is specified by
+FromExtensions, FromFormats, ToExtensions and ToFormats parameter respectively,
+where "format name" means a value which can be passed to -f or -t option of pandoc.
+
+The default filter provided along with this script make some changes to the input AST.
+
+* It changes extension of a relative link in the AST. 
+
+It changes the extension of a relative link in the input AST
+if the extension is a target of extension mapping.
+The extension mapping is defined by mapping from FromExtensions parameter to ToExtensions parameter and
+OtherExtensionMap parameter.
+
+For example, a link to 'a.md' in a source document file is converted to 'a.html'
+if FromExtensions is @('.md') and ToExtension is @('.html').
+
 .PARAMETER FromDir 
-    The directory where the source documents are stored.
-    The default value is '../md'.
+
+The directory where the source document files to be formatted are located. 
+
 .PARAMETER FromExtensions 
-    The extensions of the source document files.
-    The default value is @('.md').
+
+The array of extension for source document files.
+
 .PARAMETER FromFormats 
-    The formats of the source documents.
-    Each value must be one which can be passed to -f option of pandoc.
-    Each item in this argument corresponds to the item in FromExtensions respectively.
-    The length of this argument must be same to the length of FromExtensions.
-    The default value is @('markdown').
+
+The array of format name for source document files.
+Each name must be one which can be passed to -f option of pandoc.
+Each item in this parameter corresponds to the item in FromExtensions respectively.
+The array length of this parameter must be same to the one of FromExtensions.
+
 .PARAMETER ToDir 
-    The directory where the destination documents are going to be stored.
-    The default value is '../html'.
-.PARAMETER ToExtensions 
-    The extensions of the destination document files.
-    Each item in this argument corresponds to the item in FromExtensions respectively.
-    The length of this argument must be same to the length of FromExtensions.
-    The default value is @('.html').
+
+The directory where the formatted document files are going to be stored.
+
+.PARAMETER ToExtensions
+
+The array of extension for formatted document files.
+Each item in this parameter corresponds to the item in FromExtensions respectively.
+The array length of this parameter must be same to the one of FromExtensions.
+
 .PARAMETER ToFormats 
-    The format of the destination documents.
-    Each value must be one which can be passed to -t option of pandoc.
-    Each item in this argument corresponds to the item in FromExtensions respectively.
-    The length of this argument must be same to the length of FromExtensions.
-    The default value is @('html').
-.PARAMETER MetadataFiles 
-    The yaml files which describe metadata for this formatting. 
-.PARAMETER RebaseOtherRelativeLinks 
-    Whether relative links which are not target of extension mapping
-    should be rebase so that the links keep to reference its target
-    in the original location.
-    If this value is $false, this script copys such files into $ToDir
-    along with the formatted files, and do not rebase links to the
-    files.
-    The default value is $true.
-.PARAMETER OtherExtensionMap 
-    The extension mappings other than the pair of FromExtensions and ToExtensions.
-    This script replaces those extensions in relative links.
-.PARAMETER OtherReadOptions 
-    The array of other read options to be provided to pandoc.
-    The default value is @().
-.PARAMETER OtherWriteOptions 
-    The array of other write options to be provided to pandoc.
-    The default value is @('--standalone').
+
+The array of format for formatted document files.
+Each value must be one which can be passed to -f option of pandoc.
+Each item in this argument corresponds to the item in FromExtensions respectively.
+The array length of this parameter must be same to the one of FromExtensions.
+
+.PARAMETER MetadataFiles
+
+The array of yaml file which describes metadata for this formatting.
+The all specified metadata are attached to all source document files. 
+
 .PARAMETER Filter 
-    The command line of the pandoc filter to be used.
-.PARAMETER Rebuild 
-    Whether formats all source documents.
-    By default, only updated source documents are formatted.
+
+The command line of the pandoc filter to be used.
+If this parameter is empty string, "dotnet $scriptDir/FormatAST.dll" is used,
+where $scriptDir is the directory where this script is located.
+
+.PARAMETER RebaseOtherRelativeLinks 
+
+If this parameter is True, relative links to files which are not target of extension mapping
+should be rebased so that the links keep to reference the files in the original location.
+
+If this parameter is false, this script copys such files into the output directory
+along with the formatted files, and do not rebase links to the files.
+
+.PARAMETER OtherExtensionMap 
+
+The extension mappings other than the pair of FromExtensions and ToExtensions.
+This script replaces those extensions in relative links according the extension mapping.
+
+By specifying a mapping from an extension to the same extension, for example '.yaml'='.yaml',
+files with the extension are excluded from the target of rebasing by RebaseOtherRelativeLinks option,
+suppressing the extension change of relative links to the files. 
+
+.PARAMETER OtherReadOptions 
+
+The array of other read option to be passed to pandoc
+when it is invoked to read the source document files.
+
+.PARAMETER OtherWriteOptions 
+
+The array of other write option to be passed to pandoc
+when it is invoked to write the formatted document files.
+
+.PARAMETER Rebuild
+
+If this parameter is True, this script formats all source document files.
+If this parameter is False, this script formats only updated files.
+
 .PARAMETER Silent
-    Whether suppresses progress message or not.
+
+If this parameter is True, this script does not display progress.
+If this parameter is False, this script displays progress, that is name of processed file.
+
+.PARAMETER NoOutput
+
+If this parameter is True, this script returns no object.
+If this parameter is False, this script returns an object which stores the list of processed file.
+
 .INPUTS
-    None.
+
+None. You cannot pipe input to this script.
+
 .OUTPUTS
-    The lines which consist of the path of document and how it is processed.
-    The path is relative to $FromDir.
-    The last line is simple statistics of the formatting.
+
+None or PSCustomObject.
+
+This script outputs none if NoOutput parameter is True.
+Otherwise it outputs an object which has following properties:
+
+* Copied: The list of file which this script copies to the output directory.
+* Failed: The list of file for which this script fails in processing.
+* Formatted: The list of file which this script successfully formats.
+* NotTarget: The list of file which this script does not process.
+* UpToDate: The list of file for which this script skips processing because it is up-to-date.
+
+The files are represented in relative path from the input directory.
 #>
 param (
-    [string]$fromDir = '../md',
-    [string[]]$fromExtensions = @('.md'),
-    [string[]]$fromFormats = @('markdown'),
-    [string]$toDir = '../html',
-    [string[]]$toExtensions = @('.html'),
-    [string[]]$toFormats = @('html'),
-    [string[]]$metadataFiles = @(),
-    [string]$filter = '',   # the default value is set in the script body
-    [bool]$rebaseOtherRelativeLinks = $true,
-    [hashtable]$otherExtensionMap = @{'.yaml'='.yaml'},
-    [string[]]$otherReadOptions = @(),
-    [string[]]$otherWriteOptions = @('--standalone'),
-    [bool]$rebuild = $false,
-    [bool]$silent = $false
+    [string]$FromDir = '../md',
+    [string[]]$FromExtensions = @('.md'),
+    [string[]]$FromFormats = @('markdown'),
+    [string]$ToDir = '../html',
+    [string[]]$ToExtensions = @('.html'),
+    [string[]]$ToFormats = @('html'),
+    [string[]]$MetadataFiles = @(),
+    [string]$Filter = '',   # the default value is set in the script body
+    [bool]$RebaseOtherRelativeLinks = $true,
+    [hashtable]$OtherExtensionMap = @{'.yaml'='.yaml'},
+    [string[]]$OtherReadOptions = @(),
+    [string[]]$OtherWriteOptions = @('--standalone'),
+    [bool]$Rebuild = $false,
+    [bool]$Silent = $false,
+    [bool]$NoOutput = $false
 )
 
 
@@ -119,7 +195,7 @@ function Report([string]$fromfileRelPath, [string]$toFileRelPath, [int]$result) 
     $message = "${fromfileRelPath}: $description"
     if ($result -eq $Result_Failed) {
         Write-Error $message
-    } elseif (-not $silent) {
+    } elseif (-not $Silent) {
         Write-Host $message
     }
 }
@@ -181,16 +257,16 @@ function CreateCombinedMetadataFile([string[]]$metadataFilePaths, [string]$fromF
         }
 
         # append the parameters
-        if ($rebaseOtherRelativeLinks) {
+        if ($RebaseOtherRelativeLinks) {
             $rebase = "true"
         } else {
             $rebase = "false"
         }
         $rawAttribute = '{=_Param}'
         $params = @"
-_Param.FromBaseDirPath: '``$(EscapeForYamlSingleQuotedString $fromDir)``$rawAttribute'
+_Param.FromBaseDirPath: '``$(EscapeForYamlSingleQuotedString $FromDir)``$rawAttribute'
 _Param.FromFileRelPath: '``$(EscapeForYamlSingleQuotedString $fromFileRelPath)``$rawAttribute'
-_Param.ToBaseDirPath: '``$(EscapeForYamlSingleQuotedString $toDir)``$rawAttribute'
+_Param.ToBaseDirPath: '``$(EscapeForYamlSingleQuotedString $ToDir)``$rawAttribute'
 _Param.ToFileRelPath: '``$(EscapeForYamlSingleQuotedString $toFileRelPath)``$rawAttribute'
 _Param.RebaseOtherRelativeLinks: $rebase
 
@@ -214,12 +290,12 @@ _Param.RebaseOtherRelativeLinks: $rebase
 function FormatFile([string]$fromFileRelPath, [hashtable]$format) {
     # preparations
     $toFileRelPath = [System.IO.Path]::ChangeExtension($fromFileRelPath, $format.toExtension)
-    $fromFilePath = Join-Path $fromDir $fromFileRelPath
-    $toFilePath = Join-Path $toDir $toFileRelPath
+    $fromFilePath = Join-Path $FromDir $fromFileRelPath
+    $toFilePath = Join-Path $ToDir $toFileRelPath
 
     # check existence of the metadata file
-    if (0 -lt $metadataFiles.Count) {
-        $allMetadataFiles = $metadataFiles.Clone()
+    if (0 -lt $MetadataFiles.Count) {
+        $allMetadataFiles = $MetadataFiles.Clone()
     } else {
         $allMetadataFiles = @()
     }
@@ -231,7 +307,7 @@ function FormatFile([string]$fromFileRelPath, [hashtable]$format) {
 
     $sourceFiles = $allMetadataFiles.Clone()
     $sourceFiles += $fromFilePath
-    if ((-not $rebuild) -and (IsUpToDate $sourceFiles $toFilePath)) {
+    if ((-not $Rebuild) -and (IsUpToDate $sourceFiles $toFilePath)) {
         # the to file is up-to-data
         Report $fromFileRelPath $toFileRelPath $Result_Skipped_UpToDate
     } else {
@@ -251,17 +327,17 @@ function FormatFile([string]$fromFileRelPath, [hashtable]$format) {
         $metadataOption = "--metadata-file=$combinedMetadataFile"
         try {
             # run pandoc
-            if ([string]::IsNullOrWhiteSpace($filter)) {
+            if ([string]::IsNullOrWhiteSpace($Filter)) {
                 # with no filter
-                pandoc $otherReadOptions $otherWriteOptions $metadataOption -f $format.fromFormat -t $format.toFormat -o $toFilePath $fromFilePath
+                pandoc $OtherReadOptions $OtherWriteOptions $metadataOption -f $format.fromFormat -t $format.toFormat -o $toFilePath $fromFilePath
                 $succeeded = ($LastExitCode -eq 0)
             } else {
                 # with the specified filter
                 # Note that this pipeline must not be run on PowerShell but *normal* shell.
                 # Because pipeline of PowerShell is not designed to connect native programs.
-                $commandLine = "pandoc $otherReadOptions $metadataOption -f $($format.fromFormat) -t json $fromFilePath | " `
-                + (Invoke-Expression "`"$filter`"") `
-                + " | pandoc $otherWriteOptions -f json -t $($format.toFormat) -o $toFilePath"
+                $commandLine = "pandoc $OtherReadOptions $metadataOption -f $($format.fromFormat) -t json $fromFilePath | " `
+                + (Invoke-Expression "`"$Filter`"") `
+                + " | pandoc $OtherWriteOptions -f json -t $($format.toFormat) -o $toFilePath"
                 $succeeded = RunOnShell $commandLine
             }
         } finally {
@@ -282,11 +358,11 @@ function FormatFile([string]$fromFileRelPath, [hashtable]$format) {
 
 function CopyFile([string]$fromFileRelPath) {
     # preparations
-    $fromFilePath = Join-Path $fromDir $fromFileRelPath
+    $fromFilePath = Join-Path $FromDir $fromFileRelPath
     $toFileRelPath = $fromFileRelPath
-    $toFilePath = Join-Path $toDir $toFileRelPath
+    $toFilePath = Join-Path $ToDir $toFileRelPath
 
-    if ((-not $rebuild) -and (IsUpToDate $fromFilePath $toFilePath)) {
+    if ((-not $Rebuild) -and (IsUpToDate $fromFilePath $toFilePath)) {
         # no need to copy
         Report $fromFileRelPath $toFileRelPath $Result_Skipped_UpToDate
     } else {
@@ -316,14 +392,14 @@ function ProcessFile([string]$fromFileRelPath) {
     if ($null -ne $format) {
         # target of this formatting session
         FormatFile $fromFileRelPath $format
-    } elseif ($otherExtensionMap.ContainsKey($extension)) {
+    } elseif ($OtherExtensionMap.ContainsKey($extension)) {
         # target of another formatting session
         # Do nothing. The other session will process it.
         Report $fromFileRelPath $toFileRelPath $Result_Skipped_NotTarget
     } else {
         # other files
         # copy the file if you don't want rebasing
-        if ($rebaseOtherRelativeLinks) {
+        if ($RebaseOtherRelativeLinks) {
             Report $fromFileRelPath $toFileRelPath $Result_Skipped_NotTarget
         } else {
             CopyFile $fromFileRelPath
@@ -336,46 +412,46 @@ function ProcessFile([string]$fromFileRelPath) {
 
 # collect formatting information
 
-$formatCount = $fromExtensions.Length
-@($fromFormats.Length; $toExtensions.Length; $toFormats.Length) `
+$formatCount = $FromExtensions.Length
+@($FromFormats.Length; $ToExtensions.Length; $ToFormats.Length) `
   | ForEach-Object { 
         if ($_ -ne $formatCount) {
-            Write-Error 'The length of $fromExtensions, $fromFormats, $toExtensions and $toFormats must be same.' -ErrorAction Stop
+            Write-Error 'The length of $FromExtensions, $FromFormats, $ToExtensions and $ToFormats must be same.' -ErrorAction Stop
         }
     }
 
 $formatMap = @{}
-$extensionMap = $otherExtensionMap.Clone()
+$extensionMap = $OtherExtensionMap.Clone()
 for ($i = 0; $i -lt $formatCount; ++$i) {
     # add the info to the format map 
-    $fromExtension = $fromExtensions[$i]
-    $toExtension = $toExtensions[$i]
+    $fromExtension = $FromExtensions[$i]
+    $toExtension = $ToExtensions[$i]
     $formatMap[$fromExtension] = @{
         'fromExtension' = $fromExtension;
-        'fromFormat' = $fromFormats[$i];
+        'fromFormat' = $FromFormats[$i];
         'toExtension' = $toExtension;
-        'toFormat' = $toFormats[$i]
+        'toFormat' = $ToFormats[$i]
     }
 
     # add the info to the extension map
     $extensionMap[$fromExtension] = $toExtension
 }
 
-# give the default value for $filter
-if ([string]::IsNullOrEmpty($filter)) {
-    $filter = "dotnet $scriptDir/FormatAST.dll"
+# give the default value for $Filter
+if ([string]::IsNullOrEmpty($Filter)) {
+    $Filter = "dotnet $scriptDir/FormatAST.dll"
 } 
 
 # make the paths absolute
 # Note the working directory of PowerShell may differ from the current directory.
 # That means you can not use [System.IO.Path]::GetFullPath() easily.
 $workingDir = Convert-Path '.'
-$fromDir = Convert-Path $fromDir -ErrorAction Stop  # $fromDir must exist
-$toDir = [System.IO.Path]::Combine($workingDir, $toDir)
-if (-not (Test-Path $toDir -PathType Container)) {
-    New-Item $toDir -ItemType Directory -ErrorAction Stop | Out-Null
+$FromDir = Convert-Path $FromDir -ErrorAction Stop  # $FromDir must exist
+$ToDir = [System.IO.Path]::Combine($workingDir, $ToDir)
+if (-not (Test-Path $ToDir -PathType Container)) {
+    New-Item $ToDir -ItemType Directory -ErrorAction Stop | Out-Null
 }
-$metadataFiles = $metadataFiles | ForEach-Object { [System.IO.Path]::Combine($workingDir, $_) }
+$MetadataFiles = $MetadataFiles | ForEach-Object { [System.IO.Path]::Combine($workingDir, $_) }
 
 # process all files in the from directory
 Get-ChildItem $fromDir -File -Name -Recurse | ForEach-Object { ProcessFile $_ }
