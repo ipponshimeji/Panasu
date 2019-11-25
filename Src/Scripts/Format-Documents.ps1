@@ -7,33 +7,65 @@ Formats the documents under the specified directory using pandoc.
 
 .DESCRIPTION 
 
-The Format-Documents.ps1 script formats source document files under the input directory specified by FromDir parameter.
-The formatted document files are output in the output directory specified by ToDir parameter.
+The Format-Documents.ps1 script formats source document files under the input directory given by FromDir parameter.
+The formatted document files are output in the output directory given by ToDir parameter.
 
-pandoc is used to format source document files.
+Formatting process
+
+This script uses pandoc to format source document files.
 pandoc 2.3 or later must be installed to run this script.
+
 Formatting of each file is performed as follows:
 
-1. pandoc reads a source document file and converts it into AST (Abstract Syntax Tree). 
+1. `pandoc` reads a source document file and converts it into AST (Abstract Syntax Tree). 
 2. The filter specified by Filter parameter modify the AST.
-3. pandoc reads the filtered AST and writes it into the output directory in the target format. 
+3. `pandoc` reads the filtered AST and writes it into the output directory in the target format. 
 
 The relation of the extension of source document file, the format name of source document,
-the extension of formatted document file and the format name of formatted document is specified by
-FromExtensions, FromFormats, ToExtensions and ToFormats parameter respectively,
-where "format name" means a value which can be passed to -f or -t option of pandoc.
+the extension of formatted document file and the format name of formatted document is given by
+FromExtensions, FromFormats, ToExtensions and ToFormats parameters respectively,
+where "format name" means a value which can be passed to -f or -t option of `pandoc`.
 
-The default filter provided along with this script make some changes to the input AST.
+The default filter, FormatAST is provided along with this script.
+See about_FormatAST for how it modifies the AST.
 
-* It changes extension of a relative link in the AST. 
+Only files whose extension is contained in FromExtensions parameter are formatted.
+This script does not process other files,
+but some files are copied to ToDir if RebaseOtherRelativeLinks parameter is false.
+See the description of RebaseOtherRelativeLinks parameter for details.
 
-It changes the extension of a relative link in the input AST
-if the extension is a target of extension mapping.
-The extension mapping is defined by mapping from FromExtensions parameter to ToExtensions parameter and
-OtherExtensionMap parameter.
+Extension mapping
 
-For example, a link to 'a.md' in a source document file is converted to 'a.html'
-if FromExtensions is @('.md') and ToExtension is @('.html').
+The default filter replaces the extension of relative links in the input AST.
+For example, a link to "a.md" in the input AST is replaced to one to "a.html".
+The extension mappings used in this replacement consists of the following mappings:
+
+* from extensions given by FromExtensions parameter to ones given by ToExtensions parameter
+* the mapping specified by OtherExtensionMap parameter
+
+An extension which is not a target of the extension mappings is not replaced.
+
+Metadata
+
+When pandoc converts a document,
+you can give metadata along with the source document as "parameter" of conversion.
+
+There are some ways to provide metadata in this script's process.
+
+* In pandoc, metadata can be embedded in a source document in some formats such as markdown.
+  See Metadata blocks in Pandoc User's Guide.
+  Note that this notation may decrease compatibility of the source document as markdown format.
+* If file named "<source document file name>.metadata.yaml" exists in the same directory,
+  this script takes it as metadata for the source document.
+  For example, this script regards "a.md.metadata.yaml" as metadata of "a.md" if it exists.
+  The metadata file must be a YAML file.
+* You can specify metadata files which are commonly used for this formatting process by MetadataFiles parameter.
+  The metadata file must be a YAML file.
+
+This scripts combines metadata files, embeds parameters for the filter into it and passes it to pandoc.
+
+Some filters, including the default filter, support metadata macro.
+See about_MetadataMacro for details.
 
 .PARAMETER FromDir 
 
@@ -69,31 +101,42 @@ The array length of this parameter must be same to the one of FromExtensions.
 
 .PARAMETER MetadataFiles
 
-The array of yaml file which describes metadata for this formatting.
+The array of yaml file which describes common metadata for this formatting session.
 The all specified metadata are attached to all source document files. 
 
 .PARAMETER Filter 
 
-The command line of the pandoc filter to be used.
-If this parameter is empty string, "dotnet $scriptDir/FormatAST.dll" is used,
+The command line of the pandoc filter to be used in the formatting process.
+
+If this parameter is null or empty string, "dotnet $scriptDir/FormatAST.dll" is used,
 where $scriptDir is the directory where this script is located.
+See about_FormatAST for details about FormatAST.
+
+This script embeds the parameters for the filter into the metadata of the source document.
+The source document and metadata are converted into AST,
+and the specified filter reads the AST.
+Then the filter can reference the parameters from the metadata in the input AST.
+
+The parameters for filter embedded in metadata are ones which are requied in the default filter, FormatAST.
+So if you specify a custom filter, the filter can use those parameters via the input AST.
+See about_FormatAST for the details about parameters.
 
 .PARAMETER RebaseOtherRelativeLinks 
 
 If this parameter is True, relative links to files which are not target of extension mapping
 should be rebased so that the links keep to reference the files in the original location.
 
-If this parameter is false, this script copys such files into the output directory
+If this parameter is False, this script copies such files into the output directory
 along with the formatted files, and do not rebase links to the files.
 
 .PARAMETER OtherExtensionMap 
 
-The extension mappings other than the pair of FromExtensions and ToExtensions.
-This script replaces those extensions in relative links according the extension mapping.
+The extension mappings other than the mappings from FromExtensions to ToExtensions parameter.
+The filter replaces those extensions in relative links according the extension mappings.
 
 By specifying a mapping from an extension to the same extension, for example '.yaml'='.yaml',
-files with the extension are excluded from the target of rebasing by RebaseOtherRelativeLinks option,
-suppressing the extension change of relative links to the files. 
+files with the extension are excluded from the target of rebasing or copying by RebaseOtherRelativeLinks parameter,
+suppressing the extension replacement of relative links to the files. 
 
 .PARAMETER OtherReadOptions 
 
@@ -107,8 +150,8 @@ when it is invoked to write the formatted document files.
 
 .PARAMETER Rebuild
 
-If this parameter is True, this script formats all source document files.
-If this parameter is False, this script formats only updated files.
+If this parameter is True, this script processes all files.
+If this parameter is False, this script processes only updated files.
 
 .PARAMETER Silent
 
@@ -138,6 +181,14 @@ Otherwise it outputs an object which has following properties:
 * UpToDate: The list of file for which this script skips processing because it is up-to-date.
 
 The files are represented in relative path from the input directory.
+
+.LINK
+
+about_FormatAST
+
+.LINK
+
+about_MetadataMacros
 #>
 param (
     [string]$FromDir = '../md',
