@@ -29,7 +29,7 @@ Ubuntu 18.04上でもやってみたら動きました。
 なお、手元でUbuntu 18.04でふつうに`apt-get install pandoc`してみたところ、
 1.19がインストールされました。
 
-### .NET Core 3.0以降
+### .NET Core 3.1以降
 
 [インストール方法のページ](https://dotnet.microsoft.com/download)
 

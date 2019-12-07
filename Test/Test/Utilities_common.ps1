@@ -6,7 +6,7 @@ Set-Variable -Name testDir -Value (Split-Path -Parent $MyInvocation.MyCommand.Pa
 Set-Variable -Name resourcesDirBase -Value "$testDir/../_Resources" -Option ReadOnly -Scope Script
 Set-Variable -Name repositoryDir -Value "$testDir/../.." -Option ReadOnly -Scope Script
 Set-Variable -Name defaultConfig -Value 'Debug' -Option ReadOnly -Scope Script
-Set-Variable -Name defaultRuntime -Value 'netcoreapp3.0' -Option ReadOnly -Scope Script
+Set-Variable -Name defaultRuntime -Value 'netcoreapp3.1' -Option ReadOnly -Scope Script
 
 
 ## Assertions

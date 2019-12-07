@@ -85,7 +85,7 @@ That is, the `<Runtime>` part of the following path, which is typical output pat
 This value is used if the script tests the built files directly. 
 
 If this parameter is omitted or its value is an empty string, the script decides the default value.
-The current default value is `netcoreapp3.0`, that is the name for .NET Core 3.0 platform.
+The current default value is `netcoreapp3.1`, that is the name for .NET Core 3.1 platform.
 Note that the default value will be changed if the default target platform of Panasu is changed.  
 
 .PARAMETER TestScriptPath
@@ -116,7 +116,7 @@ See the -PassThru parameter of Invoke-Pester commandlet for details.
 
 test.ps1
 
-This command tests the build outout from Panasu.sln of the default configuration and the default target runtime, that is `Debug` and `netcoreapp3.0` respectively.
+This command tests the build outout from Panasu.sln of the default configuration and the default target runtime, that is `Debug` and `netcoreapp3.1` respectively.
 
 The Panasu.sln must be built successfully for the configuration and the target runtime before the command is executed.
 
