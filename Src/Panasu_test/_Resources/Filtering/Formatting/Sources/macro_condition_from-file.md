@@ -6,7 +6,7 @@ _Param.FromBaseDirPath: "/tmp/From/"
 _Param.FromFileRelPath: "x/macro_condition_from-file.md"
 _Param.ToBaseDirPath: "/tmp/To/"
 _Param.ToFileRelPath: "x/macro_condition_from-file.html"
-_Param.RebaseOtherRelativeLinks: false
+_Param.StickOtherRelativeLinks: false
 _Param.ExtensionMap:
   .md: ".html"
 

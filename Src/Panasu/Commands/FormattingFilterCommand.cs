@@ -41,8 +41,8 @@ namespace Panasu.Commands {
 			Debug.Assert(args != null);
 			Debug.Assert(value == null);	// using value-separated option 
 
-			if (AreSameOptionNames(shortName, "r") || AreSameOptionNames(longName, FormattingFilter.Parameters.Names.RebaseOtherRelativeLinks)) {
-				this.Parameters.RebaseOtherRelativeLinks = true;	// TODO:
+			if (AreSameOptionNames(shortName, "r") || AreSameOptionNames(longName, FormattingFilter.Parameters.Names.StickOtherRelativeLinks)) {
+				this.Parameters.StickOtherRelativeLinks = true;	// TODO:
 			} else if (AreSameOptionNames(shortName, "m") || AreSameOptionNames(longName, FormattingFilter.Parameters.Names.ExtensionMap)) {
 				(string from, string to) SplitExtensions(string val) {
 					int index = val.IndexOf(':');
@@ -102,8 +102,8 @@ namespace Panasu.Commands {
 			writer.WriteLine("    The path must be relative from FromBaseDirPath.");
 			writer.WriteLine("  -h, -?, --Help");
 			writer.WriteLine("    Shows the help of this command.");
-			writer.WriteLine("  --RebaseOtherRelativeLinks");
-			writer.WriteLine("    Rebases relative links which are not included in the ExtensionMap.");
+			writer.WriteLine("  --StickOtherRelativeLinks");
+			writer.WriteLine("    Sticks relative links which are not included in the ExtensionMap on the original target.");
 			writer.WriteLine("  -td, --ToBaseDirPath <dir>");
 			writer.WriteLine("    The path of base directory for final output files.");
 			writer.WriteLine("  -tf, --ToFileRelPath <relativePath>");

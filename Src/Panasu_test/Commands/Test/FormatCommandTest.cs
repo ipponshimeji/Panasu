@@ -35,7 +35,7 @@ namespace Panasu.Commands.Test {
 					args.Add("-tf");
 					args.Add(parameters.ToFileRelPath);
 				}
-				if (parameters.RebaseOtherRelativeLinks.HasValue && parameters.RebaseOtherRelativeLinks.Value) {
+				if (parameters.StickOtherRelativeLinks.HasValue && parameters.StickOtherRelativeLinks.Value) {
 					args.Add("-r");
 				}
 				if (parameters.ExtensionMap != null) {

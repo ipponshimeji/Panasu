@@ -6,7 +6,7 @@
         "_Param.FromFileRelPath":{"t":"MetaInlines","c":[{"t":"Str","c":"x/y/z/macro_rebase.md"}]},
         "_Param.ToBaseDirPath":{"t":"MetaInlines","c":[{"t":"Str","c":"/tmp/To/"}]},
         "_Param.ToFileRelPath":{"t":"MetaInlines","c":[{"t":"Str","c":"x/y/z/macro_rebase.html"}]},
-        "_Param.RebaseOtherRelativeLinks":{"t":"MetaBool","c":false},
+        "_Param.StickOtherRelativeLinks":{"t":"MetaBool","c":false},
         "_Param.ExtensionMap":{"t":"MetaMap","c":{".md":{"t":"MetaInlines","c":[{"t":"Str","c":".html"}]}}},
         "absolute":{"t":"MetaInlines","c":[{"t":"Str","c":"http://www.example.org/absolute.css"}]},
         "relative":{"t":"MetaInlines","c":[{"t":"Str","c":"../../../styles/doc.css"}]},

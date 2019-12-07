@@ -9,7 +9,7 @@
             "FromFileRelPath": "link_mapped.md",
             "ToBaseDirPath": "To/",
             "ToFileRelPath": "link_mapped.html",
-            "RebaseOtherRelativeLinks": false,
+            "StickOtherRelativeLinks": false,
             "ExtensionMap": {
                 ".md": ".html",
                 ".jpeg": ".png"

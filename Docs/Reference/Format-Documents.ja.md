@@ -22,7 +22,7 @@ Format-Documents.ps1
   [-ToFormats <String[]>]
   [-MetadataFiles <String[]>]
   [-Filter <String>]
-  [-RebaseOtherRelativeLinks <Bool>]
+  [-StickOtherRelativeLinks <Bool>]
   [-OtherExtensionMap <Hashtable>]
   [-OtherReadOptions <String[]>]
   [-OtherWriteOptions <String[]>]
@@ -60,8 +60,8 @@ Format-Documents.ps1
 
 `FromExtensions`パラメーターに含まれる拡張子をもつファイルのみがフォーマットの対象になります。
 このスクリプトは他のファイルを処理しませんが、
-`RebaseOtherRelativeLinks`パラメーターがfalseの場合はいくつかのファイルが`ToDir`へコピーされることがあります。
-詳細は[RebaseOtherRelativeLinksパラメーターの説明](#-RebaseOtherRelativeLinks)を参照してください。
+`StickOtherRelativeLinks`パラメーターがfalseの場合はいくつかのファイルが`ToDir`へコピーされることがあります。
+詳細は[StickOtherRelativeLinksパラメーターの説明](#-StickOtherRelativeLinks)を参照してください。
 
 #### 拡張子の対応
 
@@ -202,7 +202,7 @@ FilterASTの詳細については、[about_FilterAST](about_FilterAST.ja.md)を�
 
 '.yaml'='.yaml'のように同じ拡張子のマッピングを指定することで、
 相対リンクの拡張子置換を抑止しつつ、
-この拡張子のファイルを`RebaseOtherRelativeLinks`オプションによるリベースやコピーの対象から除外することができます。
+この拡張子のファイルを`StickOtherRelativeLinks`オプションによるリンク変更やコピーの対象から除外することができます。
 
 |||
 |:--|:--| 
@@ -238,7 +238,7 @@ pandocに渡すその他のオプションの配列です。
 | Accept pipeline input: | False |
 | Accept wildcard characters: | False |
 
-### -RebaseOtherRelativeLinks
+### -StickOtherRelativeLinks
 
 このパラメーターがTrueの場合、拡張子マッピングの対象ではないファイルへの相対リンクを変更して、
 それらのリンクが元々の場所のファイルを参照し続けるようにします。

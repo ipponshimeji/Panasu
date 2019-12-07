@@ -1,4 +1,4 @@
-# Links (non-rebase)
+# Links (non-stick)
 
 #### pages to be checked
 

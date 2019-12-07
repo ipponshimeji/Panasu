@@ -53,11 +53,11 @@ dotnet FilterAST.dll [options]
 
 `FromFileRelPath`パラメーターに対応します。
 
-#### --RebaseOtherRelativeLinks または -r
+#### --StickOtherRelativeLinks または -r
 
-`RebaseOtherRelativeLinks`パラメーターに対応します。
+`StickOtherRelativeLinks`パラメーターに対応します。
 もしこのオプションが指定されると、
-`RebaseOtherRelativeLinks`パラメータに`true`が設定されます。
+`StickOtherRelativeLinks`パラメータに`true`が設定されます。
 
 #### --ToBaseDirPath <path> または -td <path>
 
@@ -117,7 +117,7 @@ _Param.FromBaseDirPath: "c:/docs/md"
 _Param.FromFileRelPath: "sub/a.md"
 ```
 
-#### RebaseOtherRelativeLinks: bool
+#### StickOtherRelativeLinks: bool
 
 このパラメーターは省略可能です。省略値は`true`になります。
 
@@ -133,7 +133,7 @@ _Param.FromFileRelPath: "sub/a.md"
 例:
 
 ```yaml
-_Param.RebaseOtherRelativeLinks: false
+_Param.StickOtherRelativeLinks: false
 ```
 
 #### ToBaseDirPath: string
@@ -201,16 +201,15 @@ _Param.ToFileRelPath: "sub/a.html"
 
 ### 拡張子対応の対象外である相対リンクの変更
 
-`RebaseOtherRelativeLinks`パラメーターがtrueの場合、
+`StickOtherRelativeLinks`パラメーターがtrueの場合、
 拡張子マッピングの対象ではない拡張子をもつ入力AST中の相対リンクは、
-`ToBaseDirPath`パラメーターのディレクトリ下からの相対リンクにリベースされ、
-リンクはオリジナルの場所にあるファイルを参照し続けます。
+オリジナルの場所にあるファイルを参照し続けるように変更されます。
 
 例えば、
 `FromBaseDirPath`が"/docs/md"で`ToBaseDirPath`が"/docs/html"の場合、
 入力AST中の"a.png"へのリンクは、"../md/a.png"にリベースされます。
 
-`RebaseOtherRelativeLinks`パラメーターがfalseの場合、
+`StickOtherRelativeLinks`パラメーターがfalseの場合、
 このフィルタはそれらのリンクを変更しません。
 リンク先は`ToBaseDirPath`中にあると想定されます。
 [Format-Documents.ps1](Format-Documents.ja.md)など、

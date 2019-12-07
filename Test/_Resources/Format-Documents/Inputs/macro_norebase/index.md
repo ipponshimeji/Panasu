@@ -1,4 +1,4 @@
-# Macro (not RebaseOtherRelativeLinks mode)
+# Macro (not StickOtherRelativeLinks mode)
 
 #### pages to be checked
 

@@ -1,0 +1,18 @@
+{
+    "Description": "link_nonmapped_nostick",
+    "Spec": "The filter should not change a relative link whose extension is not specified to be mapped.",
+    "InputFilePath": "Inputs/link_nonmapped_nostick.input.json",
+    "AnswerFilePath": "Answers/link_nonmapped_nostick.answer.json",
+    "Config": {
+        "Parameters": {
+            "FromBaseDirPath": "From/",
+            "FromFileRelPath": "x/y/z/link_nonmapped_nostick.md",
+            "ToBaseDirPath": "To/",
+            "ToFileRelPath": "x/y/z/link_nonmapped_nostick.html",
+            "StickOtherRelativeLinks": false,
+            "ExtensionMap": {
+                ".md": ".html"
+            }
+        }
+    }
+}

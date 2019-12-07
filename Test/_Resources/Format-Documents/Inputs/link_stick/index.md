@@ -1,4 +1,4 @@
-# Links (rebase)
+# Links (stick)
 
 #### pages to be checked
 

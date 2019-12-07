@@ -12,7 +12,7 @@ param (
     [string[]]$ToFormats = @('html'),
     [string[]]$MetadataFiles = @(),
     [string]$Filter = '',   # the default value is set in the script body
-    [bool]$RebaseOtherRelativeLinks = $true,
+    [bool]$StickOtherRelativeLinks = $true,
     [hashtable]$OtherExtensionMap = @{'.yaml'='.yaml'},
     [string[]]$OtherReadOptions = @(),
     [string[]]$OtherWriteOptions = @('--standalone'),
@@ -34,7 +34,7 @@ param (
     -ToFormats $ToFormats `
     -MetadataFiles $MetadataFiles `
     -Filter $Filter `
-    -RebaseOtherRelativeLinks $RebaseOtherRelativeLinks `
+    -StickOtherRelativeLinks $StickOtherRelativeLinks `
     -OtherExtensionMap $OtherExtensionMap `
     -OtherReadOptions $OtherReadOptions `
     -OtherWriteOptions $OtherWriteOptions `

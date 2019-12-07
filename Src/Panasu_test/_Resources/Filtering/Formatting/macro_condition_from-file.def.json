@@ -9,7 +9,7 @@
             "FromFileRelPath": "x/macro_condition_from-file.md",
             "ToBaseDirPath": "To/",
             "ToFileRelPath": "x/macro_condition_from-file.html",
-            "RebaseOtherRelativeLinks": false,
+            "StickOtherRelativeLinks": false,
             "ExtensionMap": {
                 ".md": ".html"
             }

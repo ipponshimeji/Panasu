@@ -22,7 +22,7 @@ Format-Documents.ps1
   [-ToFormats <String[]>]
   [-MetadataFiles <String[]>]
   [-Filter <String>]
-  [-RebaseOtherRelativeLinks <Bool>]
+  [-StickOtherRelativeLinks <Bool>]
   [-OtherExtensionMap <Hashtable>]
   [-OtherReadOptions <String[]>]
   [-OtherWriteOptions <String[]>]
@@ -59,8 +59,8 @@ See [about_FilterAST](about_FilterAST.md) for how it modifies the AST.
 
 Only files whose extension is contained in `FromExtensions` parameter are formatted.
 This script does not process other files,
-but some files are copied to `ToDir` if `RebaseOtherRelativeLinks` parameter is false.
-See [the description of RebaseOtherRelativeLinks parameter](#-RebaseOtherRelativeLinks) for details.
+but some files are copied to `ToDir` if `StickOtherRelativeLinks` parameter is false.
+See [the description of StickOtherRelativeLinks parameter](#-StickOtherRelativeLinks) for details.
 
 #### Extension mapping
 
@@ -197,7 +197,7 @@ The extension mappings other than the mappings from `FromExtensions` to `ToExten
 The filter replaces those extensions in relative links according the extension mappings.
 
 By specifying a mapping from an extension to the same extension, for example '.yaml'='.yaml',
-files with the extension are excluded from the target of rebasing or copying by `RebaseOtherRelativeLinks` parameter,
+files with the extension are excluded from the target of rebasing or copying by `StickOtherRelativeLinks` parameter,
 suppressing the extension replacement of relative links to the files. 
 
 |||
@@ -234,7 +234,7 @@ when it is invoked to write the formatted document files.
 | Accept pipeline input: | False |
 | Accept wildcard characters: | False |
 
-### -RebaseOtherRelativeLinks
+### -StickOtherRelativeLinks
 
 If this parameter is True, relative links to files which are not target of extension mapping
 should be changed so that the links keep to reference the files in the original location.

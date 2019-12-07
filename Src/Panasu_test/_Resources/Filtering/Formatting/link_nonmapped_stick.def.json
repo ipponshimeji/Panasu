@@ -1,0 +1,18 @@
+{
+    "Description": "link_nonmapped_stick",
+    "Spec": "The filter should rebase a relative link whose extension is not specified to be mapped.",
+    "InputFilePath": "Inputs/link_nonmapped_stick.input.json",
+    "AnswerFilePath": "Answers/link_nonmapped_stick.answer.json",
+    "Config": {
+        "Parameters": {
+            "FromBaseDirPath": "From/",
+            "FromFileRelPath": "x/y/z/link_nonmapped_stick.md",
+            "ToBaseDirPath": "To/",
+            "ToFileRelPath": "x/y/z/link_nonmapped_stick.html",
+            "StickOtherRelativeLinks": true,
+            "ExtensionMap": {
+                ".md": ".html"
+            }
+        }
+    }
+}

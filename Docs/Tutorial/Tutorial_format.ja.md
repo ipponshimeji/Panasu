@@ -136,10 +136,10 @@ pandocは以下のように動作します。
 * そのファイルへの相対リンクは変更されません。
 
 このモードで変換を行うには、
-`format`スクリプトの`RebaseOtherRelativeLinks`オプションを`$false`に設定します。
+`format`スクリプトの`StickOtherRelativeLinks`オプションを`$false`に設定します。
 
 ```
-PS C:\Work\_scripts> ./format.ps1 -RebaseOtherRelativeLinks $false
+PS C:\Work\_scripts> ./format.ps1 -StickOtherRelativeLinks $false
 ```
 
 この動作をデフォルトにしたい場合は、
@@ -149,7 +149,7 @@ PS C:\Work\_scripts> ./format.ps1 -RebaseOtherRelativeLinks $false
 ...
 param (
     ...
-    [bool]$RebaseOtherRelativeLinks = $false, # ここをfalseにする
+    [bool]$StickOtherRelativeLinks = $false, # ここをfalseにする
     ...
 )
 

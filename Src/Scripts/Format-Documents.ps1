@@ -31,8 +31,8 @@ See about_FilterAST for how it modifies the AST.
 
 Only files whose extension is contained in FromExtensions parameter are formatted.
 This script does not process other files,
-but some files are copied to ToDir if RebaseOtherRelativeLinks parameter is false.
-See the description of RebaseOtherRelativeLinks parameter for details.
+but some files are copied to ToDir if StickOtherRelativeLinks parameter is false.
+See the description of StickOtherRelativeLinks parameter for details.
 
 Extension mapping
 
@@ -121,13 +121,13 @@ The parameters for filter embedded in metadata are ones which are requied in the
 So if you specify a custom filter, the filter can use those parameters via the input AST.
 See about_FilterAST for the details about parameters.
 
-.PARAMETER RebaseOtherRelativeLinks 
+.PARAMETER StickOtherRelativeLinks 
 
 If this parameter is True, relative links to files which are not target of extension mapping
-should be rebased so that the links keep to reference the files in the original location.
+should be changed so that the links keep to reference the files in the original location.
 
 If this parameter is False, this script copies such files into the output directory
-along with the formatted files, and do not rebase links to the files.
+along with the formatted files, and do not change links to the files.
 
 .PARAMETER OtherExtensionMap 
 
@@ -135,7 +135,7 @@ The extension mappings other than the mappings from FromExtensions to ToExtensio
 The filter replaces those extensions in relative links according the extension mappings.
 
 By specifying a mapping from an extension to the same extension, for example '.yaml'='.yaml',
-files with the extension are excluded from the target of rebasing or copying by RebaseOtherRelativeLinks parameter,
+files with the extension are excluded from the target of rebasing or copying by StickOtherRelativeLinks parameter,
 suppressing the extension replacement of relative links to the files. 
 
 .PARAMETER OtherReadOptions 
@@ -199,7 +199,7 @@ param (
     [string[]]$ToFormats = @('html'),
     [string[]]$MetadataFiles = @(),
     [string]$Filter = '',   # the default value is set in the script body
-    [bool]$RebaseOtherRelativeLinks = $true,
+    [bool]$StickOtherRelativeLinks = $true,
     [hashtable]$OtherExtensionMap = @{'.yaml'='.yaml'},
     [string[]]$OtherReadOptions = @(),
     [string[]]$OtherWriteOptions = @('--standalone'),
@@ -308,7 +308,7 @@ function CreateCombinedMetadataFile([string[]]$metadataFilePaths, [string]$fromF
         }
 
         # append the parameters
-        if ($RebaseOtherRelativeLinks) {
+        if ($StickOtherRelativeLinks) {
             $rebase = "true"
         } else {
             $rebase = "false"
@@ -319,7 +319,7 @@ _Param.FromBaseDirPath: '``$(EscapeForYamlSingleQuotedString $FromDir)``$rawAttr
 _Param.FromFileRelPath: '``$(EscapeForYamlSingleQuotedString $fromFileRelPath)``$rawAttribute'
 _Param.ToBaseDirPath: '``$(EscapeForYamlSingleQuotedString $ToDir)``$rawAttribute'
 _Param.ToFileRelPath: '``$(EscapeForYamlSingleQuotedString $toFileRelPath)``$rawAttribute'
-_Param.RebaseOtherRelativeLinks: $rebase
+_Param.StickOtherRelativeLinks: $rebase
 
 "@
         if (0 -lt $extensionMap.Count) {
@@ -450,7 +450,7 @@ function ProcessFile([string]$fromFileRelPath) {
     } else {
         # other files
         # copy the file if you don't want rebasing
-        if ($RebaseOtherRelativeLinks) {
+        if ($StickOtherRelativeLinks) {
             Report $fromFileRelPath $toFileRelPath $Result_Skipped_NotTarget
         } else {
             CopyFile $fromFileRelPath

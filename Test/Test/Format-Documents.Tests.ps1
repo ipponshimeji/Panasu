@@ -83,7 +83,7 @@ try {
                 -FromDir $fromDir `
                 -ToDir $toDir `
                 -Filter $filter `
-                -RebaseOtherRelativeLinks $true `
+                -StickOtherRelativeLinks $true `
                 -OtherWriteOptions @('--standalone', "--template=$commonTemplatePath") `
                 -Rebuild $true `
                 -Silent $true
@@ -125,8 +125,8 @@ try {
                 But to simplify the test, .txt and .png files are
                 stored in the input dir and let them be copied to the output
                 dir as non-formatting-target files
-                by $false RebaseOtherRelativeLinks option.
-                (RebaseOtherRelativeLinks behavior is tested in detail later)  
+                by $false StickOtherRelativeLinks option.
+                (StickOtherRelativeLinks behavior is tested in detail later)  
             #>
 
             # arrange
@@ -139,7 +139,7 @@ try {
                 -FromDir $fromDir `
                 -ToDir $toDir `
                 -Filter $filter `
-                -RebaseOtherRelativeLinks $false `
+                -StickOtherRelativeLinks $false `
                 -OtherExtensionMap @{'.yaml'='.yaml'; '.text'='.txt'; '.gif'='.png'} `
                 -OtherWriteOptions @('--standalone', "--template=$commonTemplatePath") `
                 -Rebuild $true `
@@ -160,16 +160,16 @@ try {
             $toDir | Should -DirHaveSameContentsTo "$answersDir/$caseName"
         }
 
-        It '[link_norebase] copies non-formatting-target files if RebaseOtherRelativeLinks is false' {
+        It '[link_nostick] copies non-formatting-target files if StickOtherRelativeLinks is false' {
             <#
-                If RebaseOtherRelativeLinks is $false,
+                If StickOtherRelativeLinks is $false,
                 it copies non-formatting-target files to ToDir.
                 As a result, the relative links to such files are
                 still valid after formatting.
             #>
 
             # arrange
-            $caseName = 'link_norebase'
+            $caseName = 'link_nostick'
             $fromDir = "$inputsDir/$caseName"
             $toDir = CreateOutputDir $outputDir $caseName
 
@@ -182,7 +182,7 @@ try {
                 -ToExtensions @('.html', '.htm') `
                 -ToFormats @('html', 'html') `
                 -Filter $filter `
-                -RebaseOtherRelativeLinks $false `
+                -StickOtherRelativeLinks $false `
                 -OtherExtensionMap @{'.yaml'='.yaml'} `
                 -OtherWriteOptions @('--standalone', "--template=$commonTemplatePath") `
                 -Rebuild $true `
@@ -203,16 +203,15 @@ try {
             $toDir | Should -DirHaveSameContentsTo "$answersDir/$caseName"
         }
 
-        It '[link_rebase] rebases links to non-formatting-target files if RebaseOtherRelativeLinks is true' {
+        It '[link_stick] changes links to non-formatting-target files if StickOtherRelativeLinks is true' {
             <#
-                If RebaseOtherRelativeLinks is $true,
+                If StickOtherRelativeLinks is $true,
                 it does not copy non-formatting-target files to ToDir,
-                but rebases links to such files to point the original files
-                in FromDir.
+                but changes links so that they point the original files in FromDir.
             #>
 
             # arrange
-            $caseName = 'link_rebase'
+            $caseName = 'link_stick'
             $toDir = CreateOutputDir $outputDir $caseName
 
             # copy input dir
@@ -229,7 +228,7 @@ try {
                 -ToExtensions @('.html', '.htm') `
                 -ToFormats @('html', 'html') `
                 -Filter $filter `
-                -RebaseOtherRelativeLinks $true `
+                -StickOtherRelativeLinks $true `
                 -OtherExtensionMap @{'.yaml'='.yaml'} `
                 -OtherWriteOptions @('--standalone', "--template=$commonTemplatePath") `
                 -Rebuild $true `
@@ -272,7 +271,7 @@ try {
                 -FromDir $fromDir `
                 -ToDir $toDir `
                 -Filter $filter `
-                -RebaseOtherRelativeLinks $true `
+                -StickOtherRelativeLinks $true `
                 -OtherWriteOptions @('--standalone', "--template=$commonTemplatePath") `
                 -Rebuild $true `
                 -Silent $true
@@ -313,7 +312,7 @@ try {
                 -ToDir $toDir `
                 -MetadataFiles @("$inputsDir/macro.metadata.yaml") `
                 -Filter $filter `
-                -RebaseOtherRelativeLinks $false `
+                -StickOtherRelativeLinks $false `
                 -OtherWriteOptions @('--standalone', "--template=$commonTemplatePath") `
                 -Rebuild $true `
                 -Silent $true
@@ -357,7 +356,7 @@ try {
                 -FromDir $fromDir `
                 -ToDir $toDir `
                 -Filter $filter `
-                -RebaseOtherRelativeLinks $true `
+                -StickOtherRelativeLinks $true `
                 -OtherReadOptions @('--metadata=testparam:Hello') `
                 -OtherWriteOptions @('--standalone', "--template=$inputsDir/$caseName.template.html") `
                 -Rebuild $true `
@@ -385,7 +384,7 @@ try {
                 * It formats a source if one of following file is newer than its target:
                     * source file
                     * attached metadata file of the source
-                * It copies a non-formatting-target file if RebaseOtherRelativeLinks option is false
+                * It copies a non-formatting-target file if StickOtherRelativeLinks option is false
                   and it is newer than its target.
             #>
 
@@ -422,7 +421,7 @@ try {
                 -FromDir $fromDir `
                 -ToDir $toDir `
                 -Filter $filter `
-                -RebaseOtherRelativeLinks $false `
+                -StickOtherRelativeLinks $false `
                 -OtherWriteOptions @('--standalone', "--template=$commonTemplatePath") `
                 -Rebuild $false `
                 -Silent $true
@@ -484,7 +483,7 @@ try {
                 -ToDir $toDir `
                 -Filter $filter `
                 -MetadataFiles @("$fromDir/commonmetadata1.yaml"; "$fromDir/commonmetadata2.yaml") `
-                -RebaseOtherRelativeLinks $false `
+                -StickOtherRelativeLinks $false `
                 -OtherWriteOptions @('--standalone', "--template=$commonTemplatePath") `
                 -Rebuild $false `
                 -Silent $true
@@ -536,7 +535,7 @@ try {
                 -FromDir $fromDir `
                 -ToDir $toDir `
                 -Filter $filter `
-                -RebaseOtherRelativeLinks $false `
+                -StickOtherRelativeLinks $false `
                 -OtherWriteOptions @('--standalone', "--template=$commonTemplatePath") `
                 -Rebuild $true `
                 -Silent $true
@@ -572,7 +571,7 @@ try {
                 -ToExtensions @('.html', '.txt') `
                 -ToFormats @('html', 'plain') `
                 -Filter $filter `
-                -RebaseOtherRelativeLinks $false `
+                -StickOtherRelativeLinks $false `
                 -OtherWriteOptions @('--standalone', "--template=$commonTemplatePath") `
                 -Rebuild $true `
                 -Silent $true

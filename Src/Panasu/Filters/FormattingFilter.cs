@@ -14,7 +14,7 @@ namespace Panasu.Filters {
 			public new class Names: ConvertingFilter.Parameters.Names {
 				#region constants
 
-				public const string RebaseOtherRelativeLinks = "RebaseOtherRelativeLinks";
+				public const string StickOtherRelativeLinks = "StickOtherRelativeLinks";
 				public const string ExtensionMap = "ExtensionMap";
 
 				#endregion
@@ -25,7 +25,7 @@ namespace Panasu.Filters {
 
 			#region data
 
-			private bool? rebaseOtherRelativeLinks = null;
+			private bool? stickOtherRelativeLinks = null;
 
 			private Dictionary<string, string> extensionMap = null;
 
@@ -34,13 +34,13 @@ namespace Panasu.Filters {
 
 			#region properties
 
-			public bool? RebaseOtherRelativeLinks {
+			public bool? StickOtherRelativeLinks {
 				get {
-					return this.rebaseOtherRelativeLinks;
+					return this.stickOtherRelativeLinks;
 				}
 				set {
 					EnsureNotFreezed();
-					this.rebaseOtherRelativeLinks = value;
+					this.stickOtherRelativeLinks = value;
 				}
 			}
 
@@ -66,7 +66,7 @@ namespace Panasu.Filters {
 				Debug.Assert(overwriteParams != null);
 
 				// initialize members
-				this.rebaseOtherRelativeLinks = ReadValueFrom(jsonObj, Names.RebaseOtherRelativeLinks, overwriteParams.RebaseOtherRelativeLinks);
+				this.stickOtherRelativeLinks = ReadValueFrom(jsonObj, Names.StickOtherRelativeLinks, overwriteParams.StickOtherRelativeLinks);
 				this.extensionMap = ReadObjectFrom<string>(jsonObj, Names.ExtensionMap, overwriteParams.ExtensionMap);
 			}
 
@@ -79,7 +79,7 @@ namespace Panasu.Filters {
 				Debug.Assert(src != null);
 
 				// copy the src's contents
-				this.rebaseOtherRelativeLinks = src.rebaseOtherRelativeLinks;
+				this.stickOtherRelativeLinks = src.stickOtherRelativeLinks;
 				this.extensionMap = (src.extensionMap == null) ? null : new Dictionary<string, string>(src.extensionMap);
 			}
 
@@ -134,10 +134,10 @@ namespace Panasu.Filters {
 
 				// complete this class level contents
 
-				// RebaseOtherRelativeLinks
-				if (this.rebaseOtherRelativeLinks.HasValue == false) {
+				// StickOtherRelativeLinks
+				if (this.stickOtherRelativeLinks.HasValue == false) {
 					// set default value
-					this.rebaseOtherRelativeLinks = false;
+					this.stickOtherRelativeLinks = false;
 				}
 
 				// ExtensionMap
@@ -293,7 +293,7 @@ namespace Panasu.Filters {
 				}
 			} else {
 				// not a target to change extension
-				if (parameters.RebaseOtherRelativeLinks ?? false) {
+				if (parameters.StickOtherRelativeLinks ?? false) {
 					// rebase
 					Uri newUri = parameters.ToFileUri.MakeRelativeUri(new Uri(parameters.FromFileUri, unescapedPath));
 					newTarget = newUri.ToString();

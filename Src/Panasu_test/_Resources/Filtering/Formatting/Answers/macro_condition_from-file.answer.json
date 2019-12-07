@@ -6,7 +6,7 @@
         "_Param.FromFileRelPath":{"t":"MetaInlines","c":[{"t":"Str","c":"x/macro_condition_from-file.md"}]},
         "_Param.ToBaseDirPath":{"t":"MetaInlines","c":[{"t":"Str","c":"/tmp/To/"}]},
         "_Param.ToFileRelPath":{"t":"MetaInlines","c":[{"t":"Str","c":"x/macro_condition_from-file.html"}]},
-        "_Param.RebaseOtherRelativeLinks":{"t":"MetaBool","c":false},
+        "_Param.StickOtherRelativeLinks":{"t":"MetaBool","c":false},
         "_Param.ExtensionMap":{"t":"MetaMap","c":{".md":{"t":"MetaInlines","c":[{"t":"Str","c":".html"}]}}},
         "single_true-case":{"t":"MetaInlines","c":[{"t":"Str","c":"OK"}]},
         "single_false-case":{"t":"MetaInlines","c":[{"t":"Str","c":"OK"}]},

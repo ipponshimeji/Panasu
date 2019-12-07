@@ -9,7 +9,7 @@
             "FromFileRelPath": "x/y/z/macro_rebase.md",
             "ToBaseDirPath": "To/",
             "ToFileRelPath": "x/y/z/macro_rebase.html",
-            "RebaseOtherRelativeLinks": false,
+            "StickOtherRelativeLinks": false,
             "ExtensionMap": {
                 ".md": ".html"
             }

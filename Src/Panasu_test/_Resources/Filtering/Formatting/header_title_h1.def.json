@@ -9,7 +9,7 @@
             "FromFileRelPath": "header_title_h1.md",
             "ToBaseDirPath": "To/",
             "ToFileRelPath": "header_title_h1.html",
-            "RebaseOtherRelativeLinks": false,
+            "StickOtherRelativeLinks": false,
             "ExtensionMap": {
                 ".md": ".html"
             }

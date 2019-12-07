@@ -52,10 +52,10 @@ Corresponds to `FromBaseDirPath` parameter.
 
 Corresponds to `FromFileRelPath` parameter.
 
-#### --RebaseOtherRelativeLinks or -r
+#### --StickOtherRelativeLinks or -r
 
-Corresponds to `RebaseOtherRelativeLinks` parameter.
-If this option is set, the `RebaseOtherRelativeLinks` parameter is set to `true`.
+Corresponds to `StickOtherRelativeLinks` parameter.
+If this option is set, the `StickOtherRelativeLinks` parameter is set to `true`.
 
 #### --ToBaseDirPath <path> or -td <path>
 
@@ -115,7 +115,7 @@ Example:
 _Param.FromFileRelPath: "sub/a.md"
 ```
 
-#### RebaseOtherRelativeLinks: bool
+#### StickOtherRelativeLinks: bool
 
 This parameter is optional. Its default value is `true`.
 
@@ -129,7 +129,7 @@ See [Rebasing relative links to non extension mapping target](#Rebasing-relative
 Example:
 
 ```yaml
-_Param.RebaseOtherRelativeLinks: false
+_Param.StickOtherRelativeLinks: false
 ```
 
 #### ToBaseDirPath: string
@@ -192,17 +192,16 @@ So the filter modifies the input AST as follows:
 In conclusion, if you write only one leve-1 header at the top of your source document file,
 its output will be what you expect.
 
-### Rebasing relative links to non extension mapping target
+### Handling relative links to non extension mapping target
 
-If `RebaseOtherRelativeLinks` parameter is true,
+If `StickOtherRelativeLinks` parameter is true,
 a relative link in the input AST whose extension is not target of extension mappings
-is rebased from the directory of `ToBaseDirPath` parameter
-so that the link keep to reference the file in the original location.
+is changed so that the link keep to reference the file in the original location.
 
 For example, a link to "a.png" in the input AST is rebased to "../md/a.png"
 if `FromBaseDirPath` is "/docs/md" and `ToBaseDirPath` is "/docs/html".
 
-If `RebaseOtherRelativeLinks` parameter is false,
+If `StickOtherRelativeLinks` parameter is false,
 the filter does not change such links.
 The link target is supposed to be located in ToBaseDirPath.
 Some scripts which use this filter, such as [Format-Documents.ps1](Format-Documents.md),

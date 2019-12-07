@@ -22,8 +22,8 @@ namespace Panasu.Test {
 			private static readonly FormattingSample[] samples = {
 				GetSample(SampleGroup, "link_absolute"),
 				GetSample(SampleGroup, "link_mapped"),
-				GetSample(SampleGroup, "link_nonmapped_norebase"),
-				GetSample(SampleGroup, "link_nonmapped_rebase"),
+				GetSample(SampleGroup, "link_nonmapped_nostick"),
+				GetSample(SampleGroup, "link_nonmapped_stick"),
 				GetSample(SampleGroup, "header_only_h1"),
 				GetSample(SampleGroup, "header_title_h1"),
 				GetSample(SampleGroup, "macro_rebase"),
