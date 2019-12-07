@@ -508,14 +508,12 @@ $MetadataFiles = $MetadataFiles | ForEach-Object { [System.IO.Path]::Combine($wo
 Get-ChildItem $fromDir -File -Name -Recurse | ForEach-Object { ProcessFile $_ }
 
 # return the result
-return New-Object PSObject -Property @{
-    Formatted = $log_formatted;
-    Copied = $log_copied;
-    UpToDate = $log_uptodate;
-    NotTarget = $log_nottarget;
-    Failed = $log_failed
+if (-not $NoOutput) {
+    return New-Object PSObject -Property @{
+        Formatted = $log_formatted;
+        Copied = $log_copied;
+        UpToDate = $log_uptodate;
+        NotTarget = $log_nottarget;
+        Failed = $log_failed
+    }
 }
-
-# report the result
-# ''  # output blank line
-# "Formatted: $($resultCount[0]), Copied: $($resultCount[1]), Failed: $($resultCount[4]), Up-To-Date: $($resultCount[2]), Not-Target: $($resultCount[3])"

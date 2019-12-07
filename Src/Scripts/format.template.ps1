@@ -20,6 +20,7 @@ param (
     [bool]$Rebuild = $false,
     [switch]
     [bool]$Silent = $false,
+    [bool]$NoOutput = $false,
     [string]$PanasuPath = "$(Split-Path -Parent $MyInvocation.MyCommand.Path)/Panasu"
 )
 
@@ -38,4 +39,5 @@ param (
     -OtherReadOptions $OtherReadOptions `
     -OtherWriteOptions $OtherWriteOptions `
     -Rebuild $Rebuild `
-    -Silent $Silent
+    -Silent $Silent `
+    -NoOutput $NoOutput
