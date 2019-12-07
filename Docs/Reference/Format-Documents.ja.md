@@ -55,8 +55,8 @@ Format-Documents.ps1
 および`ToFormats`によって指定されます。
 ここで、「フォーマット名」は`pandoc`の-fオプションや-tオプションに指定することのできる名前です。
 
-デフォルトのフィルターである`FormatAST`がこのスクリプトとともに提供されています。
-`FormatAST`がどのようにASTを変更するかは[about_FormatAST](about_FormatAST.ja.md)を参照してください。
+デフォルトのフィルターである`FilterAST`がこのスクリプトとともに提供されています。
+`FilterAST`がどのようにASTを変更するかは[about_FilterAST](about_FilterAST.ja.md)を参照してください。
 
 `FromExtensions`パラメーターに含まれる拡張子をもつファイルのみがフォーマットの対象になります。
 このスクリプトは他のファイルを処理しませんが、
@@ -105,19 +105,19 @@ Format-Documents.ps1
 
 フォーマット過程の中で用いるpandocフィルターのコマンドライン。
 
-このパラメーターがnullか空文字列の場合は、"dotnet $scriptDir/FormatAST.dll"が用いられます。
+このパラメーターがnullか空文字列の場合は、"dotnet $scriptDir/FilterAST.dll"が用いられます。
 ここで、$scriptDirはこのスクリプトが格納されているディレクトリです。
-FormatASTの詳細については、[about_FormatAST](about_FormatAST.ja.md)を参照してください。
+FilterASTの詳細については、[about_FilterAST](about_FilterAST.ja.md)を参照してください。
 
 このスクリプトは、フィルターへのパラメーターをソースドキュメントのメタデータに埋め込みます。
 ソースドキュメントとメタデータはASTに変換され、指定されたフィルタがそれを読み込みます。
 その結果、フィルタは入力ASTのメタデータからパラメーターを参照することができます。
 
 メタデータに埋め込まれるフィルターへのパラメーターは、
-デフォルトのフィルターである`FormatAST`に必要とされるパラメーターです。
+デフォルトのフィルターである`FilterAST`に必要とされるパラメーターです。
 カスタムフィルターを指定する場合、
 そのフィルターは入力ASTを通してこれらのパラメーターを利用することができます。
-パラメーターの詳細については、[about_FormatAST](about_FormatAST.ja.md)を参照してください。
+パラメーターの詳細については、[about_FilterAST](about_FilterAST.ja.md)を参照してください。
 
 |||
 |:--|:--| 
@@ -350,5 +350,5 @@ NoOutputパラメーターがTrueの場合、このスクリプトは何も出�
 
 ## 関連項目
 
-[about_FormatAST](about_FormatAST.ja.md)
+[about_FilterAST](about_FilterAST.ja.md)
 [about_MetadataMacros](about_MetadataMacros.ja.md)

@@ -50,7 +50,7 @@ PS C:\Panasu\Test\Test> ./test.ps1
 
 This command tests the build outout from Panasu.sln
 of the default configuration and the default target runtime, 
-that is `Debug` and `netcoreapp3.0` respectively.
+that is `Debug` and `netcoreapp3.1` respectively.
 
 The Panasu.sln must be built successfully for the configuration and the target runtime before the command is executed.
 
@@ -68,7 +68,7 @@ The Panasu.sln must be built successfully for the configuration and the target r
 ### Example 3: Test the Panasu in the specified directory
 
 ```powershell
-PS C:\Panasu\Test\Test> ./test.ps1 -FormatDocumentsScript 'C:\Panasu\Format-Documents.ps1' -formatDocumentsFilter 'dotnet C:\Panasu\FormatAST.dll'
+PS C:\Panasu\Test\Test> ./test.ps1 -FormatDocumentsScript 'C:\Panasu\Format-Documents.ps1' -formatDocumentsFilter 'dotnet C:\Panasu\FilterAST.dll'
 ```
 
 This command tests Panasu located in `C:\Panasu`.
@@ -141,14 +141,14 @@ Specifies the command line of the filter which is given to Format-Documents.ps1.
 Generally, it forms as follows:
 
 ```
-dotnet <path to FormatAST.dll>
+dotnet <path to FilterAST.dll>
 ```
 
 If this parameter is omitted or its value is an empty string,
 the script uses the following value.
 
 ```
-dotnet <Working Copy Root>/Src/FormatAST/bin/<Configuration>/<Runtime>/FormatAST.dll
+dotnet <Working Copy Root>/Src/FilterAST/bin/<Configuration>/<Runtime>/FilterAST.dll
 ```
 
 Where `<Configuration>` and `<Runtime>` are values of `Configuration` and `Runtime` parameter respectively.

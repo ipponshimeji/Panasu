@@ -1,4 +1,4 @@
-# About FormatAST
+# About FilterAST
 
 * [SHORT DESCRIPTION](#SHORT-DESCRIPTION)
 * [LONG DESCRIPTION](#LONG-DESCRIPTION)
@@ -10,26 +10,26 @@
 
 ## SHORT DESCRIPTION
 
-Describes the features of `FormatAST`
+Describes the features of `FilterAST`
 which is the default filter of [Format-Documents.ps1](Format-Documents.md) script. 
 
 
 ## LONG DESCRIPTION
 
-`FormatAST` is a [pandoc filter](https://pandoc.org/filters.html).
-[Format-Documents.ps1](Format-Documents.md) uses FormatAST as its default filter when it formats source document files.
+`FilterAST` is a [pandoc filter](https://pandoc.org/filters.html).
+[Format-Documents.ps1](Format-Documents.md) uses FilterAST as its default filter when it formats source document files.
 
-Actually `FormatAST` is a .NET Core application.
+Actually `FilterAST` is a .NET Core application.
 It read pandoc AST from standard input, and write modified AST to standard output.
 See [AST MODIFICATION](#AST-MODIFICATION) how it modifies the AST.
 
 
 ## COMMAND LINE SYNTAX
 
-The command line syntax to run `FormatAST` is as follows:
+The command line syntax to run `FilterAST` is as follows:
 
 ```
-dotnet FormatAST.dll [options]
+dotnet FilterAST.dll [options]
 ```
 
 Usually parameters for this filter are embedded in metadata in the input AST.

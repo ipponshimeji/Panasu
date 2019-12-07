@@ -5,14 +5,7 @@ using System.IO;
 using Panasu.Filters;
 
 namespace Panasu.Commands {
-	public class FormatCommand: ConvertCommand {
-		#region constants
-
-		public const string FormatTaskKind = "Format";
-
-		#endregion
-
-
+	public class FormattingFilterCommand: ConvertingFilterCommand {
 		#region properties
 
 		protected new FormattingFilter.Configurations Config {
@@ -32,10 +25,10 @@ namespace Panasu.Commands {
 
 		#region constructors
 
-		protected FormatCommand(FormattingFilter.Configurations config, string commandName, string invoker): base(config, commandName, invoker) {
+		protected FormattingFilterCommand(FormattingFilter.Configurations config, string commandName, string invoker): base(config, commandName, invoker) {
 		}
 
-		public FormatCommand(string commandName, string invoker = null): base(new FormattingFilter.Configurations(), commandName, invoker) {
+		public FormattingFilterCommand(string commandName, string invoker = null): base(new FormattingFilter.Configurations(), commandName, invoker) {
 		}
 
 		#endregion
@@ -80,18 +73,7 @@ namespace Panasu.Commands {
 			// state checks
 			// nothing to do
 
-			return FormatTaskKind;
-		}
-
-		protected override void Execute(string taskKind) {
-			switch (taskKind) {
-				case FormatTaskKind:
-					Filter();
-					break;
-				default:
-					base.Execute(taskKind);
-					break;
-			}
+			return FilterTaskKind;
 		}
 
 		protected override void WriteUsage(TextWriter writer) {

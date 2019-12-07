@@ -7,6 +7,13 @@ using Panasu.Filters;
 
 namespace Panasu.Commands {
 	public abstract class FilterCommand: Command {
+		#region constants
+
+		public const string FilterTaskKind = "Filter";
+
+		#endregion
+
+
 		#region data
 
 		private Filter.Configurations config = null;
@@ -92,6 +99,17 @@ namespace Panasu.Commands {
 				this.InputFile = GetSeparatedOptionValue(args, shortName, longName);
 			} else {
 				base.ProcessOption(args, shortName, longName, value);
+			}
+		}
+
+		protected override void Execute(string taskKind) {
+			switch (taskKind) {
+				case FilterTaskKind:
+					Filter();
+					break;
+				default:
+					base.Execute(taskKind);
+					break;
 			}
 		}
 

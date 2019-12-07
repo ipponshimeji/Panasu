@@ -4,7 +4,7 @@ using System.Diagnostics;
 using Panasu.Filters;
 
 namespace Panasu.Commands {
-	public abstract class ConvertCommand: FilterCommand {
+	public abstract class ConvertingFilterCommand: FilterCommand {
 		#region properties
 
 		protected new ConvertingFilter.Configurations Config {
@@ -24,7 +24,7 @@ namespace Panasu.Commands {
 
 		#region constructors
 
-		protected ConvertCommand(ConvertingFilter.Configurations config, string commandName, string invoker): base(config, commandName, invoker) {
+		protected ConvertingFilterCommand(ConvertingFilter.Configurations config, string commandName, string invoker): base(config, commandName, invoker) {
 		}
 
 		#endregion

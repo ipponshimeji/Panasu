@@ -5,8 +5,8 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <AssemblyName>FormatAST</AssemblyName>
-    <RootNamespace>Panasu.FormatAST</RootNamespace>
+    <AssemblyName>FilterAST</AssemblyName>
+    <RootNamespace>Panasu.FilterAST</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

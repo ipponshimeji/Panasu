@@ -25,7 +25,7 @@ if ([string]::IsNullOrEmpty($formatDocumentsScript)) {
     $formatDocumentsScript = "$repositoryDir/Src/Scripts/Format-Documents.ps1"
 }
 if ([string]::IsNullOrEmpty($formatDocumentsFilter)) {
-    $formatDocumentsFilter = GetFilter 'FormatAST' 'FormatAST.dll' $config $runtime
+    $formatDocumentsFilter = GetFilter 'FilterAST' 'FilterAST.dll' $config $runtime
 }
 
 # The full path to the Format-Documents.ps1 script to be invoked.
@@ -33,7 +33,7 @@ Set-Variable -Name scriptPath -Value $formatDocumentsScript -Option ReadOnly -Sc
 
 # The filter command line to be specified Filter option of Format-Documents script.
 # It may contain developing module in build output path.
-#   ex. 'dotnet E:/Panasu/Src/FormatAST/bin/Debug/netcoreapp3.0/FormatAST.dll'
+#   ex. 'dotnet E:/Panasu/Src/FilterAST/bin/Debug/netcoreapp3.1/FilterAST.dll'
 Set-Variable -Name filter -Value $formatDocumentsFilter -Option ReadOnly -Scope Script
 
 # The path of the directory where the resources for this test are stored.

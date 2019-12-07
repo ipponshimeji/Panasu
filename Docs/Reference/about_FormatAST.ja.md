@@ -1,4 +1,4 @@
-# FormatASTについて
+# FilterASTについて
 
 * [簡易説明](#簡易説明)
 * [詳細説明](#詳細説明)
@@ -10,27 +10,27 @@
 
 ## 簡易説明
 
-`FormatAST`の機能について説明します。
+`FilterAST`の機能について説明します。
 これは、[Format-Documents.ps1](Format-Documents.ja.md)スクリプトのデフォルトフィルターです。
 
 
 ## 詳細説明
 
-`FormatAST`は[pandocフィルター](https://pandoc.org/filters.html)の一種です。
+`FilterAST`は[pandocフィルター](https://pandoc.org/filters.html)の一種です。
 [Format-Documents.ps1](Format-Documents.ja.md)は、ソースドキュメントファイル群をフォーマットする際に、
-`FormatAST`をデフォルトのフィルターとして用います。
+`FilterAST`をデフォルトのフィルターとして用います。
 
-実際には`FormatAST`は.NET Coreアプリケーションです。
-`FormatAST`はpandocのASTを標準入力から読み込み、変更したASTを標準出力に出力します。
+実際には`FilterAST`は.NET Coreアプリケーションです。
+`FilterAST`はpandocのASTを標準入力から読み込み、変更したASTを標準出力に出力します。
 どのようにASTを変更するかについては、[ASTへの変更](#ASTへの変更)を参照してください。
 
 
 ## コマンドライン構文
 
-`FormatAST`を実行するためのコマンドライン構文は以下の通りです。
+`FilterAST`を実行するためのコマンドライン構文は以下の通りです。
 
 ```
-dotnet FormatAST.dll [options]
+dotnet FilterAST.dll [options]
 ```
 
 通常、このフィルタへのパラメーターは入力ASTのメタデータ内に埋め込まれます。

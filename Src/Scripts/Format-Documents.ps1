@@ -26,8 +26,8 @@ the extension of formatted document file and the format name of formatted docume
 FromExtensions, FromFormats, ToExtensions and ToFormats parameters respectively,
 where "format name" means a value which can be passed to -f or -t option of `pandoc`.
 
-The default filter, FormatAST is provided along with this script.
-See about_FormatAST for how it modifies the AST.
+The default filter, FilterAST is provided along with this script.
+See about_FilterAST for how it modifies the AST.
 
 Only files whose extension is contained in FromExtensions parameter are formatted.
 This script does not process other files,
@@ -108,18 +108,18 @@ The all specified metadata are attached to all source document files.
 
 The command line of the pandoc filter to be used in the formatting process.
 
-If this parameter is null or empty string, "dotnet $scriptDir/FormatAST.dll" is used,
+If this parameter is null or empty string, "dotnet $scriptDir/FilterAST.dll" is used,
 where $scriptDir is the directory where this script is located.
-See about_FormatAST for details about FormatAST.
+See about_FilterAST for details about FilterAST.
 
 This script embeds the parameters for the filter into the metadata of the source document.
 The source document and metadata are converted into AST,
 and the specified filter reads the AST.
 Then the filter can reference the parameters from the metadata in the input AST.
 
-The parameters for filter embedded in metadata are ones which are requied in the default filter, FormatAST.
+The parameters for filter embedded in metadata are ones which are requied in the default filter, FilterAST.
 So if you specify a custom filter, the filter can use those parameters via the input AST.
-See about_FormatAST for the details about parameters.
+See about_FilterAST for the details about parameters.
 
 .PARAMETER RebaseOtherRelativeLinks 
 
@@ -184,7 +184,7 @@ The files are represented in relative path from the input directory.
 
 .LINK
 
-about_FormatAST
+about_FilterAST
 
 .LINK
 
@@ -490,7 +490,7 @@ for ($i = 0; $i -lt $formatCount; ++$i) {
 
 # give the default value for $Filter
 if ([string]::IsNullOrEmpty($Filter)) {
-    $Filter = "dotnet $scriptDir/FormatAST.dll"
+    $Filter = "dotnet $scriptDir/FilterAST.dll"
 } 
 
 # make the paths absolute

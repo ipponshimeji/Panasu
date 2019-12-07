@@ -46,7 +46,7 @@ namespace Panasu.Commands.Test {
 				}
 
 				void filter(Stream inputStream, Stream outputStream) {
-					FormatCommand command = new FormatCommand("unit test");
+					FormattingFilterCommand command = new FormattingFilterCommand("unit test");
 					int exitCode = command.Run(args.ToArray(), inputStream, outputStream);
 					if (exitCode != Command.SuccessExitCode) {
 						throw new ApplicationException($"The command failed. Exit code: {exitCode}");

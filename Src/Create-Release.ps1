@@ -38,8 +38,8 @@ New-Item $contentsDir -ItemType Directory -ErrorAction Stop | Out-Null
 
 ## collect files
 
-# FormatAST files
-Copy-Item "$srcDir/FormatAST/bin/$Config/$Runtime/publish/*" $contentsDir -Recurse -Exclude 'FormatAST.exe'
+# FilterAST files
+Copy-Item "$srcDir/FilterAST/bin/$Config/$Runtime/publish/*" $contentsDir -Recurse -Exclude 'FilterAST.exe'
 
 # scripts
 Copy-Item "$srcDir/Scripts/*" $contentsDir

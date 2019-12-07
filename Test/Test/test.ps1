@@ -39,11 +39,11 @@ Note that the default value will be changed if the default configuration of Pana
 Specifies the command line of the filter which is given to Format-Documents.ps1.
 Generally, it forms as follows:
 
-dotnet <path to FormatAST.dll>
+dotnet <path to FilterAST.dll>
 
 If this parameter is omitted or its value is an empty string, the script uses the following value.
 
-dotnet <Working Copy Root>/Src/FormatAST/bin/<Configuration>/<Runtime>/FormatAST.dll
+dotnet <Working Copy Root>/Src/FilterAST/bin/<Configuration>/<Runtime>/FilterAST.dll
 
 Where `<Configuration>` and `<Runtime>` are values of `Configuration` and `Runtime` parameter respectively.
 That is, the script uses the build output of the specified configuration and target runtime.
@@ -130,7 +130,7 @@ The Panasu.sln must be built successfully for the configuration and the target r
 
 .EXAMPLE
 
-test.ps1 -FormatDocumentsScript 'C:\Panasu\Format-Documents.ps1' -formatDocumentsFilter 'dotnet C:\Panasu\FormatAST.dll'
+test.ps1 -FormatDocumentsScript 'C:\Panasu\Format-Documents.ps1' -formatDocumentsFilter 'dotnet C:\Panasu\FilterAST.dll'
 
 This command tests Panasu located in `C:\Panasu`.
 
