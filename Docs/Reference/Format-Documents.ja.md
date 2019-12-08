@@ -350,5 +350,5 @@ NoOutputパラメーターがTrueの場合、このスクリプトは何も出�
 
 ## 関連項目
 
-[about_FilterAST](about_FilterAST.ja.md)
-[about_MetadataMacros](about_MetadataMacros.ja.md)
+* [about_FilterAST](about_FilterAST.ja.md)
+* [about_MetadataMacros](about_MetadataMacros.ja.md)

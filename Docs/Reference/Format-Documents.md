@@ -346,5 +346,5 @@ The files are represented in relative path from the input directory.
 
 ## Related Links
 
-[about_FilterAST](about_FilterAST.md)
-[about_MetadataMacros](about_MetadataMacros.md)
+* [about_FilterAST](about_FilterAST.md)
+* [about_MetadataMacros](about_MetadataMacros.md)
