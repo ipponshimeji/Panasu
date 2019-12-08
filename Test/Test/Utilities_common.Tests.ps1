@@ -17,6 +17,28 @@ Describe 'DirHaveEqualContentsTo' {
             $result.FailureMessage | Should -Be ''
         }
 
+        It 'returns successful result for the dir whose contents only differ in new line code.' {
+            $srcDir = "$resourcesDir/same"
+            $tempDir = CreateTempDir
+            try {
+                # copy a.txt with LF as new line
+                $contents = (Get-Content "$srcDir/a.txt" | ForEach-Object {"${_}`n"})
+                Set-Content "$tempDir/a.txt" $contents -NoNewline
+
+                # copy sub/b.txt with CRLF as new line
+                New-Item "$tempDir/sub" -ItemType Directory -ErrorAction Stop | Out-Null
+                $contents = (Get-Content "$srcDir/sub/b.txt" | ForEach-Object {"${_}`r`n"})
+                Set-Content "$tempDir/sub/b.txt" $contents -NoNewline
+
+                $result = DirHaveEqualContentsTo -ActualValue $tempDir -ExpectedValue $expectedDir
+            } finally {
+                Remove-Item $tempDir -Recurse | Out-Null
+            }
+
+            $result.Succeeded | Should -Be $true
+            $result.FailureMessage | Should -Be ''
+        }
+
         It 'returns failed result for the dir which has a missing file' {
             $actualDir = "$resourcesDir/missing"
 
