@@ -201,7 +201,9 @@ namespace Panasu.Test {
 line2""]}
 					]
 				}";
-				string expected = $"\"line1{Environment.NewLine}line2\"";
+				string sourceNewLine = @"
+";
+				string expected = $"\"line1{sourceNewLine}line2\"";
 
 				object value = JsonSerializer.Deserialize<object>(input);
 				string formatName = "params";
