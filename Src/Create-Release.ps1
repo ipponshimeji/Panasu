@@ -12,6 +12,14 @@ Set-Variable -Name contentsDir -Value (Join-Path $releaseDir 'Panasu') -Option R
 Set-Variable -Name repDir -Value (Join-Path $srcDir '..') -Option ReadOnly -Scope Script
 
 
+## version check
+
+if ($PSVersionTable.PSEdition -ne 'Core') {
+    Write-Error "This script must be run by PowerShell Core. Windows PowerShell is not supported."
+    exit 1
+}
+
+
 ## detect version
 
 # read the package version from the solution's common property settings
