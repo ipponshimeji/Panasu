@@ -11,7 +11,7 @@ Set-Variable -Name defaultRuntime -Value 'netcoreapp3.1' -Option ReadOnly -Scope
 
 ## Assertions
 
-function DirHaveSameContentsTo([string]$actualValue, [string]$expectedValue, [switch]$negate) {
+function DirHaveEqualContentsTo([string]$actualValue, [string]$expectedValue, [switch]$negate) {
     [bool]$succeeded = $true
     [string[]]$messages = @()
 

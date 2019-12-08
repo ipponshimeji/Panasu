@@ -11,11 +11,11 @@ $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 # import common utilities
 . "$here\Utilities_common.ps1"
 
-# register DirHaveSameContentsTo assertion to Pester
+# register DirHaveEqualContentsTo assertion to Pester
 # It asserts whether the given actual dir have the same contents to the expected's.
 # Note that Add-AssertionOperator is supported Pester 4.0.5 or later.
 CheckPesterVersion
-Add-AssertionOperator -Name DirHaveSameContentsTo -Test $function:DirHaveSameContentsTo
+Add-AssertionOperator -Name DirHaveEqualContentsTo -Test $function:DirHaveEqualContentsTo
 
 
 ## Common settings
@@ -96,7 +96,7 @@ try {
             $result.UpToDate | Should -HaveCount 0
             $result.NotTarget | Should -HaveCount 0
             $result.Failed | Should -HaveCount 0
-            $toDir | Should -DirHaveSameContentsTo "$answersDir/$caseName"
+            $toDir | Should -DirHaveEqualContentsTo "$answersDir/$caseName"
         }
     }
 
@@ -157,7 +157,7 @@ try {
                 "a${pathSeparator}A.gif", "a${pathSeparator}A.text", 'R.gif', 'R.text'
             )
             $result.Failed | Should -HaveCount 0
-            $toDir | Should -DirHaveSameContentsTo "$answersDir/$caseName"
+            $toDir | Should -DirHaveEqualContentsTo "$answersDir/$caseName"
         }
 
         It '[link_nostick] copies non-formatting-target files if StickOtherRelativeLinks is false' {
@@ -200,7 +200,7 @@ try {
                 "a${pathSeparator}A.yaml", "b${pathSeparator}B.yaml", 'R.yaml'
             )
             $result.Failed | Should -HaveCount 0
-            $toDir | Should -DirHaveSameContentsTo "$answersDir/$caseName"
+            $toDir | Should -DirHaveEqualContentsTo "$answersDir/$caseName"
         }
 
         It '[link_stick] changes links to non-formatting-target files if StickOtherRelativeLinks is true' {
@@ -244,7 +244,7 @@ try {
                 "a${pathSeparator}A.png", "a${pathSeparator}A.txt", "a${pathSeparator}A.yaml", "b${pathSeparator}B.png", "b${pathSeparator}B.txt", "b${pathSeparator}B.yaml", 'R.png', 'R.txt', 'R.yaml'
             )
             $result.Failed | Should -HaveCount 0
-            $toDir | Should -DirHaveSameContentsTo "$answersDir/$caseName"
+            $toDir | Should -DirHaveEqualContentsTo "$answersDir/$caseName"
         }
     }
 
@@ -284,7 +284,7 @@ try {
             $result.UpToDate | Should -HaveCount 0
             $result.NotTarget | Should -BeExactly @('attached_metadata.md.metadata.yaml')
             $result.Failed | Should -HaveCount 0
-            $toDir | Should -DirHaveSameContentsTo "$answersDir/$caseName"
+            $toDir | Should -DirHaveEqualContentsTo "$answersDir/$caseName"
         }
     }
 
@@ -325,7 +325,7 @@ try {
             $result.UpToDate | Should -HaveCount 0
             $result.NotTarget | Should -HaveCount 0
             $result.Failed | Should -HaveCount 0
-            $toDir | Should -DirHaveSameContentsTo "$answersDir/$caseName"
+            $toDir | Should -DirHaveEqualContentsTo "$answersDir/$caseName"
         }
     }
 
@@ -368,7 +368,7 @@ try {
             $result.UpToDate | Should -HaveCount 0
             $result.NotTarget | Should -HaveCount 0
             $result.Failed | Should -HaveCount 0
-            $toDir | Should -DirHaveSameContentsTo "$answersDir/$caseName"
+            $toDir | Should -DirHaveEqualContentsTo "$answersDir/$caseName"
         }
     }
 
@@ -440,7 +440,7 @@ try {
                 'shouldbeupdated_withmetadata.md.metadata.yaml', 'shouldnotbeupdated_withmetadata.md.metadata.yaml'
             )
             $result.Failed | Should -HaveCount 0
-            $toDir | Should -DirHaveSameContentsTo "$answersDir/$caseName"
+            $toDir | Should -DirHaveEqualContentsTo "$answersDir/$caseName"
         }
 
         It '[rebuild_false_commonmetadata] formats all sources if one of common metadata files is updated, when Rebuild option is false' {
@@ -500,7 +500,7 @@ try {
                 'commonmetadata1.yaml', 'commonmetadata2.yaml'
             )
             $result.Failed | Should -HaveCount 0
-            $toDir | Should -DirHaveSameContentsTo "$answersDir/$caseName"
+            $toDir | Should -DirHaveEqualContentsTo "$answersDir/$caseName"
         }
 
         It '[rebuild_true] updates all targets even if they are up-to-date, when Rebuild option is true' {
@@ -550,7 +550,7 @@ try {
             $result.UpToDate | Should -HaveCount 0
             $result.NotTarget | Should -HaveCount 0
             $result.Failed | Should -HaveCount 0
-            $toDir | Should -DirHaveSameContentsTo "$answersDir/$caseName"
+            $toDir | Should -DirHaveEqualContentsTo "$answersDir/$caseName"
         }
     }
 
@@ -582,7 +582,7 @@ try {
             $result.UpToDate | Should -HaveCount 0
             $result.NotTarget | Should -HaveCount 0
             $result.Failed | Sort-Object | Should -BeExactly @('invalid.json')
-            $toDir | Should -DirHaveSameContentsTo "$answersDir/$caseName"
+            $toDir | Should -DirHaveEqualContentsTo "$answersDir/$caseName"
         }
     }
 } finally {
