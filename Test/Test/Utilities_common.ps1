@@ -26,10 +26,16 @@ function DirHaveSameContentsTo([string]$actualValue, [string]$expectedValue, [sw
             $succeeded = $false
             $messages += "An expected file is not found: $_"
         } else {
-            [string[]]$paths = @((Join-Path $expectedValue $_ -Resolve), (Join-Path $actualValue $_ -Resolve))
-            [string[]]$hashs = (Get-FileHash $paths -Algorithm SHA256 | Select-Object -Property Hash )
+            $actualPath = (Join-Path $actualValue $_ -Resolve)
+            $expectedPath = (Join-Path $expectedValue $_ -Resolve)
 
-            if ($hashs[0] -ne $hashs[1]) {
+            if (IsBinaryFile($expectedPath)) {
+                $result = AreSameBinaryFiles $actualPath $expectedPath
+            } else {
+                $result = AreSameTextFilesIgnoringNewLine $actualPath $expectedPath
+            }
+
+            if (-not $result) {
                 $succeeded = $false
                 $messages += "The actual file has different contents from expected: $_"
             }
@@ -61,6 +67,23 @@ function DirHaveSameContentsTo([string]$actualValue, [string]$expectedValue, [sw
 
 
 ## Utilities
+
+function IsBinaryFile([string]$path) {
+    # assumes only '.png' and '.gif' files are binary
+    $ext = [System.IO.Path]::GetExtension($path)
+    return ($ext -ieq '.png' -or $ext -ieq '.gif')
+}
+
+function AreSameBinaryFiles([string]$actualPath, [string]$expectedPath) {
+    # compare the hashes
+    [string[]]$hashes = (Get-FileHash @($actualPath, $expectedPath) -Algorithm SHA256 | Select-Object -Property Hash)
+
+    return ($hashes[0] -eq $hashes[1])
+}
+
+function AreSameTextFilesIgnoringNewLine([string]$actualPath, [string]$expectedPath) {
+    return $null -eq (Compare-Object (Get-Content $actualPath) (Get-Content $expectedPath) -CaseSensitive)
+}
 
 function CheckPesterVersion() {
     if ((Get-Module Pester).Version -lt $minPesterVer) {
