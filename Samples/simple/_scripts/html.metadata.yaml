@@ -1,0 +1,18 @@
+lang: "en"
+css:
+  - {_macro: "rebase", target: "styles/style.css"}
+
+# giving a different footer for index.html
+include-after:
+  - _macro: "condition"
+    from-file: "index.md"
+    true-case: |
+
+      ---
+      [Panasu](https://github.com/ipponshimeji/Panasu)
+    
+    false-case: |
+
+      ---
+      Panasu Sample
+      
