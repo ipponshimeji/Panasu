@@ -52,6 +52,10 @@ Copy-Item "$srcDir/FilterAST/bin/$Config/$Runtime/publish/*" $contentsDir -Recur
 # scripts
 Copy-Item "$srcDir/Scripts/*" $contentsDir
 
+# misc
+Copy-Item "$srcDir/_Configuring/version.txt" $contentsDir
+Copy-Item "$srcDir/_Configuring/OSS.txt" $contentsDir
+
 
 ## zip the files
 

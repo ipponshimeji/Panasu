@@ -66,3 +66,8 @@ pandocを用いた変換を行うスクリプトを提供します。
 ## ドキュメントなど
 
 * [ドキュメント](Docs/README.ja.md)
+
+
+## このソフトウェアが利用しているOSS
+
+* [OSS used in this software](Src/_Configuring/OSS.txt)

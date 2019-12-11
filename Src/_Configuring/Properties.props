@@ -2,11 +2,12 @@
 
   <PropertyGroup>
     <Version>1.0.0</Version>
-    <Company>Takamasa Uramoto</Company>
+    <Authors>Takamasa Uramoto</Authors>
     <Product>Panasu</Product>
     <Copyright>Copyright 2019 Takamasa Uramoto</Copyright>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <FileVersion>1.0.0.0</FileVersion>
+    <RepositoryUrl>https://github.com/ipponshimeji/Panasu</RepositoryUrl>
   </PropertyGroup>
 
 </Project>
