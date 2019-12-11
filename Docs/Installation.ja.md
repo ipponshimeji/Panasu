@@ -54,4 +54,4 @@ Ubuntu 18.04上でもやってみたら動きました。
 [Releases](https://github.com/ipponshimeji/Panasu/releases/)ページからzipファイルをダウンロードして、
 適当なフォルダに展開します。
 
-具体的な使い方は、[チュートリアル](Tutorial.ja.md)を参照してください。
+具体的な使い方は、[チュートリアル](Tutorial/Tutorial.ja.md)を参照してください。
