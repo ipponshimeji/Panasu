@@ -2,11 +2,9 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-
+    <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
-
     <AssemblyName>Panasu.Test</AssemblyName>
-
     <RootNamespace>Panasu</RootNamespace>
   </PropertyGroup>
 

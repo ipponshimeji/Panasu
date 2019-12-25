@@ -5,6 +5,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
+    <Nullable>enable</Nullable>
     <AssemblyName>FilterAST</AssemblyName>
     <RootNamespace>Panasu.FilterAST</RootNamespace>
   </PropertyGroup>

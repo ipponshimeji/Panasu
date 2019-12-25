@@ -3,13 +3,12 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 
 namespace Panasu {
 	public static class Util {
 		#region methods
 
-		public static void ClearDisposable<T>(ref T target) where T: class, IDisposable {
+		public static void ClearDisposable<T>(ref T? target) where T: class, IDisposable {
 			if (target != null) {
 				IDisposable temp = target;
 				target = null;
@@ -18,20 +17,29 @@ namespace Panasu {
 		}
 
 
+		#nullable disable
+
 		private static bool CheckValue<T>(bool keyExist, object originalValue, out T value) {
-			if (keyExist) {
+			if (keyExist == false) {
+				// the value does not exist
+				value = default(T);
+				return false;
+			} else {
 				if (originalValue == null) {
 					// the key exists, but its value is null
-					value = default(T);				// actually it is null for a reference type
-					return !typeof(T).IsValueType;	// false for a value type
+					if (typeof(T).IsValueType) {
+						throw new InvalidCastException($"A null cannot be casted to '{typeof(T).FullName}' type.");
+					} else {
+						value = default(T);	// actually it is null for a reference type
+						return true;
+					}
 				} else if (originalValue is T) {
 					value = (T)originalValue;
 					return true;
+				} else {
+					throw new InvalidCastException($"A value of '{originalValue.GetType().FullName}' type cannot be casted to '{typeof(T).FullName}' type.");
 				}
 			}
-
-			value = default(T);
-			return false;
 		}
 
 		public static bool TryGetValue<T>(this IReadOnlyDictionary<string, object> dictionary, string key, out T value) {
@@ -56,6 +64,10 @@ namespace Panasu {
 			return CheckValue<T>(dictionary.TryGetValue(key, out originalValue), originalValue, out value);
 		}
 
+		public static bool TryGetValue<T>(this Dictionary<string, object> dictionary, string key, out T value) {
+			return TryGetValue<T>((IDictionary<string, object>)dictionary, key, out value);
+		}
+
 		public static (bool, T) GetOptionalValue<T>(this IReadOnlyDictionary<string, object> dictionary, string key) {
 			T value;
 			bool exist = TryGetValue(dictionary, key, out value);
@@ -68,6 +80,10 @@ namespace Panasu {
 			return (exist, value);
 		}
 
+		public static (bool, T) GetOptionalValue<T>(this Dictionary<string, object> dictionary, string key) {
+			return GetOptionalValue<T>((IDictionary<string, object>)dictionary, key);
+		}
+
 		public static T GetOptionalValue<T>(this IReadOnlyDictionary<string, object> dictionary, string key, T defaultValue) {
 			T value;
 			return TryGetValue(dictionary, key, out value) ? value : defaultValue;
@@ -78,9 +94,17 @@ namespace Panasu {
 			return TryGetValue(dictionary, key, out value) ? value : defaultValue;
 		}
 
+		public static T GetOptionalValue<T>(this Dictionary<string, object> dictionary, string key, T defaultValue) {
+			return GetOptionalValue<T>((IDictionary<string, object>)dictionary, key, defaultValue);
+		}
+
+		#nullable restore
+
 		public static Exception CreateMissingKeyException(string key) {
 			return new KeyNotFoundException($"The indispensable key '{key}' is missing in the dictionary.");
 		}
+
+		#nullable disable
 
 		public static T GetIndispensableValue<T>(this IReadOnlyDictionary<string, object> dictionary, string key) {
 			T value;
@@ -100,7 +124,9 @@ namespace Panasu {
 			}
 		}
 
-		public static object CloneJsonObject(object src) {
+		#nullable restore
+
+		public static object? CloneJsonObject(object? src) {
 			// argument checks
 			if (src == null) {
 				// clone null
@@ -112,6 +138,9 @@ namespace Panasu {
 				case IDictionary<string, object> obj:
 					// object
 					return obj.ToDictionary(key => key, value => CloneJsonObject(value));
+				case IReadOnlyDictionary<string, object> obj:
+					// object
+					return obj.ToDictionary(key => key, value => CloneJsonObject(value));
 				case IList<object> array:
 					// array
 					return array.Select(child => CloneJsonObject(child)).ToList();
@@ -121,13 +150,14 @@ namespace Panasu {
 			}
 		}
 
+
 		public static bool IsRelativeUri(string uriString) {
 			// argument checks
 			if (string.IsNullOrEmpty(uriString)) {
 				throw new ArgumentNullException(nameof(uriString));
 			}
 
-			Uri uri;
+			Uri? uri;
 			return Uri.TryCreate(uriString, UriKind.Relative, out uri);
 		}
 
