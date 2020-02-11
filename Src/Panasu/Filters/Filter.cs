@@ -225,10 +225,6 @@ namespace Panasu.Filters {
 				return (TParameters)this.Parameters;
 			}
 
-			public (bool, T) GetOptionalValue<T>(string key) {
-				return ((IReadOnlyDictionary<string, object>)this.ObjectValue).GetOptionalValue<T>(key);
-			}
-
 			public T GetOptionalValue<T>(string key, T defaultValue) {
 				return ((IReadOnlyDictionary<string, object>)this.ObjectValue).GetOptionalValue<T>(key, defaultValue);
 			}

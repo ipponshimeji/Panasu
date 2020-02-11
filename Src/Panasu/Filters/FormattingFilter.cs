@@ -315,12 +315,13 @@ namespace Panasu.Filters {
 			Debug.Assert(type == Schema.TypeNames.Header);
 			Debug.Assert(contents != null);
 
-			IDictionary<string, object> metadata = context.AST.GetMetadata(true);
-			IDictionary<string, object> title;
-			if (metadata.TryGetValue(Schema.Names.Title, out title) == false) {
+			IDictionary<string, object?> metadata = context.AST.GetMetadata(true);
+			IDictionary<string, object?>? dummy;
+			bool titleExists = metadata.TryGetValue<IDictionary<string, object?>>(Schema.Names.Title, out dummy);
+			if (titleExists == false) {
 				// the ast has no title metadata
 				// set the header contents to the title
-				title = new Dictionary<string, object>();
+				Dictionary<string, object> title = new Dictionary<string, object>();
 				title[Schema.Names.T] = Schema.TypeNames.MetaInlines;
 				if (3 <= contents.Count) {
 					title[Schema.Names.C] = contents[2];

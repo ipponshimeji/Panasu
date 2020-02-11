@@ -87,7 +87,7 @@ namespace Panasu.Filters {
 
 		#region overridables
 
-		protected virtual Version ReadPandocAPIVersion(IReadOnlyDictionary<string, object> ast) {
+		protected virtual Version ReadPandocAPIVersion(IReadOnlyDictionary<string, object?> ast) {
 			// argument checks
 			if (ast == null) {
 				throw new ArgumentNullException(nameof(ast));
@@ -95,8 +95,10 @@ namespace Panasu.Filters {
 
 			// read the 'pandoc-api-version' key
 			Version version = new Version();    // version 0.0, by default
-			IReadOnlyList<object> apiVersion;
-			if (ast.TryGetValue<IReadOnlyList<object>>(Schema.Names.PandocApiVersion, out apiVersion)) {
+												//(bool apiVersionExists, IReadOnlyList<object> apiVersion) = ast.GetOptionalValue<IReadOnlyList<object>>(Schema.Names.PandocApiVersion);
+			IReadOnlyList<object?> apiVersion;
+			bool apiVersionExists = ast.TryGetValue<IReadOnlyList<object?>>(Schema.Names.PandocApiVersion, out apiVersion);
+			if (apiVersionExists) {
 				try {
 					int getNumber(int index) {
 						// An InvalidCastException will be thrown if list[index] is not an integer.

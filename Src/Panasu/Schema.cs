@@ -55,14 +55,18 @@ namespace Panasu {
 		#region methods
 
 		public static FormatException CreateInvalidContentsFormatException(string typeName) {
-			return new FormatException($"Invalid contents format as '{typeName}' element.");
+			if (typeName == null) {
+				throw new ArgumentNullException(nameof(typeName));
+			}
+
+			return new FormatException($"Invalid contents format as a '{typeName}' element.");
 		}
 
 		public static FormatException CreateInvalidContentsFormatException(string typeName, string expectedContentsType, object actualContents) {
 			return new FormatException($"Invalid AST format: The contents in a '{typeName}' element is not '{expectedContentsType}' but '{GetJSONTypeName(actualContents)}'.");
 		}
 
-		public static string GetJSONTypeName(object value) {
+		public static string GetJSONTypeName(object? value) {
 			switch (value) {
 				case bool boolValue:
 					return JSONTypeNames.Boolean;
@@ -81,7 +85,7 @@ namespace Panasu {
 			}
 		}
 
-		public static (string type, object contents) IsElement(IReadOnlyDictionary<string, object> obj) {
+		public static (string? type, object? contents) IsElement(IReadOnlyDictionary<string, object> obj) {
 			if (obj != null) {
 				// check existence of 't' and 'c' key
 				string type = obj.GetOptionalValue<string>(Schema.Names.T, null);

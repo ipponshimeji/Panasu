@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 
@@ -17,96 +18,116 @@ namespace Panasu {
 		}
 
 
-		#nullable disable
-
-		private static bool CheckValue<T>(bool keyExist, object originalValue, out T value) {
-			if (keyExist == false) {
+		private static bool CheckValue<T>(bool valueExists, object? originalValue, [MaybeNullWhen(false)] out T value) where T: notnull {
+			if (valueExists == false) {
 				// the value does not exist
-				value = default(T);
+				value = default(T)!;
+				return false;
+			} else if (originalValue == null) {
+				// the value exists, but it is null
+				throw new InvalidCastException("Its value is a null.");
+			} else {
+				// the value exists and it is not null
+				// The cast below may throw an InvalidCastException if originalValue is unconformable to T.
+				value = (T)originalValue;
+				return true;
+			}
+		}
+
+		private static bool CheckNullableValue<T>(bool valueExists, object? originalValue, out T? value) where T: class {
+			if (valueExists == false) {
+				// the value does not exist
+				value = null;
 				return false;
 			} else {
-				if (originalValue == null) {
-					// the key exists, but its value is null
-					if (typeof(T).IsValueType) {
-						throw new InvalidCastException($"A null cannot be casted to '{typeof(T).FullName}' type.");
-					} else {
-						value = default(T);	// actually it is null for a reference type
-						return true;
-					}
-				} else if (originalValue is T) {
-					value = (T)originalValue;
-					return true;
-				} else {
-					throw new InvalidCastException($"A value of '{originalValue.GetType().FullName}' type cannot be casted to '{typeof(T).FullName}' type.");
-				}
+				// the value exists
+				// The cast below may throw an InvalidCastException if originalValue is unconformable to T.
+				value = (T?)originalValue;
+				return true;
 			}
 		}
 
-		public static bool TryGetValue<T>(this IReadOnlyDictionary<string, object> dictionary, string key, out T value) {
+		public static bool TryGetValue<T>(this IReadOnlyDictionary<string, object?> dictionary, string key, [MaybeNullWhen(false)] out T value) where T: notnull {
 			// argument checks
 			if (dictionary == null) {
 				throw new ArgumentNullException(nameof(dictionary));
 			}
 
-			// try to get value
-			object originalValue;
+			object? originalValue;
 			return CheckValue<T>(dictionary.TryGetValue(key, out originalValue), originalValue, out value);
 		}
 
-		public static bool TryGetValue<T>(this IDictionary<string, object> dictionary, string key, out T value) {
+		public static bool TryGetValue<T>(this IDictionary<string, object?> dictionary, string key, [MaybeNullWhen(false)] out T value) where T: notnull {
 			// argument checks
 			if (dictionary == null) {
 				throw new ArgumentNullException(nameof(dictionary));
 			}
 
-			// try to get value
-			object originalValue;
+			object? originalValue;
 			return CheckValue<T>(dictionary.TryGetValue(key, out originalValue), originalValue, out value);
 		}
 
-		public static bool TryGetValue<T>(this Dictionary<string, object> dictionary, string key, out T value) {
-			return TryGetValue<T>((IDictionary<string, object>)dictionary, key, out value);
+		public static bool TryGetValue<T>(this Dictionary<string, object?> dictionary, string key, [MaybeNullWhen(false)] out T value) where T: notnull {
+			return TryGetValue<T>((IDictionary<string, object?>)dictionary, key, out value);
 		}
 
-		public static (bool, T) GetOptionalValue<T>(this IReadOnlyDictionary<string, object> dictionary, string key) {
+		public static bool TryGetNullableValue<T>(this IReadOnlyDictionary<string, object?> dictionary, string key, out T? value) where T: class {
+			// argument checks
+			if (dictionary == null) {
+				throw new ArgumentNullException(nameof(dictionary));
+			}
+
+			object? originalValue;
+			return CheckNullableValue<T>(dictionary.TryGetValue(key, out originalValue), originalValue, out value);
+		}
+
+		public static bool TryGetNullableValue<T>(this IDictionary<string, object?> dictionary, string key, out T? value) where T: class {
+			// argument checks
+			if (dictionary == null) {
+				throw new ArgumentNullException(nameof(dictionary));
+			}
+
+			object? originalValue;
+			return CheckNullableValue<T>(dictionary.TryGetValue(key, out originalValue), originalValue, out value);
+		}
+
+		public static bool TryGetNullableValue<T>(this Dictionary<string, object?> dictionary, string key, out T? value) where T: class {
+			return TryGetNullableValue<T>((IDictionary<string, object?>)dictionary, key, out value);
+		}
+
+		public static T GetOptionalValue<T>(this IReadOnlyDictionary<string, object?> dictionary, string key, T defaultValue) where T: notnull {
 			T value;
-			bool exist = TryGetValue(dictionary, key, out value);
-			return (exist, value);
+			return TryGetValue<T>(dictionary, key, out value)? value: defaultValue;
 		}
 
-		public static (bool, T) GetOptionalValue<T>(this IDictionary<string, object> dictionary, string key) {
+		public static T GetOptionalValue<T>(this IDictionary<string, object?> dictionary, string key, T defaultValue) where T: notnull {
 			T value;
-			bool exist = TryGetValue(dictionary, key, out value);
-			return (exist, value);
+			return TryGetValue<T>(dictionary, key, out value)? value: defaultValue;
 		}
 
-		public static (bool, T) GetOptionalValue<T>(this Dictionary<string, object> dictionary, string key) {
-			return GetOptionalValue<T>((IDictionary<string, object>)dictionary, key);
+		public static T GetOptionalValue<T>(this Dictionary<string, object?> dictionary, string key, T defaultValue) where T: notnull {
+			return GetOptionalValue<T>((IDictionary<string, object?>)dictionary, key, defaultValue);
 		}
 
-		public static T GetOptionalValue<T>(this IReadOnlyDictionary<string, object> dictionary, string key, T defaultValue) {
-			T value;
-			return TryGetValue(dictionary, key, out value) ? value : defaultValue;
+		public static T? GetOptionalNullableValue<T>(this IReadOnlyDictionary<string, object?> dictionary, string key, T? defaultValue) where T: class {
+			T? value;
+			return TryGetNullableValue<T>(dictionary, key, out value)? value: defaultValue;
 		}
 
-		public static T GetOptionalValue<T>(this IDictionary<string, object> dictionary, string key, T defaultValue) {
-			T value;
-			return TryGetValue(dictionary, key, out value) ? value : defaultValue;
+		public static T? GetOptionalNullableValue<T>(this IDictionary<string, object?> dictionary, string key, T? defaultValue) where T: class {
+			T? value;
+			return TryGetNullableValue<T>(dictionary, key, out value) ? value : defaultValue;
 		}
 
-		public static T GetOptionalValue<T>(this Dictionary<string, object> dictionary, string key, T defaultValue) {
-			return GetOptionalValue<T>((IDictionary<string, object>)dictionary, key, defaultValue);
+		public static T? GetOptionalNullableValue<T>(this Dictionary<string, object?> dictionary, string key, T? defaultValue) where T: class {
+			return GetOptionalNullableValue<T>((IDictionary<string, object?>)dictionary, key, defaultValue);
 		}
-
-		#nullable restore
 
 		public static Exception CreateMissingKeyException(string key) {
 			return new KeyNotFoundException($"The indispensable key '{key}' is missing in the dictionary.");
 		}
 
-		#nullable disable
-
-		public static T GetIndispensableValue<T>(this IReadOnlyDictionary<string, object> dictionary, string key) {
+		public static T GetIndispensableValue<T>(this IReadOnlyDictionary<string, object?> dictionary, string key) where T: notnull {
 			T value;
 			if (TryGetValue<T>(dictionary, key, out value)) {
 				return value;
@@ -115,39 +136,39 @@ namespace Panasu {
 			}
 		}
 
-		public static T GetIndispensableValue<T>(this IDictionary<string, object> dictionary, string key) {
+		public static T GetIndispensableValue<T>(this IDictionary<string, object?> dictionary, string key) where T: notnull {
 			T value;
-			if (TryGetValue(dictionary, key, out value)) {
+			if (TryGetValue<T>(dictionary, key, out value)) {
 				return value;
 			} else {
 				throw CreateMissingKeyException(key);
 			}
 		}
 
-		#nullable restore
+		public static T GetIndispensableValue<T>(this Dictionary<string, object?> dictionary, string key) where T: notnull {
+			return GetIndispensableValue<T>((IDictionary<string, object?>)dictionary, key);
+		}
 
-		public static object? CloneJsonObject(object? src) {
-			// argument checks
-			if (src == null) {
-				// clone null
-				return null;
+		public static T? GetIndispensableNullableValue<T>(this IReadOnlyDictionary<string, object?> dictionary, string key) where T: class {
+			T? value;
+			if (TryGetNullableValue<T>(dictionary, key, out value)) {
+				return value;
+			} else {
+				throw CreateMissingKeyException(key);
 			}
+		}
 
-			// clone the json object
-			switch (src) {
-				case IDictionary<string, object> obj:
-					// object
-					return obj.ToDictionary(key => key, value => CloneJsonObject(value));
-				case IReadOnlyDictionary<string, object> obj:
-					// object
-					return obj.ToDictionary(key => key, value => CloneJsonObject(value));
-				case IList<object> array:
-					// array
-					return array.Select(child => CloneJsonObject(child)).ToList();
-				default:
-					// string or value type
-					return src;
+		public static T? GetIndispensableNullableValue<T>(this IDictionary<string, object?> dictionary, string key) where T: class {
+			T? value;
+			if (TryGetNullableValue<T>(dictionary, key, out value)) {
+				return value;
+			} else {
+				throw CreateMissingKeyException(key);
 			}
+		}
+
+		public static T? GetIndispensableNullableValue<T>(this Dictionary<string, object?> dictionary, string key) where T : class {
+			return GetIndispensableNullableValue<T>((IDictionary<string, object?>)dictionary, key);
 		}
 
 
@@ -157,11 +178,12 @@ namespace Panasu {
 				throw new ArgumentNullException(nameof(uriString));
 			}
 
-			Uri? uri;
-			return Uri.TryCreate(uriString, UriKind.Relative, out uri);
+			// The Uri.TryCreate() call below returns true for uriString "/a/b/c".
+			// So Path.IsPathRooted() is called to remove such rooted path.
+			return Uri.TryCreate(uriString, UriKind.Relative, out Uri? uri) && !Path.IsPathRooted(uriString);
 		}
 
-		public static (string unescapedPath, string fragment) DecomposeRelativeUri(string relativeUriString) {
+		public static (string path, string fragment) DecomposeRelativeUri(string relativeUriString, bool unescapePath = true) {
 			// argument checks
 			if (relativeUriString == null) {
 				throw new ArgumentNullException(nameof(relativeUriString));
@@ -172,7 +194,7 @@ namespace Panasu {
 			string path;
 			string fragment;
 			int index = relativeUriString.IndexOf('#');
-			if (0 < index) {
+			if (0 <= index) {
 				// uriString has a fragment
 				path = relativeUriString.Substring(0, index);
 				fragment = relativeUriString.Substring(index);	// include '#'
@@ -183,7 +205,10 @@ namespace Panasu {
 			}
 
 			// Note that fragment contains the separator '#' if it exists.
-			return (Uri.UnescapeDataString(path), fragment);
+			if (unescapePath) {
+				path = Uri.UnescapeDataString(path);
+			}
+			return (path, fragment);
 		}
 
 		public static string RebaseRelativeUri(Uri oldBaseUri, string relativeUriString, Uri newBaseUri) {
@@ -199,34 +224,11 @@ namespace Panasu {
 			}
 
 			// decompose fragment from the relative Uri
-			(string unescapedPath, string fragment) = DecomposeRelativeUri(relativeUriString);
+			(string path, string fragment) = DecomposeRelativeUri(relativeUriString, false);
 
 			// rebase the relative path
-			Uri newUri = newBaseUri.MakeRelativeUri(new Uri(oldBaseUri, unescapedPath));
+			Uri newUri = newBaseUri.MakeRelativeUri(new Uri(oldBaseUri, path));
 			string newRelativeUriString = newUri.ToString();
-
-			// compose the fragment
-			if (0 < fragment.Length) {
-				newRelativeUriString = string.Concat(newRelativeUriString, fragment);
-			}
-
-			return newRelativeUriString;
-		}
-
-		public static string ChangeRelativeUriExtension(string relativeUriString, string extension) {
-			// argument checks
-			if (relativeUriString == null) {
-				throw new ArgumentNullException(nameof(relativeUriString));
-			}
-			if (extension == null) {
-				throw new ArgumentNullException(nameof(extension));
-			}
-
-			// decompose fragment from the relative Uri
-			(string unescapedPath, string fragment) = DecomposeRelativeUri(relativeUriString);
-
-			// change the extension of the relative path
-			string newRelativeUriString = Path.ChangeExtension(unescapedPath, extension);
 
 			// compose the fragment
 			if (0 < fragment.Length) {
