@@ -12,8 +12,8 @@ namespace Panasu.Test {
 			[Fact(DisplayName ="Success, null")]
 			public void Success_null() {
 				// Arrange
-				object expected = null;
-				object actual = null;
+				object? expected = null;
+				object? actual = null;
 
 				// Act
 				TestUtil.EqualJson(expected, actual);
@@ -64,8 +64,8 @@ namespace Panasu.Test {
 			[Fact(DisplayName = "Success, array")]
 			public void Success_array() {
 				// Arrange
-				object expected = new object[] { "abc", 567.89, null, false };
-				object actual = new object[] { "abc", 567.89, null, false };
+				object expected = new object?[] { "abc", 567.89, null, false };
+				object actual = new object?[] { "abc", 567.89, null, false };
 
 				// Act
 				TestUtil.EqualJson(expected, actual);
@@ -105,10 +105,10 @@ namespace Panasu.Test {
 				// Arrange
 				object expected = new Dictionary<string, object> {
 					{ "abc", new object[] { "a", "b", "c" } },
-					{ "xyz", new object[] { 1.23, false, null } }
+					{ "xyz", new object?[] { 1.23, false, null } }
 				};
 				object actual = new Dictionary<string, object> {
-					{ "xyz", new object[] { 1.23, false, null } },
+					{ "xyz", new object?[] { 1.23, false, null } },
 					{ "abc", new object[] { "a", "b", "c" } }
 				};
 
@@ -141,7 +141,7 @@ namespace Panasu.Test {
 			[Fact(DisplayName = "Failure, null")]
 			public void Failure_null() {
 				// Arrange
-				object expected = null;
+				object? expected = null;
 				object actual = "abc";
 
 				// Act
@@ -231,7 +231,7 @@ namespace Panasu.Test {
 			[Fact(DisplayName = "Failure, array, type")]
 			public void Failure_array_type() {
 				// Arrange
-				object expected = new object[] { "abc", 567.89, null, false };
+				object expected = new object?[] { "abc", 567.89, null, false };
 				object actual = false;
 
 				// Act
@@ -249,8 +249,8 @@ namespace Panasu.Test {
 			[Fact(DisplayName = "Failure, array, count")]
 			public void Failure_array_count() {
 				// Arrange
-				object expected = new object[] { "abc", 567.89, null, false };
-				object actual = new object[] { "abc", 567.89, null };
+				object expected = new object?[] { "abc", 567.89, null, false };
+				object actual = new object?[] { "abc", 567.89, null };
 
 				// Act
 				EqualJsonException exception = Assert.Throws<EqualJsonException>(
@@ -267,8 +267,8 @@ namespace Panasu.Test {
 			[Fact(DisplayName = "Failure, array, contents")]
 			public void Failure_array_contents() {
 				// Arrange
-				object expected = new object[] { "abc", 567.89, null, false };
-				object actual = new object[] { "abc", 567.89, null, true };
+				object expected = new object?[] { "abc", 567.89, null, false };
+				object actual = new object?[] { "abc", 567.89, null, true };
 
 				// Act
 				EqualJsonException exception = Assert.Throws<EqualJsonException>(
@@ -340,7 +340,7 @@ namespace Panasu.Test {
 			public void Failure_object_unexpecteditem() {
 				// Arrange
 				object expected = new Dictionary<string, object> { { "abc", 123.45 }, { "xyz", false } };
-				object actual = new Dictionary<string, object> { { "unexpected", null }, { "xyz", false }, { "abc", 123.45 } };
+				object actual = new Dictionary<string, object?> { { "unexpected", null }, { "xyz", false }, { "abc", 123.45 } };
 
 				// Act
 				EqualJsonException exception = Assert.Throws<EqualJsonException>(
@@ -452,7 +452,7 @@ namespace Panasu.Test {
 					{ "xyz", new object[] { new Dictionary<string, object> { {"k1", true }, {"k2", false } }, false, 1.23 } }
 				};
 				object actual = new Dictionary<string, object> {
-					{ "xyz", new object[] { null, true, 1.23 } },
+					{ "xyz", new object?[] { null, true, 1.23 } },
 					{ "abc", new object[] { "a", "b", "c" } }
 				};
 

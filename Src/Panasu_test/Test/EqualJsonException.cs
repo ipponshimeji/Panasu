@@ -19,7 +19,7 @@ namespace Panasu.Test {
 
 		#region data
 
-		public string Point { get; private set; }
+		public string? Point { get; private set; }
 
 		public string Path { get; private set; }
 
@@ -28,16 +28,16 @@ namespace Panasu.Test {
 
 		#region constructors
 
-		public EqualJsonException(string path, string point, object expected, object actual) : base(expected, actual, "TestUtil.EqualJson()  Failure") {
+		public EqualJsonException(string? path, string? point, object? expected, object? actual) : base(expected, actual, "TestUtil.EqualJson()  Failure") {
 			// initialize members
 			this.Path = path ?? string.Empty;
 			this.Point = point;
 		}
 
-		public EqualJsonException(IEnumerable<object> path, string point, object expected, object actual) :this(GetPath(path), point, expected, actual) {
+		public EqualJsonException(IEnumerable<object>? path, string? point, object? expected, object? actual) :this(GetPath(path), point, expected, actual) {
 		}
 
-		private static string GetPath(IEnumerable<object> path) {
+		private static string GetPath(IEnumerable<object>? path) {
 			// argument checks
 			if (path == null) {
 				return string.Empty;

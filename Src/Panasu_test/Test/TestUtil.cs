@@ -46,9 +46,9 @@ namespace Panasu.Test {
 
 		private static readonly object classLock = new object();
 
-		private static string resourceDirPath = null;
+		private static string resourceDirPath = null!;
 
-		private static string filteringResourceDirPath = null;
+		private static string filteringResourceDirPath = null!;
 
 		#endregion
 
@@ -62,7 +62,10 @@ namespace Panasu.Test {
 					lock (classLock) {
 						value = resourceDirPath;
 						if (value == null) {
-							string moduleDir = Path.GetDirectoryName(typeof(TestUtil).Assembly.ManifestModule.FullyQualifiedName);
+							string? moduleDir = Path.GetDirectoryName(typeof(TestUtil).Assembly.ManifestModule.FullyQualifiedName);
+							if (moduleDir == null) {
+								throw new NotSupportedException();
+							}
 							value = Path.GetFullPath("../../../_Resources", moduleDir);
 							resourceDirPath = value;
 						}
@@ -156,7 +159,7 @@ namespace Panasu.Test {
 
 		#region methods - asserts
 
-		public static void EqualJson(object expected, object actual, Stack<object> path = null) {
+		public static void EqualJson(object? expected, object? actual, Stack<object>? path = null) {
 			// internal functions
 			void pushPath(object value) {
 				if (path == null) {
@@ -170,11 +173,11 @@ namespace Panasu.Test {
 				path.Pop();
 			}
 
-			string getTypeText(object value) {
+			string getTypeText(object? value) {
 				return (value == null) ? "null" : value.GetType().ToString();
 			}
 
-			IEnumerable<object> getPath() {
+			IEnumerable<object>? getPath() {
 				// change the path enumeration from LIFO to FIFO.
 				return (path == null) ? null : path.Reverse();
 			}
@@ -183,7 +186,7 @@ namespace Panasu.Test {
 				return new EqualJsonException(getPath(), EqualJsonException.TypePoint, expectedType, getTypeText(actual));
 			}
 
-			EqualJsonException createValueFailure(object expectedValue, object actualValue) {
+			EqualJsonException createValueFailure(object? expectedValue, object? actualValue) {
 				return new EqualJsonException(getPath(), EqualJsonException.ValuePoint, expectedValue, actualValue);
 			}
 
@@ -196,7 +199,7 @@ namespace Panasu.Test {
 					// expected is a JSON object
 
 					// check type
-					IReadOnlyDictionary<string, object> actualObj = actual as IReadOnlyDictionary<string, object>;
+					IReadOnlyDictionary<string, object>? actualObj = actual as IReadOnlyDictionary<string, object>;
 					if (actualObj == null) {
 						throw createTypeFailure("(compatible with JSON object)");
 					}
@@ -207,7 +210,7 @@ namespace Panasu.Test {
 						string expectedKey = pair.Key;
 						pushPath(expectedKey);
 						try {
-							object actualValue;
+							object? actualValue;
 							if (actualObj.TryGetValue(expectedKey, out actualValue) == false) {
 								// an expected item is missing
 								throw createValueFailure(pair.Value, Missing.Instance);
@@ -230,7 +233,7 @@ namespace Panasu.Test {
 					// expected is a JSON array
 
 					// check type
-					IReadOnlyList<object> actualArray = actual as IReadOnlyList<object>;
+					IReadOnlyList<object>? actualArray = actual as IReadOnlyList<object>;
 					if (actualArray == null) {
 						throw createTypeFailure("(compatible with JSON array)");
 					}
