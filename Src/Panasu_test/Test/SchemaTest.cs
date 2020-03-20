@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
 using Panasu;
 using Xunit;
 using Utf8Json;
@@ -11,6 +12,141 @@ namespace Panasu.Test {
 
 		public static string GetInvalidContentsFormatMessage(string typeName, string expectedContentsType, string actualContentsType) {
 			return $"Invalid AST format: The contents in a '{typeName}' element is not '{expectedContentsType}' but '{actualContentsType}'.";
+		}
+
+		#endregion
+
+
+		#region IsElement
+
+		public class IsElement {
+			#region utilities
+
+			protected void TestNormal(Dictionary<string, object?>? sample, (string? type, object? contents) expected) {
+				// Arrange
+				IReadOnlyDictionary<string, object?>? readOnlyDictionarySample = sample;
+				IDictionary<string, object?>? dictionarySample = sample;
+				object? objectSample = sample;
+
+				// Act
+				// overload 1: (string?, object?) IsElement(IReadOnlyDictionary<string, object?>?)
+				(string? type, object? contents) actual1 = Schema.IsElement(readOnlyDictionarySample);
+				// overload 2: (string?, object?) IsElement(IDictionary<string, object?>?)
+				(string? type, object? contents) actual2 = Schema.IsElement(dictionarySample);
+				// overload 3: (string?, object?) IsElement(Dictionary<string, object?>?)
+				(string? type, object? contents) actual3 = Schema.IsElement(sample);
+				// overload 4: (string?, object?) IsElement(object?)
+				(string? type, object? contents) actual4 = Schema.IsElement(objectSample);
+
+				// Assert
+				Assert.True(Schema.TypeNames.Comparer.Equals(expected.type, actual1.type));
+				TestUtil.EqualJson(expected.contents, actual1.contents);
+				Assert.True(Schema.TypeNames.Comparer.Equals(expected.type, actual2.type));
+				TestUtil.EqualJson(expected.contents, actual2.contents);
+				Assert.True(Schema.TypeNames.Comparer.Equals(expected.type, actual3.type));
+				TestUtil.EqualJson(expected.contents, actual3.contents);
+				Assert.True(Schema.TypeNames.Comparer.Equals(expected.type, actual4.type));
+				TestUtil.EqualJson(expected.contents, actual4.contents);
+			}
+
+			#endregion
+
+
+			#region tests
+
+			[Fact(DisplayName = "obj: null")]
+			public void obj_null() {
+				Dictionary<string, object?>? sample = null;
+				(string? type, object? contents) expected = (null, null);
+
+				TestNormal(sample, expected);
+			}
+
+			[Fact(DisplayName = "obj: a general element")]
+			public void obj_general() {
+				string type = "Type";
+				object contents = true;
+				Dictionary<string, object?> sample = new Dictionary<string, object?>() {
+					{ "t", type },
+					{ "c", contents }
+				};
+				(string? type, object? contents) expected = (type, contents);
+
+				TestNormal(sample, expected);
+			}
+
+			[Fact(DisplayName = "obj: an element with null contents")]
+			public void obj_null_contents() {
+				string type = "Type";
+				object? contents = null;
+				Dictionary<string, object?> sample = new Dictionary<string, object?>() {
+					{ "t", type },
+					{ "c", contents }
+				};
+				(string? type, object? contents) expected = (type, contents);
+
+				TestNormal(sample, expected);
+			}
+
+			[Fact(DisplayName = "obj: an element with no contents")]
+			public void obj_no_contents() {
+				string type = "Type";
+				Dictionary<string, object?> sample = new Dictionary<string, object?>() {
+					{ "t", type },
+				};
+				(string? type, object? contents) expected = (type, null);
+
+				TestNormal(sample, expected);
+			}
+
+			[Fact(DisplayName = "obj: non-element")]
+			public void obj_non_element() {
+				Dictionary<string, object?> sample = new Dictionary<string, object?>() {
+					{ "a", "xyz" },
+					{ "c", 23.4 }
+				};
+				(string? type, object? contents) expected = (null, null);
+
+				TestNormal(sample, expected);
+			}
+
+			[Fact(DisplayName = "value: non-object")]
+			public void value_non_object() {
+				// Arrange
+				object sample = "ABC";  // not a JSON object
+
+				// Act
+				(string? type, object? contents) actual = Schema.IsElement(sample);
+
+				// Assert
+				Assert.Null(actual.type);
+				Assert.Null(actual.contents);
+			}
+
+			[Fact(DisplayName = "value: IReadOnlyDictionary")]
+			public void value_IReadOnlyDictionary() {
+				// Schema.IsElement(object value) checks whether value implements IDictionary<string, object?> first,
+				// then IReadOnlyDictionary<string, object?>.
+				// This test tests the case the value does not implement IDictionary<string, object?> but only IReadOnlyDictionary<string, object?>.
+
+				// Arrange
+				string type = "Type";
+				object contents = true;
+				Dictionary<string, object?> dic = new Dictionary<string, object?>() {
+					{ "t", type },
+					{ "c", contents }
+				};
+				IReadOnlyDictionary<string, object?> sample = new ReadOnlyDictionary<string, object?>(dic);
+
+				// Act
+				(string? type, object? contents) actual = Schema.IsElement(sample);
+
+				// Assert
+				Assert.True(Schema.TypeNames.Comparer.Equals(type, actual.type));
+				TestUtil.EqualJson(contents, actual.contents);
+			}
+
+			#endregion
 		}
 
 		#endregion

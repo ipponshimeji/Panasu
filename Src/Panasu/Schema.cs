@@ -18,6 +18,8 @@ namespace Panasu {
 		}
 
 		public static class TypeNames {
+			#region constants
+
 			public const string Header = "Header";
 			public const string Image = "Image";
 			public const string MetaBlocks = "MetaBlocks";
@@ -31,6 +33,28 @@ namespace Panasu {
 			public const string RawInline = "RawInline";
 			public const string Space = "Space";
 			public const string Str = "Str";
+
+			#endregion
+
+
+			#region properties
+
+			public static StringComparer Comparer {
+				get {
+					return StringComparer.Ordinal;
+				}
+			}
+
+			#endregion
+
+
+			#region methods
+
+			public static bool Equals(string? name1, string? name2) {
+				return Comparer.Equals(name1, name2);
+			}
+
+			#endregion
 		}
 
 		public static class ExtendedNames {
@@ -85,11 +109,11 @@ namespace Panasu {
 			}
 		}
 
-		public static (string? type, object? contents) IsElement(IReadOnlyDictionary<string, object> obj) {
+		public static (string? type, object? contents) IsElement(IReadOnlyDictionary<string, object?>? obj) {
 			if (obj != null) {
 				// check existence of 't' and 'c' key
-				string type = obj.GetOptionalValue<string>(Schema.Names.T, null);
-				object contents = obj.GetOptionalValue<object>(Schema.Names.C, null);
+				string? type = obj.GetOptionalNullableValue<string>(Schema.Names.T, null);
+				object? contents = obj.GetOptionalNullableValue<object>(Schema.Names.C, null);
 				if (!string.IsNullOrEmpty(type)) {
 					// value is an element
 					// Note that content may be null.
@@ -100,36 +124,58 @@ namespace Panasu {
 			return (null, null);    // not an element
 		}
 
-		public static (string type, object contents) IsElement(IDictionary<string, object> obj) {
-			return IsElement((IReadOnlyDictionary<string, object>)new ReadOnlyDictionary<string, object>(obj));
+		public static (string? type, object? contents) IsElement(IDictionary<string, object?>? obj) {
+			if (obj != null) {
+				// check existence of 't' and 'c' key
+				string? type = obj.GetOptionalNullableValue<string>(Schema.Names.T, null);
+				object? contents = obj.GetOptionalNullableValue<object>(Schema.Names.C, null);
+				if (!string.IsNullOrEmpty(type)) {
+					// value is an element
+					// Note that content may be null.
+					return (type, contents);
+				}
+			}
+
+			return (null, null);    // not an element
 		}
 
-		public static (string type, object contents) IsElement(object value) {
-			IReadOnlyDictionary<string, object> obj = value as IReadOnlyDictionary<string, object>;
-			return (obj == null) ? (null, null) : IsElement(obj);
+		public static (string? type, object? contents) IsElement(Dictionary<string, object?>? obj) {
+			return IsElement((IReadOnlyDictionary<string, object?>?)obj);
 		}
 
-		public static (string macroName, object contents) IsValueMacro(object value) {
+		public static (string? type, object? contents) IsElement(object? value) {
+			switch (value) {
+				case IDictionary<string, object?> dic:
+					return IsElement(dic);
+				case IReadOnlyDictionary<string, object?> roDic:
+					return IsElement(roDic);
+				default:
+					return (null, null);
+			}
+		}
+
+		public static (string? macroName, object? contents) IsValueMacro(object? value) {
 			// argument checks
 			// value can be null
 
-			(string type, object contents) = IsElement(value);
-			if (type == TypeNames.MetaMap) {
+			(string? type, object? contents) = IsElement(value);
+			if (TypeNames.Equals(type, TypeNames.MetaMap)) {
+				// value is a 'MetaMap' element
 				string macroName = IsContentsMacro(contents);
 				if (macroName != null) {
 					return (macroName, contents);
 				}
 			}
 
-			return (null, null);
+			return (null, null);	// not a macro
 		}
 
-		public static string IsContentsMacro(object contents) {
+		public static string? IsContentsMacro(object? contents) {
 			// argument checks
 			// contents can be null
 
 			// Is 'contents' a JSON object? 
-			IReadOnlyDictionary<string, object> obj = contents as IReadOnlyDictionary<string, object>;
+			IReadOnlyDictionary<string, object?>? obj = contents as IReadOnlyDictionary<string, object?>;
 			if (obj != null) {
 				// Does 'contents' have '_macro' key?
 				object macroValue;
