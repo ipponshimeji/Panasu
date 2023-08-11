@@ -1,6 +1,6 @@
 param (
     [string]$Config = 'Release',
-    [string]$Runtime = 'netcoreapp3.1'
+    [string]$Runtime = 'net6.0'
 )
 
 # The full path to the Format-Documents.ps1 script to be invoked.

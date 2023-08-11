@@ -56,6 +56,6 @@ $panasuDir = Join-Path $releaseDir 'Panasu'
     -OutputDir $OutputDir `
     -FormatDocumentsScript "$panasuDir/Format-Documents.ps1" `
     -FormatDocumentsFilter '' `
-    -Config $Config `
-    -Runtime $Runtime `
+    -Config '' `
+    -Runtime '' `
     -OtherOptions $OtherOptions

@@ -33,7 +33,7 @@ Set-Variable -Name scriptPath -Value $formatDocumentsScript -Option ReadOnly -Sc
 
 # The filter command line to be specified Filter option of Format-Documents script.
 # It may contain developing module in build output path.
-#   ex. 'dotnet E:/Panasu/Src/FilterAST/bin/Debug/netcoreapp3.1/FilterAST.dll'
+#   ex. 'dotnet E:/Panasu/Src/FilterAST/bin/Debug/net6.0/FilterAST.dll'
 Set-Variable -Name filter -Value $formatDocumentsFilter -Option ReadOnly -Scope Script
 
 # The path of the directory where the resources for this test are stored.

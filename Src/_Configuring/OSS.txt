@@ -2,8 +2,8 @@
 
 This software is dynamically linked with the following OSS:
 
-* .NET Core
-  Copyright (c) .NET Foundation and Contributors All rights reserved.
+* .NET
+  Copyright (c) .NET Foundation and Contributors
   license (MIT): https://github.com/dotnet/core/blob/master/LICENSE.TXT 
 
 * Utf8Json
